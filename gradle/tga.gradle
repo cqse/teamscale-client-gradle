@@ -154,16 +154,21 @@ ext {
 				version: { file ->
 					assert tga.trace.store.versionAssembly != null
 					
-					def assemblyKey = "Assembly=$tga.trace.store.versionAssembly:"
-					def assemblyLine = file.readLines().find { it.startsWith(assemblyKey) }
+					def assemblyKey = tga.trace.store.versionAssembly
+					if (!(tga.trace.store.versionAssembly instanceof java.util.regex.Pattern)) {
+						assemblyKey = java.util.regex.Pattern.quote(tga.trace.store.versionAssembly)
+					}
+										
+					assemblyKey = "^Assembly=$assemblyKey:\\d+ Version:.*"
+					
+					def assemblyLine = file.readLines().find { it ==~ assemblyKey }
 					if (assemblyLine == null) {
 						return null
 					}
-					assemblyLine -= assemblyKey
 					assemblyLine.split(" ").find{it.startsWith(tga.trace.store.versionAttribute+":")}.split(":")[1]
 				},
 
- 				message: { traceFile, version -> tga.trace.store.partition(traceFile) + "\nVersion: $version\nTrace: ${traceFile.name})" },
+ 				message: { traceFile, version -> tga.trace.store.partition(traceFile) + " (Version: $version Trace: ${traceFile.name})" },
 
 				partition: { traceFile -> "Manual Test" }
 			],

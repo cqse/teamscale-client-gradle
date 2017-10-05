@@ -26,3 +26,7 @@
 
 		return "$app $type"
 	}
+
+## Use an arbitrary version assembly matching a regular expression
+
+	tga.trace.store.versionAssembly = ~/Foo\.Bar\..*/
