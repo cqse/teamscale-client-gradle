@@ -21,6 +21,34 @@ ext {
 	}
 	
 	fileTreeFiltered = { dir, config ->
+		if (config.subdir) {
+			dir = file("$dir/${config.subdir}")
+		}
 		fileTree(dir: dir, includes: config.includes, excludes: config.excludes).filter(config.filter)
+	}
+
+	getFileVersion = { file, attribute = 'FileVersion' ->
+		new ByteArrayOutputStream().withStream { os ->
+			exec {
+				commandLine "Powershell", "(get-item '$file').VersionInfo.$attribute"
+				standardOutput = os
+			}
+			os.toString().trim()
+		}
+	}
+
+	stripPathPrefix = { path, prefix ->
+		def norm = { p ->
+			p.tr('A-Z\\', 'a-z/')
+		}
+
+		if (norm(path).startsWith(norm(prefix))) {
+			path = path.substring(prefix.length())
+			if (path.startsWith('/') || path.startsWith('\\')) {
+				path = path.substring(1)
+			} 
+		}
+		
+		return path
 	}
 }

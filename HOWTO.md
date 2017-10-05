@@ -10,3 +10,19 @@
 			os.toString().trim()
 		}
 	}
+
+## Category traces based on subfolder structure, creates separate partition and disting message
+
+	tga.trace.store.partition = { trace ->
+		def app = trace.parentFile.parentFile.name
+		// sanity check for traces that are in no subfolder
+		if (app == "store") {
+			app = trace.parentFile.name
+		}
+		def type = "Manual Test"
+		if (trace.parentFile.name == "jenkins") {
+			type = "Automated Jenkins Test"
+		}
+
+		return "$app $type"
+	}
