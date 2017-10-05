@@ -42,6 +42,8 @@ ext {
 			p.tr('A-Z\\', 'a-z/')
 		}
 
+		path = path as String
+		prefix = prefix as String
 		if (norm(path).startsWith(norm(prefix))) {
 			path = path.substring(prefix.length())
 			if (path.startsWith('/') || path.startsWith('\\')) {
