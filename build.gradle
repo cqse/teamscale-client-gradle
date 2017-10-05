@@ -5,7 +5,8 @@ ext {
 
 	teamscale.url = "http://localhost:8080"
 	teamscale.project = "my-project"
-	teamscale.password = "__TODO__"
+	teamscale.username = "__TODO__"
+	teamscale.accesskey = "__TODO__"
 	
 	tga.pdb.store.dir = "$dataDir/tga/pdb"
 	
