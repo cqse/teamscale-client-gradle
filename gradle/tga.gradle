@@ -227,7 +227,7 @@ task uploadPdb(dependsOn: collectPdb) {
 				println "  ... in DRY-RUN mode"
 			}
 			
-			def http = createHttpClient(teamscale)
+			def http = teamscale.httpClient(teamscale)
 			def pdbs = fileTreeFiltered(pdbDir, tga.pdb.store)
 			pdbs.collate(tga.pdb.uploadCollate).each { pdbSlice ->
 				println "  -> Uploading: " + pdbSlice
