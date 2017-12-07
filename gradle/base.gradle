@@ -40,7 +40,7 @@ ext {
 	isDotNetPdb = { file ->
 		def lines = new ByteArrayOutputStream().withStream { os ->
 			exec {
-				commandLine "D:/teamscale/scripts/gradle/bin/cvdump.exe", "-id", file
+				commandLine "$rootDir/gradle/bin/cvdump.exe", "-id", file
 				standardOutput = os
 			}
 			os.toString().readLines()
