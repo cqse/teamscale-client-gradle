@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/base.gradle"
+apply from: "$rootDir/gradle/base-teamscale.gradle"
 
 // TODO find a way to general import buildscript deps...
 buildscript {
@@ -10,31 +10,6 @@ buildscript {
 ///////  Configuration
 
 ext {
-	// The Teamscale server configuration
-	teamscale = [
-		// The Teamscale server URL
-		url: "http://localhost:8080",
-		
-		// The user uploads are performed with. 
-		username: "admin",
-		
-		// The user access token. Must be set!. Gather from Teamscale Web UI, password will not work!
-		accesskey: null,
-		
-		// The project id. Must be set!
-		project: null,
-		
-		// Configuration of HTTP Timeouts
-		timeout: [
-			connect: 60,
-			write: 60,
-			read: 60
-		]
-	]
-	
-	// Dry run will prevent submitting data to Teamscale
-	dryRun = false
-	
 	// The TGA configuration, override in used project
 	tga = [
 		// .NET debugging file (PDB) configuration
@@ -248,7 +223,7 @@ task uploadPdb(dependsOn: collectPdb) {
 			println "Uploading PDBs to $teamscale.project"
 			println "  ... for timestamp $timestamp"
 			println "  ... for version $version"
-			if (dryRun) {
+			if (teamscale.dryRun) {
 				println "  ... in DRY-RUN mode"
 			}
 			
@@ -257,7 +232,7 @@ task uploadPdb(dependsOn: collectPdb) {
 			pdbs.collate(tga.pdb.uploadCollate).each { pdbSlice ->
 				println "  -> Uploading: " + pdbSlice
 				
-				if (dryRun) {
+				if (teamscale.dryRun) {
 					return
 				}
 			
@@ -277,7 +252,9 @@ task uploadPdb(dependsOn: collectPdb) {
 				}
 			}
 			
-			published.append "${version}\r\n"
+			if (teamscale.dryRun) {
+				published.append "${version}\r\n"
+			}
 		}
 	}
 }
@@ -305,7 +282,7 @@ task uploadTrace(dependsOn: collectTraces) {
 	doLast {
 		assert file(tga.trace.store.dir).exists()
 		
-		def http = createHttpClient(teamscale)
+		def http = teamscale.httpClient(teamscale)
 		def sortedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.sort{ it.lastModified() }
 		println "Uploading Traces to project $teamscale.project"
 		sortedTraces.each { traceFile ->
@@ -315,11 +292,8 @@ task uploadTrace(dependsOn: collectTraces) {
 			println "  -> $traceFile.name"
 			println "     ... for timestamp $timestamp"
 			println "     ... for version $version"
-			if (dryRun) {
+			if (teamscale.dryRun) {
 				println "     ... in DRY-RUN mode"
-			}
-			
-			if (dryRun) {
 				return
 			}
 			
@@ -353,21 +327,5 @@ task uploadTrace(dependsOn: collectTraces) {
 			ant.move(file: traceFile, todir: toDir, preservelastmodified: true)
 		}
 	
-	}
-}
-
-def createHttpClient(teamscale) {
-	assert teamscale.accesskey != null
-	
-	return groovyx.net.http.OkHttpBuilder.configure {
-		request.uri = teamscale.url
-		//request.auth.basic teamscale.username, teamscale.accesskey
-		request.headers['Authorization'] = "Basic " + "${teamscale.username}:${teamscale.accesskey}".bytes.encodeBase64().toString()
-		
-		clientConfig.clientCustomizer { okhttp3.OkHttpClient.Builder builder ->
-			builder.connectTimeout(teamscale.timeout.connect, java.util.concurrent.TimeUnit.SECONDS);
-			builder.writeTimeout(teamscale.timeout.write, java.util.concurrent.TimeUnit.SECONDS);
-			builder.readTimeout(teamscale.timeout.read, java.util.concurrent.TimeUnit.SECONDS);
-		}
 	}
 }

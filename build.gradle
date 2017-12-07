@@ -1,4 +1,5 @@
 apply from: "$rootDir/gradle/tga.gradle"
+apply from: "$rootDir/gradle/report.gradle"
 
 ext {
 	dataDir = "C:/Teamscale"
@@ -8,8 +9,14 @@ ext {
 	teamscale.username = "__TODO__"
 	teamscale.accesskey = "__TODO__"
 	
+	// Do not upload to Teamscale (debugging)
+	// teamscale.dryRun = true
+	
 	tga.pdb.store.dir = "$dataDir/tga/pdb"
 	
+	// E.g. remove non-C# PDBs
+	tga.pdb.store.filter = { file -> isDotNetPdb(file) }
+
 	// The PDB file that is used to calculate the timestamp the PDB correlate to the code (approximation) 
 	tga.pdb.timestampFile = "MyAssembly.pdb"
 	
@@ -36,6 +43,8 @@ ext {
 	tga.trace.store.versionAssembly = "MyAssembly"
 	tga.trace.archive.dir = "$dataDir/tga/trace/archive"
 
-	// Do not upload to Teamscale (debugging)
-	// dryRun = true
+	report.inbox.dir = "$dataDir/share/coverage"
+	report.store.dir = "$dataDir/tga/coverage/store"
+	report.archive.dir = "$dataDir/tga/coverage/archive"
+	report.store.partition = { report -> repo)
 }

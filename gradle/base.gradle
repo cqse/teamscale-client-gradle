@@ -36,6 +36,18 @@ ext {
 			os.toString().trim()
 		}
 	}
+	
+	isDotNetPdb = { file ->
+		def lines = new ByteArrayOutputStream().withStream { os ->
+			exec {
+				commandLine "D:/teamscale/scripts/gradle/bin/cvdump.exe", "-id", file
+				standardOutput = os
+			}
+			os.toString().readLines()
+		}
+		
+		return !lines.any{it.startsWith('0x')}
+	}
 
 	stripPathPrefix = { path, prefix ->
 		def norm = { p ->
