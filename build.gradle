@@ -18,7 +18,7 @@ ext {
 	tga.pdb.store.filter = { file -> isDotNetPdb(file) }
 
 	// The PDB file that is used to calculate the timestamp the PDB correlate to the code (approximation) 
-	tga.pdb.timestampFile = "MyAssembly.pdb"
+	tga.pdb.upload.timestampFile = "MyAssembly.pdb"
 	
 	// The directory where build results are stored. This can also be an array of multiple directories.
 	tga.pdb.inbox.dir = /\\file-server\builds\MyBuild/
@@ -40,11 +40,11 @@ ext {
 	
 	tga.trace.inbox.dir = "$dataDir/share/traces"
 	tga.trace.store.dir = "$dataDir/tga/trace/store"
-	tga.trace.store.versionAssembly = "MyAssembly"
+	tga.trace.upload.versionAssembly = "MyAssembly"
 	tga.trace.archive.dir = "$dataDir/tga/trace/archive"
 
 	report.inbox.dir = "$dataDir/share/coverage"
 	report.store.dir = "$dataDir/tga/coverage/store"
 	report.archive.dir = "$dataDir/tga/coverage/archive"
-	report.store.partition = { report -> "VS Coverage" }
+	report.upload.partition = { report -> "VS Coverage" }
 }

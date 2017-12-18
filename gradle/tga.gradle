@@ -52,35 +52,39 @@ ext {
 				excludes: [],
 				
 				// Allows further filtering of included files, e.g. by size. Usually this is not needed and filtering should be applied before copying to the store.
-				filter: { file -> true },
-				 
-				// Closure that returns the program version based on the build directory. Usually there is no need to configure this property.
-				version: { dir -> file(dir).name }
+				filter: { file -> true }
 			],
 			
-			// The amount of pdb files to upload in one batch
-			uploadCollate: 8,
-			
-			// The PDB file that is used to calculate the timestamp the PDBs correlate to the code (approximation), better override timestamp closure and extract exact revision.
-			// FIXME, move to store/inbox?
-			timestampFile: null,
+			upload: [
+				// The amount of pdb files to upload in one batch
+				collate: 8,
+				
+				// The project to upload PDBs
+				project: { dir -> teamscale.project },
+				
+				// Closure that returns the program version based on the build directory. Usually there is no need to configure this property.
+				version: { dir -> file(dir).name },
 
-			// Defines the branch for the uploaded timestamp (currently not working)
-			timestampBranch: { path -> null },
-			
-			// The timestamp calculation closure. Timestamp the PDB files correspond to in the repository.
-			// Defaults to the modification timestamp of a specific file in build output, override if better means exist.
-			timestamp:  { path ->
-				assert tga.pdb.timestampFile != null
-				def timestampFile = file("${path}/${tga.pdb.timestampFile}")
-				assert timestampFile.exists()
-				def ts = timestampFile.lastModified() as long
-				def branch = tga.pdb.timestampBranch(path)
-				if (branch != null) {
-					ts = "$branch:$ts"
+				// Defines the branch for the uploaded timestamp (currently not working)
+				branch: { path -> null },
+
+				// The PDB file that is used to calculate the timestamp the PDBs correlate to the code (approximation), better override timestamp closure and extract exact revision.
+				timestampFile: null,
+				
+				// The timestamp calculation closure. Timestamp the PDB files correspond to in the repository.
+				// Defaults to the modification timestamp of a specific file in build output, override if better means exist.
+				timestamp:  { path ->
+					assert tga.pdb.upload.timestampFile != null
+					def timestampFile = file("${path}/${tga.pdb.upload.timestampFile}")
+					assert timestampFile.exists()
+					def ts = timestampFile.lastModified() as long
+					def branch = tga.pdb.upload.branch(path)
+					if (branch != null) {
+						ts = "$branch:$ts"
+					}
+					return ts
 				}
-				return ts
-			}
+			]
 		],
 		
 		trace: [
@@ -114,7 +118,22 @@ ext {
 				excludes: [],
 				
 				// Optional further filtering.
-				filter: { file -> true },
+				filter: { file -> true }
+			],
+			
+			upload: [
+				// The project to upload PDBs
+				project: { key, files -> teamscale.project },
+				
+				// An optional bucket to group traces, e.g. by day { trace -> new Date(trace.lastModified()).format('yyyyMMdd') }
+				bucket: { traceFile -> null },
+				
+				// The amount of traces that are uploaded in one batch.
+				// If null (default value), a collation of 200 is used if a bucket is set, otherwise collation is set to 1 (traces are processed one by one).
+				collate: null,
+				
+				// The upload commit message. The variable key corresponds to the trace grouping key.
+				message: { key, files -> "$key.partition (Version: $key.version Traces: "+files.collect{it.name}.join(", ")+")" },
 				
 				// A closure that calculates the timestamp of when the trace was created (default: modification date).
 				timestamp: { file -> file.lastModified() },
@@ -127,11 +146,11 @@ ext {
 
 				// Closure that returns the program version a trace corresponds to. Return null to ignore trace. Defaults to a version assembly. 
 				version: { file ->
-					assert tga.trace.store.versionAssembly != null
+					assert tga.trace.upload.versionAssembly != null
 					
-					def assemblyKey = tga.trace.store.versionAssembly
-					if (!(tga.trace.store.versionAssembly instanceof java.util.regex.Pattern)) {
-						assemblyKey = java.util.regex.Pattern.quote(tga.trace.store.versionAssembly)
+					def assemblyKey = tga.trace.upload.versionAssembly
+					if (!(tga.trace.upload.versionAssembly instanceof java.util.regex.Pattern)) {
+						assemblyKey = java.util.regex.Pattern.quote(tga.trace.upload.versionAssembly)
 					}
 										
 					assemblyKey = "^Assembly=$assemblyKey:\\d+ Version:.*"
@@ -140,10 +159,8 @@ ext {
 					if (assemblyLine == null) {
 						return null
 					}
-					assemblyLine.split(" ").find{it.startsWith(tga.trace.store.versionAttribute+":")}.split(":")[1]
+					assemblyLine.split(" ").find{it.startsWith(tga.trace.upload.versionAttribute+":")}.split(":")[1]
 				},
-
- 				message: { traceFile, version -> tga.trace.store.partition(traceFile) + " (Version: $version Trace: ${traceFile.name})" },
 
 				partition: { traceFile -> "Manual Test" }
 			],
@@ -154,7 +171,7 @@ ext {
 	]
 }
 
-///////  Trace Handling
+///////  PDB Handling
 
 task collectPdb {
 	doLast {
@@ -212,28 +229,30 @@ task uploadPdb(dependsOn: collectPdb) {
 		
 		def dirs = [:]
 		file(tga.pdb.store.dir).eachDir { pdbDir ->
-			def version = tga.pdb.store.version(pdbDir)
+			def version = tga.pdb.upload.version(pdbDir)
 			if (publishedVersions.contains(version)) {
 				return
 			}
 		
-			def timestamp = tga.pdb.timestamp(pdbDir)
+			def timestamp = tga.pdb.upload.timestamp(pdbDir)
 			dirs.put(timestamp, [version, pdbDir])
 		}
 
 		dirs.keySet().sort().each { timestamp ->
 		 	def (version, pdbDir) = dirs[timestamp]
+			def project = tga.pdb.upload.project(pdbDir)
 					
 			println "Uploading PDBs to $teamscale.project"
 			println "  ... for timestamp $timestamp"
 			println "  ... for version $version"
+			println "  ... to project $project"
 			if (teamscale.dryRun) {
 				println "  ... in DRY-RUN mode"
 			}
 			
 			def http = teamscale.httpClient(teamscale)
 			def pdbs = fileTreeFiltered(pdbDir, tga.pdb.store)
-			pdbs.collate(tga.pdb.uploadCollate).each { pdbSlice ->
+			pdbs.collate(tga.pdb.upload.collate).each { pdbSlice ->
 				println "  -> Uploading: " + pdbSlice
 				
 				if (teamscale.dryRun) {
@@ -241,7 +260,7 @@ task uploadPdb(dependsOn: collectPdb) {
 				}
 			
 				println http.post(String) {
-					request.uri.path = "/p/${teamscale.project}/dotnet-debug-info-upload"
+					request.uri.path = "/p/$project/dotnet-debug-info-upload"
 					request.contentType = 'multipart/form-data'
 					request.uri.query = [
 						t: timestamp,
@@ -256,7 +275,7 @@ task uploadPdb(dependsOn: collectPdb) {
 				}
 			}
 			
-			if (teamscale.dryRun) {
+			if (!teamscale.dryRun) {
 				published.append "${version}\r\n"
 			}
 		}
@@ -289,68 +308,79 @@ task uploadTrace(dependsOn: collectTraces) {
 		def http = teamscale.httpClient(teamscale)
 		println "Uploading Traces to project $teamscale.project"
 
-		def sortedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.sort{ it.lastModified() }
-		
-		// grup traces by partition, version, span (e.g. time)
+	
+		// grup traces by partition, version, bucket (e.g. time)
 		def groupedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.groupBy({[
-			version: tga.trace.store.version(it),
-			partition: tga.trace.store.partition(it),
-			span: tga.trace.store.span(it)
+			version: tga.trace.upload.version(it),
+			partition: tga.trace.upload.partition(it),
+			bucket: tga.trace.upload.bucket(it)
 		]})
 
-/*		
-		tracesByVersion.each { version, tracesForVersion ->
-			def tracesByTime = tracesForVersion.groupBy{ ((it.lastModified() as long) / 1000 / 60 / 60) as long }
-			tracesByTime.each { time, tracesForTime ->
-			
-				def sortedTraces = tracesForTime.sort{ it.lastModified() }
-			
-				def timestamp = tga.trace.store.timestamp(tracesForTime.last())
-				
-				println "  -> $tracesForTime.size Traces: " + sortedTraces.coll
-	*/	
-		
-		sortedTraces.each { traceFile ->
-			def timestamp = tga.trace.store.timestamp(traceFile)
-			def version = tga.trace.store.version(traceFile)
-			
-			println "  -> $traceFile.name"
-			println "     ... for timestamp $timestamp"
-			println "     ... for version $version"
-			if (teamscale.dryRun) {
-				println "     ... in DRY-RUN mode"
-				return
-			}
-			
-			if (version == null) {
-				version = "_unknown"
-				println "     -> Skipped due to missing version"
-			} else {
-				try {
-					println "     -> " + http.post(String) {
-					    request.uri.path = "/p/${teamscale.project}/dotnet-ephemeral-trace-upload"
-					    request.contentType = 'multipart/form-data'
-					    request.uri.query = [
-						    t: timestamp,
-						    version: version,
-						    adjusttimestamp: true,
-						    message: tga.trace.store.message(traceFile, version),
-						    partition: tga.trace.store.partition(traceFile)
-					    ]
-					    request.body = groovyx.net.http.MultipartContent.multipart {
-						    part 'report', traceFile.name, 'text/plain', traceFile
-					    }
-					    request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
-				   	}
-				} catch(e) {
-					println "     -> Skipped ($e)"
-					return
+		groupedTraces.each { key, tracesPerGroup ->
+			def collate = tga.trace.upload.collate
+			if (collate == null) {
+				if (tga.trace.upload.bucket == null) {
+					collate = 1
+				} else {
+					collate = 200
 				}
 			}
 			
-			def toDir = "$tga.trace.archive.dir/$version/" + stripPathPrefix(traceFile.parent, tga.trace.store.dir)
-			ant.move(file: traceFile, todir: toDir, preservelastmodified: true)
+			tracesPerGroup.sort{ it.lastModified() }.collate(tga.trace.upload.collate).each { traces ->
+				def timestamp = tga.trace.upload.timestamp(traces.last())
+				def version = key.version
+				def partition = key.partition
+				def project = teamscale.project
+				def message = tga.trace.upload.message(key, traces)
+				
+				if (version != null) {
+					project = tga.trace.upload.project(key, traces)
+				}
+				
+				println "  -> $traces.size Traces: "
+				println "     .... $message"
+				println "     ... for timestamp $timestamp"
+				println "     ... for bucket $key.bucket"
+				println "     ... to project $project"
+
+				if (teamscale.dryRun) {
+					println "     ... in DRY-RUN mode"
+					return
+				}
+				
+				if (version == null) {
+					version = "_unknown"
+					println "     -> Skipped due to missing version"
+				} else {
+					try {
+						println "     -> " + http.post(String) {
+							request.uri.path = "/p/$project/dotnet-ephemeral-trace-upload"
+							request.contentType = 'multipart/form-data'
+							request.uri.query = [
+								t: timestamp,
+								version: version,
+								adjusttimestamp: true,
+								message: message,
+								partition: partition
+							]
+							request.body = groovyx.net.http.MultipartContent.multipart {
+								traces.each { trace ->
+									part 'report', trace.name, 'text/plain', trace
+								}
+							}
+							request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
+						}
+					} catch(e) {
+						println "     -> Skipped ($e)"
+						return
+					}
+				}
+				
+				traces.each { trace ->
+					def toDir = "$tga.trace.archive.dir/$version/" + stripPathPrefix(trace.parent, tga.trace.store.dir)
+					ant.move(file: trace, todir: toDir, preservelastmodified: true)
+				}
+			}
 		}
-	
 	}
 }

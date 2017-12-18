@@ -41,14 +41,16 @@ ext {
 			excludes: [],
 			
 			// Optional further filtering.
-			filter: { file -> true },
-
+			filter: { file -> true }
+		],
+		
+		upload: [
 			format: { format -> "" },
 			
 			// A closure that calculates the timestamp of when the trace was created (default: modification date).
 			timestamp: { file -> file.lastModified() },
 
-			message: { reportFile -> report.store.partition(reportFile) + ": ${reportFile.name}" },
+			message: { reportFile -> report.upload.partition(reportFile) + ": ${reportFile.name}" },
 
 			partition: { reportFile -> "External Upload" }
 		],
@@ -85,7 +87,7 @@ task uploadReport(dependsOn: collectReport) {
 		def sortedReports = fileTreeFiltered(report.store.dir, report.store).files.sort{ it.lastModified() }
 		println "Uploading report to project $teamscale.project"
 		sortedReports.each { reportFile ->
-			def timestamp = report.store.timestamp(reportFile)
+			def timestamp = report.upload.timestamp(reportFile)
 			
 			println "  -> $reportFile.name"
 			println "     ... for timestamp $timestamp"
@@ -100,10 +102,10 @@ task uploadReport(dependsOn: collectReport) {
 				    request.contentType = 'multipart/form-data'
 				    request.uri.query = [
 					    t: timestamp,
-					    format: report.store.format(reportFile),
+					    format: report.upload.format(reportFile),
 					    adjusttimestamp: true,
-					    message: report.store.message(reportFile),
-					    partition: report.store.partition(reportFile)
+					    message: report.upload.message(reportFile),
+					    partition: report.upload.partition(reportFile)
 				    ]
 				    request.body = groovyx.net.http.MultipartContent.multipart {
 					    part 'report', reportFile.name, 'text/plain', reportFile
