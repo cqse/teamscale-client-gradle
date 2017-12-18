@@ -283,8 +283,29 @@ task uploadTrace(dependsOn: collectTraces) {
 		assert file(tga.trace.store.dir).exists()
 		
 		def http = teamscale.httpClient(teamscale)
-		def sortedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.sort{ it.lastModified() }
 		println "Uploading Traces to project $teamscale.project"
+
+		def sortedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.sort{ it.lastModified() }
+		
+		// grup traces by partition, version, span (e.g. time)
+		def groupedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.groupBy({[
+			version: tga.trace.store.version(it),
+			partition: tga.trace.store.partition(it),
+			span: tga.trace.store.span(it)
+		]}
+
+/*		
+		tracesByVersion.each { version, tracesForVersion ->
+			def tracesByTime = tracesForVersion.groupBy{ ((it.lastModified() as long) / 1000 / 60 / 60) as long }
+			tracesByTime.each { time, tracesForTime ->
+			
+				def sortedTraces = tracesForTime.sort{ it.lastModified() }
+			
+				def timestamp = tga.trace.store.timestamp(tracesForTime.last())
+				
+				println "  -> $tracesForTime.size Traces: " + sortedTraces.coll
+	*/	
+		
 		sortedTraces.each { traceFile ->
 			def timestamp = tga.trace.store.timestamp(traceFile)
 			def version = tga.trace.store.version(traceFile)

@@ -46,5 +46,5 @@ ext {
 	report.inbox.dir = "$dataDir/share/coverage"
 	report.store.dir = "$dataDir/tga/coverage/store"
 	report.archive.dir = "$dataDir/tga/coverage/archive"
-	report.store.partition = { report -> repo)
+	report.store.partition = { report -> "VS Coverage" }
 }
