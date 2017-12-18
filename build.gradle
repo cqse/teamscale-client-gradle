@@ -20,7 +20,7 @@ ext {
 	// The PDB file that is used to calculate the timestamp the PDB correlate to the code (approximation) 
 	tga.pdb.timestampFile = "MyAssembly.pdb"
 	
-	// The directory where build results are stored
+	// The directory where build results are stored. This can also be an array of multiple directories.
 	tga.pdb.inbox.dir = /\\file-server\builds\MyBuild/
 
 	// E.g. extract version from build directory by stripping a prefix 	

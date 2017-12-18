@@ -65,4 +65,13 @@ ext {
 		
 		return path
 	}
+	
+	/** Wraps an object as and array unless it is already iterable (having an each method). */
+	wrapAsArray = { objectOrArray ->
+		if (!objectOrArray.metaClass.respondsTo(objectOrArray, "each")) {
+			objectOrArray = [objectOrArray]
+		}
+		
+		return objectOrArray
+	}
 }

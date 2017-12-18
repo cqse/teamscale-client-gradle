@@ -16,7 +16,7 @@ ext {
 		pdb: [
 			// The PDB inbox, usually the build drop location.
 			inbox: [
-				// A directory that is scanned for (new) subdirectories which correlate to new builds.
+				// A directory (or array of directories) that is scanned for (new) subdirectories which correlate to new builds.
 				// May be null in order to disable inbox and work on manual created store.
 				dir: null,
 
@@ -163,37 +163,41 @@ task collectPdb {
 			return;
 		}
 		
-		assert file(tga.pdb.inbox.dir).exists()
+		tga.pdb.inbox.dir = wrapAsArray(tga.pdb.inbox.dir)
+		
+		tga.pdb.inbox.dir.each{ assert file(it).exists() }
 		
 		def stored = file("${tga.pdb.store.dir}/stored.txt")
 		def storedDirs = (stored.exists() ? stored.readLines() : []) as Set
 		
-		file(tga.pdb.inbox.dir).eachDir { inboxDir ->
-			if (storedDirs.contains(inboxDir.name)) {
-				return
-			}
-			
-			println "Storing PDBs from $inboxDir.name"
-			
-			if (!tga.pdb.inbox.require(inboxDir)) {
-				println "  -> Skipping, due to missing requirement"
-				return
-			}
-			
-			def version = tga.pdb.inbox.version(inboxDir)
-			println "  ... for version $version"
-			
-			def store = "$tga.pdb.store.dir/$version"
-
-			fileTreeFiltered(inboxDir, tga.pdb.inbox).files.each { file ->
-				def toDir = store
-				if (!tga.pdb.inbox.copyFlat) {
-					toDir += "/" + stripPathPrefix(file.parent, inboxDir)
+		tga.pdb.inbox.dir.each { inboxDir ->
+			file(inboxDir).eachDir { buildDir ->
+				if (storedDirs.contains(buildDir.name)) {
+					return
 				}
-				ant.copy(file: file, toDir: toDir, preservelastmodified: true)
+				
+				println "Storing PDBs from $buildDir.name"
+				
+				if (!tga.pdb.inbox.require(buildDir)) {
+					println "  -> Skipping, due to missing requirement"
+					return
+				}
+				
+				def version = tga.pdb.inbox.version(buildDir)
+				println "  ... for version $version"
+				
+				def store = "$tga.pdb.store.dir/$version"
+
+				fileTreeFiltered(buildDir, tga.pdb.inbox).files.each { file ->
+					def toDir = store
+					if (!tga.pdb.inbox.copyFlat) {
+						toDir += "/" + stripPathPrefix(file.parent, buildDir)
+					}
+					ant.copy(file: file, toDir: toDir, preservelastmodified: true)
+				}
+				
+				stored.append "$buildDir.name\r\n"
 			}
-			
-			stored.append "$inboxDir.name\r\n"
 		}
 	}
 }
@@ -292,7 +296,7 @@ task uploadTrace(dependsOn: collectTraces) {
 			version: tga.trace.store.version(it),
 			partition: tga.trace.store.partition(it),
 			span: tga.trace.store.span(it)
-		]}
+		]})
 
 /*		
 		tracesByVersion.each { version, tracesForVersion ->
