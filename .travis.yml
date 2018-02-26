@@ -1,0 +1,10 @@
+
+language: java
+variables:
+  - GRADLE_OPTS="-Dorg.gradle.daemon=false"
+install:
+  - ./gradlew -b gradle/bootstrap.gradle bootstrap
+script:
+- git describe --tags > VERSION.txt
+- rm -rf .gradle gradle/.gradle .git
+- zip -r teamscale-client-gradle.zip .
