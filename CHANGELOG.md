@@ -4,8 +4,8 @@ CHANGELOG
 Gives an overview of changes to the configuration format.
 Especially note that *Renamed Properties* are incompatible changes that have to be propagated to existing configuration files on update.
 
-2017-12-18
-----------
+v17.12.0
+--------
 
 ### Renamed Properties
 
