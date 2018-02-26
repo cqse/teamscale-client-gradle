@@ -30,3 +30,15 @@
 ## Use an arbitrary version assembly matching a regular expression
 
 	tga.trace.store.versionAssembly = ~/Foo\.Bar\..*/
+
+## Process large files / increase Java VM more memory
+
+For uploading large files it may be necessary to increase the JVM memory. Call the following before executing `gradlew`.
+
+Windows:
+
+	set JVM_OPTS=-Xmx6G
+
+Linux:
+
+	export JVM_OPTS=-Xmx6G

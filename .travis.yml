@@ -5,7 +5,7 @@ install:
   - ./gradlew -b gradle/bootstrap.gradle bootstrap
 script:
 - git describe --tags > VERSION.txt
-- rm -rf .gradle gradle/.gradle .git
+- rm -rf .gradle gradle/.gradle .git* .travis.yml
 - zip -r teamscale-client-gradle.zip .
 deploy:
   provider: releases
