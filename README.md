@@ -1,4 +1,5 @@
 Teamscale Gradle
+[![Build Status](https://travis-ci.org/cqse/teamscale-client-gradle.svg?branch=master)](https://travis-ci.org/cqse/teamscale-client-gradle)
 ================
 
 Gradle scripts for uploading files to Teamscale via the Web API.
