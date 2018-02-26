@@ -1,4 +1,3 @@
-
 language: java
 variables:
   - GRADLE_OPTS="-Dorg.gradle.daemon=false"
@@ -8,3 +7,12 @@ script:
 - git describe --tags > VERSION.txt
 - rm -rf .gradle gradle/.gradle .git
 - zip -r teamscale-client-gradle.zip .
+deploy:
+  provider: releases
+  api_key:
+    secure: XK2UOTZ4Z7sZgYq4DWcM3uR0CCxkMf7ZScaCLAHDSVZTC3YlHK6vpJ+X3qBgmGSs8nmiySGGHTGxiw1tf8D24DZ0ulPkWl3kmpSjlLIJ1GBCrBtefiysCgSFGnVq8evhZNAXu5bDACjh2D6vW4JaWGIZxLsWX76d9KYz/eFqM4NZQduW/+XMT9i+iK5jiV9U/txtQNOpqaJ01HJBMqf24GstGJ6/NqRxTt11D1hwo+LuMy4rU/ZtGZpt1xdqCoI75DOGWLPmpKmYLSbNfxFlEkQlPdgPl6KKzpOjeK7ren9NPAqz18TBS22Ui4O1CIUp/ZJI5cDdMJRuhpsckd7wPs+iNocGJHifXxcWjai9tIo2bygJ3awqRer26VUxwjWmps65fOdoFqxChe+kuIJ+Mcl37wurQhFYwH67ajRNyZZqMX0hNGZIoz4cEwj7uwgAtCc3ESb3cYv/PPQ9OmuJ5eA/iLHA3WSBt5e//JNBdAJz9xuu7o2CAl4S74GPicoSY6HpQnaZ0PNWKBdHh7vURfY/Sw1gY4WFw+e+32rhj1ynzIy0tW0cUD4ZAXWRuh54nIH/ImPOn4kXkkFU/kpES7vbToD1C5X6Dj0Ix0S0Zb0adKzugSF+NvmrE2Jj3UACPKvST4AXKFmTe7r8nrnP51IKdDQqk81i8EM4EFaut98=
+  skip_cleanup: true
+  file: teamscale-client-gradle.zip
+  on:
+    repo: cqse/teamscale-client-gradle
+    tags: true
