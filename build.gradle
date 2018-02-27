@@ -1,6 +1,6 @@
-apply from: "$rootDir/gradle/tga.gradle"
-apply from: "$rootDir/gradle/report.gradle"
-
+subprojects {
+	apply from: "$rootDir/gradle/tga.gradle"
+	apply from: "$rootDir/gradle/report.gradle
 ext {
 	dataDir = "C:/Teamscale"
 

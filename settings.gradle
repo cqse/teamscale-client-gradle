@@ -1,1 +1,15 @@
 rootProject.name = 'scripts'
+
+def config = file("${rootProject.projectDir}/config")
+if (config.exists()) {
+	config.eachFile { file ->
+		if (!file.name.startsWith("_"))
+		{
+			def name = file.name - ".gradle"
+			include name
+			def proj = project(":$name")
+			proj.projectDir = config
+			proj.buildFileName = file.name
+		}
+	}
+}
