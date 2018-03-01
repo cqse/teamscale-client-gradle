@@ -1,0 +1,9 @@
+allprojects {
+
+	task test {
+		doLast {
+			println projectDir
+		}
+	}
+
+}

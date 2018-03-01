@@ -6,6 +6,7 @@ install:
 script:
 - git describe --tags > VERSION.txt
 - rm -rf .gradle gradle/.gradle .git* .travis.yml
+- mkdir projects
 - zip -r teamscale-client-gradle.zip .
 deploy:
   provider: releases
