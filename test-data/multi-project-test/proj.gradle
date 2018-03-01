@@ -1,0 +1,5 @@
+test {
+	doLast {
+		println "xxx"
+	}
+}
