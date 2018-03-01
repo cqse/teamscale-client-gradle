@@ -2,12 +2,12 @@ language: java
 variables:
   - GRADLE_OPTS="-Dorg.gradle.daemon=false"
 install:
-  - ./gradlew -b gradle/bootstrap.gradle bootstrap
+  - ./gradlew -b gradle/bootstrap.gradle -PskipProjectDiscovery bootstrap
 script:
-- git describe --tags > VERSION.txt
-- rm -rf .gradle gradle/.gradle .git* .travis.yml
-- mkdir projects
-- zip -r teamscale-client-gradle.zip .
+  - git describe --tags > VERSION.txt
+  - rm -rf .gradle gradle/.gradle .git* .travis.yml
+  - mkdir projects
+  - zip -r teamscale-client-gradle.zip .
 deploy:
   provider: releases
   api_key:

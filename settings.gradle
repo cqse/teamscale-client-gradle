@@ -14,7 +14,7 @@ if (file(localSettings.fileName).exists())
 	apply from: localSettings.fileName
 }
 
-if (localSettings.rootDirName == null) {
+if (localSettings.rootDirName == null || hasProperty("skipProjectDiscovery")) {
 	return
 }
 
