@@ -1,5 +1,7 @@
+// Alternative to the gradle.properties file, configure with settings.local.file
+
 ext {
 	// The name of the folder (relative to this file) that contains gradle project file.
-	// If null, the automatic project discovery is disabled
-	localSettings.rootDirName = "projects"
+	// If null, the automatic project discovery is disabled.
+	projectsDirName = "projects"
 }

@@ -18,7 +18,7 @@ Configuration
 
 ### Project directory
 
-The default project directory is `projects`. This can be customized by specifying `localSettings.rootDirName` in `settings.local.gradle` (copy this file from `samples/custom-projects-dir` to the root directory).
+The default project directory is `projects`. This can be customized by specifying `projectsDirName` in `gradle.properties` (or `settings.local.gradle`, copy one of the files from `samples/custom-projects-dir` to the root directory).
 
 The project directory is searched for gradle files to build a gradle hierarchical project structure with default Gradle config inheritance and injection. The rules are as follows:
 
@@ -28,7 +28,7 @@ The project directory is searched for gradle files to build a gradle hierarchica
 * Each Gradle file (ending with `.gradle`) will also create a subproject. This is a neat shorthand to avoid useless folder hierarchies.
 * Files and folders starting with an underscore (`_`) are ignored from automatic discovery/creation (e.g. to store common scripts/configuration)
 
-You can disable automatic project discovery by setting `localSettings.rootDirName` to `null`.
+You can disable automatic project discovery by setting `projectsDirName to an empty string.
 
 
 Considerations
