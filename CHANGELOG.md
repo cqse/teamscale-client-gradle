@@ -11,7 +11,7 @@ Especially note that *Renamed Properties* are incompatible changes that have to 
 * Improved support for Gradle multi-project builds with config inheritance & injection
 * Project configuration in separate directory that can be versioned (default `projects`) and makes updating the script pack easier
 
-*Update advise for legacy projects*: Move `build.gradle` to `projects` folder or set `localSettings.rootDirName` to `null` in `settings.local.gradle`.
+*Update advise for legacy projects*: Move `build.gradle` to `projects` folder or set `projectsDirName` to empty string in `gradle.properties`.
 
 ## v17.12.0
 

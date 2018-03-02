@@ -2,24 +2,20 @@
 
 rootProject.name = 'scripts'
 
-ext {
-	localSettings = [
-		fileName: "settings.local.gradle",
-		rootDirName: "projects",
-	]
-}
+ext.localSettingsName = hasProperty("localSettingsName") ? localSettingsName : "settings.local.gradle"
+ext.projectsDirName = hasProperty("projectsDirName") ? projectsDirName : "projects"
 
-if (file(localSettings.fileName).exists())
+if (file(localSettingsName).exists())
 {
-	apply from: localSettings.fileName
+	apply from: localSettingsName
 }
 
-if (localSettings.rootDirName == null || hasProperty("skipProjectDiscovery")) {
+if (projectsDirName == null || projectsDirName == "") {
 	return
 }
 
 def projectFileName = "build.gradle"
-def rootBuildFileName = "$localSettings.rootDirName/$projectFileName"
+def rootBuildFileName = "$projectsDirName/$projectFileName"
 assert file(rootBuildFileName).exists()
 rootProject.buildFileName = rootBuildFileName
 
@@ -48,4 +44,4 @@ projectDiscovery = { projectName, dir ->
 	}
 }
 
-projectDiscovery("", file(localSettings.rootDirName))
+projectDiscovery("", file(projectsDirName))

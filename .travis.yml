@@ -2,7 +2,7 @@ language: java
 variables:
   - GRADLE_OPTS="-Dorg.gradle.daemon=false"
 install:
-  - ./gradlew -b gradle/bootstrap.gradle -PskipProjectDiscovery bootstrap
+  - ./gradlew -b gradle/bootstrap.gradle -PprojectsDirName='' bootstrap
 script:
   - git describe --tags > VERSION.txt
   - rm -rf .gradle gradle/.gradle .git* .travis.yml

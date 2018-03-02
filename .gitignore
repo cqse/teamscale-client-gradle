@@ -4,3 +4,6 @@
 /wrapper/
 /projects/
 /settings.local.gradle
+/gradle.properties
+/projects/*
+!/projects/.gitkeep
