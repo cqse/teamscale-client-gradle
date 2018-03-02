@@ -326,7 +326,7 @@ task uploadTrace(dependsOn: collectTraces) {
 				}
 			}
 			
-			tracesPerGroup.sort{ it.lastModified() }.collate(tga.trace.upload.collate).each { traces ->
+			tracesPerGroup.sort{ it.lastModified() }.collate(collate).each { traces ->
 				def timestamp = tga.trace.upload.timestamp(traces.last())
 				def version = key.version
 				def partition = key.partition
