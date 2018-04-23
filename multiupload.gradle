@@ -12,6 +12,9 @@ ext.failureDir = "./archive"
 // directory for temporary unzipping of data
 ext.workDir = "./tmp"
 
+// type of reports that are being uploaded
+ext.reportFormat = 'JACOCO'
+
 // Teamscale configuration
 ext.teamscale = [
     // upload is only performed if this is false
@@ -54,6 +57,16 @@ task unzipReport(type: Copy) {
     into workDir
 }
 
+task parsePartition {
+    dependsOn unzipReport
+
+    doLast {
+        def contents = file("$workDir/versions.txt").text
+        // todo parse
+        parsePartition.ext.partition = "p"
+    }
+}
+
 // TODO must return a hash with TS project as key and timestamp as value
 task parseVersionsTxt {
     dependsOn unzipReport
@@ -68,11 +81,13 @@ task parseVersionsTxt {
 }
 
 task uploadReport() {
-    dependsOn unzipReport, parseVersionsTxt
+    dependsOn unzipReport, parseVersionsTxt, parsePartition
 
     doLast {
         def reportFile = file("$workDir/coverage.xml")
         def versionMapping = parseVersionsTxt.ext.versionMapping
+        def partition = parsePartition.ext.partition
+        def message = "Coverage from $partition"
 
         uploadReport.ext.success = true
         println "  -> Uploading $report"
@@ -87,7 +102,7 @@ task uploadReport() {
             }
 
             try {
-                println "     -> " + uploadExternalReport(reportFile, project, timestamp)
+                println "     -> " + uploadExternalReport(reportFile, project, timestamp, message, partition)
             } catch(e) {
                 println "     -> Skipped ($e)"
                 uploadReport.ext.success = false
@@ -130,16 +145,16 @@ def createHttpClient() {
     }
 }
 
-def uploadExternalReport(reportFile, project, timestamp) {
+def uploadExternalReport(reportFile, project, timestamp, message, partition) {
     return createHttpClient().post(String) {
         request.uri.path = "/p/$project/external-report"
         request.contentType = 'multipart/form-data'
         request.uri.query = [
             t: timestamp,
-            format: report.upload.format(reportFile),
+            format: reportFormat,
             adjusttimestamp: true,
-            message: report.upload.message(reportFile),
-            partition: report.upload.partition(reportFile)
+            message: message,
+            partition: partition
         ]
         request.body = groovyx.net.http.MultipartContent.multipart {
             part 'report', reportFile.name, 'text/plain', reportFile
