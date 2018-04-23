@@ -1,0 +1,150 @@
+// Main task: process
+// Pass parameter -Preport=PATH_TO_JACOCO_REPORT_ZIP
+// Uploads to one or more TS projects
+// Assumes that the zip file contains: coverage.xml, versions.txt
+
+// where to archive successfully uploaded coverage zips
+ext.archiveDir = "./archive"
+
+// where to archive failed uploads
+ext.failureDir = "./archive"
+
+// directory for temporary unzipping of data
+ext.workDir = "./tmp"
+
+// Teamscale configuration
+ext.teamscale = [
+    // upload is only performed if this is false
+    dryRun: true,
+
+    url: "",
+    username: "",
+    accesskey: "",
+
+    // defaults should be fine
+    timeout: [
+        connect: 60,
+        read: 60,
+        write: 60,
+    ],
+]
+
+if (!project.hasProperty("report")) {
+    throw new RuntimeException("You must pass -Preport=PATH_TO_JACOCO_REPORT_ZIP")
+}
+
+buildscript {
+	dependencies {
+		classpath fileTree("$rootDir/gradle/lib").include("**.jar")
+	}
+}
+
+task cleanWorkingDirectory(type: Delete) {
+    delete workDir
+
+    doLast {
+        file(workDir).mkdirs()
+    }
+}
+
+task unzipReport(type: Copy) {
+    dependsOn cleanWorkingDirectory
+
+    from(zipTree(report))
+    into workDir
+}
+
+// TODO must return a hash with TS project as key and timestamp as value
+task parseVersionsTxt {
+    dependsOn unzipReport
+
+    doLast {
+        def contents = file("$workDir/versions.txt").text
+        // todo parse
+        parseVersionsTxt.ext.versionMapping = [
+            "project": 123L,
+        ]
+    }
+}
+
+task uploadReport() {
+    dependsOn unzipReport, parseVersionsTxt
+
+    doLast {
+        def reportFile = file("$workDir/coverage.xml")
+        def versionMapping = parseVersionsTxt.ext.versionMapping
+
+        uploadReport.ext.success = true
+        println "  -> Uploading $report"
+
+        versionMapping.each { project, timestamp ->
+            println "  -> to project $project"
+            println "     ... for timestamp $timestamp"
+
+            if (teamscale.dryRun) {
+                println "     ... in DRY-RUN mode"
+                return
+            }
+
+            try {
+                println "     -> " + uploadExternalReport(reportFile, project, timestamp)
+            } catch(e) {
+                println "     -> Skipped ($e)"
+                uploadReport.ext.success = false
+            }
+        }
+    }
+}
+
+task archiveReport {
+    dependsOn uploadReport
+
+    doLast {
+        def destination = archiveDir
+        if (!uploadReport.ext.success) {
+            destination = failureDir
+        }
+
+        println "  -> Archiving $report to $destination"
+        copy {
+            from report
+            into destination
+        }
+    }
+}
+
+task process {
+    dependsOn uploadReport, archiveReport
+}
+
+def createHttpClient() {
+    return groovyx.net.http.OkHttpBuilder.configure {
+        request.uri = teamscale.url
+        request.headers['Authorization'] = "Basic " + "${teamscale.username}:${teamscale.accesskey}".bytes.encodeBase64().toString()
+
+        clientConfig.clientCustomizer { okhttp3.OkHttpClient.Builder builder ->
+            builder.connectTimeout(teamscale.timeout.connect, java.util.concurrent.TimeUnit.SECONDS);
+            builder.writeTimeout(teamscale.timeout.write, java.util.concurrent.TimeUnit.SECONDS);
+            builder.readTimeout(teamscale.timeout.read, java.util.concurrent.TimeUnit.SECONDS);
+        }
+    }
+}
+
+def uploadExternalReport(reportFile, project, timestamp) {
+    return createHttpClient().post(String) {
+        request.uri.path = "/p/$project/external-report"
+        request.contentType = 'multipart/form-data'
+        request.uri.query = [
+            t: timestamp,
+            format: report.upload.format(reportFile),
+            adjusttimestamp: true,
+            message: report.upload.message(reportFile),
+            partition: report.upload.partition(reportFile)
+        ]
+        request.body = groovyx.net.http.MultipartContent.multipart {
+            part 'report', reportFile.name, 'text/plain', reportFile
+        }
+        request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
+    }
+}
+
