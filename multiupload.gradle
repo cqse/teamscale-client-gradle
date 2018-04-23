@@ -9,9 +9,6 @@ ext.archiveDir = "./archive"
 // where to archive failed uploads
 ext.failureDir = "./archive"
 
-// directory for temporary unzipping of data
-ext.workDir = "./tmp"
-
 // type of reports that are being uploaded
 ext.reportFormat = 'JACOCO'
 
@@ -36,32 +33,38 @@ if (!project.hasProperty("report")) {
     throw new RuntimeException("You must pass -Preport=PATH_TO_JACOCO_REPORT_ZIP")
 }
 
+// load runtime dependencies
 buildscript {
 	dependencies {
 		classpath fileTree("$rootDir/gradle/lib").include("**.jar")
 	}
 }
 
-task cleanWorkingDirectory(type: Delete) {
-    delete workDir
-
+task createWorkingDirectory {
     doLast {
-        file(workDir).mkdirs()
+        createWorkingDirectory.ext.workDir = File.createTempDir()
+        createWorkingDirectory.ext.workDir.deleteOnExit()
+    }
+}
+
+task cleanUpWorkingDirectory {
+    doLast {
+        delete createWorkingDirectory.ext.workDir
     }
 }
 
 task unzipReport(type: Copy) {
-    dependsOn cleanWorkingDirectory
+    dependsOn createWorkingDirectory
 
     from(zipTree(report))
-    into workDir
+    into createWorkingDirectory.ext.workDir
 }
 
 task parsePartition {
     dependsOn unzipReport
 
     doLast {
-        def contents = file("$workDir/versions.txt").text
+        def contents = file("${createWorkingDirectory.ext.workDir}/versions.txt").text
         // todo parse
         parsePartition.ext.partition = "p"
     }
@@ -72,7 +75,7 @@ task parseVersionsTxt {
     dependsOn unzipReport
 
     doLast {
-        def contents = file("$workDir/versions.txt").text
+        def contents = file("${createWorkingDirectory.ext.workDir}/versions.txt").text
         // todo parse
         parseVersionsTxt.ext.versionMapping = [
             "project": 123L,
@@ -84,7 +87,7 @@ task uploadReport() {
     dependsOn unzipReport, parseVersionsTxt, parsePartition
 
     doLast {
-        def reportFile = file("$workDir/coverage.xml")
+        def reportFile = file("${createWorkingDirectory.ext.workDir}/coverage.xml")
         def versionMapping = parseVersionsTxt.ext.versionMapping
         def partition = parsePartition.ext.partition
         def message = "Coverage from $partition"
@@ -130,6 +133,7 @@ task archiveReport {
 
 task process {
     dependsOn uploadReport, archiveReport
+    finalizedBy cleanUpWorkingDirectory
 }
 
 def createHttpClient() {
