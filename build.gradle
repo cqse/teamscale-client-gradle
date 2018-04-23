@@ -1,12 +1,13 @@
 // Main task: process
 // Pass parameter -Preport=PATH_TO_JACOCO_REPORT_ZIP
 // Uploads to one or more TS projects
+// Assumes that the zip file contains: coverage.xml, versions.txt
 
 // where to archive successfully uploaded coverage zips
-ext.archiveDir = ""
+ext.archiveDir = "./archive"
 
 // where to archive failed uploads
-ext.failureDir = ""
+ext.failureDir = "./archive"
 
 // directory for temporary unzipping of data
 ext.workDir = "./tmp"
@@ -32,8 +33,38 @@ if (!project.hasProperty("report")) {
     throw new RuntimeException("You must pass -Preport=PATH_TO_JACOCO_REPORT_ZIP")
 }
 
-task process {
-    dependsOn uploadReport, archiveReport
+buildscript {
+	dependencies {
+		classpath fileTree("$rootDir/gradle/lib").include("**.jar")
+	}
+}
+
+task cleanWorkingDirectory(type: Delete) {
+    delete workDir
+
+    doLast {
+        file(workDir).mkdirs()
+    }
+}
+
+task unzipReport(type: Copy) {
+    dependsOn cleanWorkingDirectory
+
+    from(zipTree(report))
+    into workDir
+}
+
+// TODO must return a hash with TS project as key and timestamp as value
+task parseVersionsTxt {
+    dependsOn unzipReport
+
+    doLast {
+        def contents = file("$workDir/versions.txt").text
+        // todo parse
+        parseVersionsTxt.ext.versionMapping = [
+            "project": 123L,
+        ]
+    }
 }
 
 task uploadReport() {
@@ -82,32 +113,8 @@ task archiveReport {
     }
 }
 
-task unzipReport(type: Copy) {
-    dependsOn cleanWorkingDirectory
-
-    from(zipTree(report))
-    into workDir
-}
-
-// TODO must return a hash with TS project as key and timestamp as value
-task parseVersionsTxt {
-    dependsOn unzipReport
-
-    doLast {
-        def contents = file("$workDir/versions.txt").text
-        // todo parse
-        parseVersionsTxt.ext.versionMapping = [
-            "project": 123L,
-        ]
-    }
-}
-
-task cleanWorkingDirectory(type: Delete) {
-    delete workDir
-
-    doLast {
-        file(workDir).mkdirs()
-    }
+task process {
+    dependsOn uploadReport, archiveReport
 }
 
 def createHttpClient() {
