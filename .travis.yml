@@ -4,8 +4,9 @@ variables:
 install:
   - ./gradlew -b gradle/bootstrap.gradle -PprojectsDirName='' bootstrap
 script:
+  - ./gradlew -p test test
   - git describe --tags > VERSION.txt
-  - rm -rf .gradle gradle/.gradle .git* .travis.yml
+  - rm -rf .gradle gradle/.gradle .git* .travis.yml test
   - mkdir projects
   - zip -r teamscale-client-gradle.zip .
 deploy:

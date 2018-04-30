@@ -28,7 +28,7 @@ The project directory is searched for gradle files to build a gradle hierarchica
 * Each Gradle file (ending with `.gradle`) will also create a subproject. This is a neat shorthand to avoid useless folder hierarchies.
 * Files and folders starting with an underscore (`_`) are ignored from automatic discovery/creation (e.g. to store common scripts/configuration)
 
-You can disable automatic project discovery by setting `projectsDirName to an empty string.
+You can disable automatic project discovery by setting `projectsDirName` to an empty string.
 
 
 Considerations
