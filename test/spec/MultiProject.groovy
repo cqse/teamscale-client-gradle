@@ -13,6 +13,6 @@ class MultiProject extends Specification {
 
         then:
 		result.tasks.collect{ it.path } == [':test', ':proj:test', ':sub:test', ':sub2:test', ':sub2:subsub:test']
-        result.output.contains('Additional out from proj')
+		result.output.contains('Additional out from proj')
     }
 }
