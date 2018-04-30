@@ -1,7 +1,9 @@
+import groovy.json.*
+
 // Main task: process
 // Pass parameter -Preport=PATH_TO_JACOCO_REPORT_ZIP
 // Uploads to one or more TS projects
-// Assumes that the zip file contains: coverage.xml, versions.txt
+// Assumes that the zip file contains: coverage.xml, version.json
 
 // where to archive successfully uploaded coverage zips
 ext.archiveDir = "./archive"
@@ -29,8 +31,16 @@ ext.teamscale = [
     ],
 ]
 
+ext.workingDir = File.createTempDir()
+ext.workingDir.deleteOnExit()
+
+def fail(message) {
+    System.err.println("FAILURE: $message")
+    throw new RuntimeException(message)
+}
+
 if (!project.hasProperty("report")) {
-    throw new RuntimeException("You must pass -Preport=PATH_TO_JACOCO_REPORT_ZIP")
+    fail("You must pass -Preport=PATH_TO_JACOCO_REPORT_ZIP")
 }
 
 // load runtime dependencies
@@ -40,46 +50,43 @@ buildscript {
 	}
 }
 
-task createWorkingDirectory {
-    doLast {
-        createWorkingDirectory.ext.workDir = File.createTempDir()
-        createWorkingDirectory.ext.workDir.deleteOnExit()
-    }
-}
-
 task cleanUpWorkingDirectory {
     doLast {
-        delete createWorkingDirectory.ext.workDir
+        delete project.workingDir
     }
 }
 
 task unzipReport(type: Copy) {
-    dependsOn createWorkingDirectory
-
+    println "Unzipping..."
     from(zipTree(report))
-    into createWorkingDirectory.ext.workDir
+    into project.workingDir
 }
 
 task parsePartition {
     dependsOn unzipReport
 
     doLast {
-        def contents = file("${createWorkingDirectory.ext.workDir}/versions.txt").text
-        // todo parse
-        parsePartition.ext.partition = "p"
+        def contents = file("${project.workingDir}/version.json").text
+        def jsonSlurper = new JsonSlurper()
+        def versionObject = jsonSlurper.parseText(contents)
+        parsePartition.ext.partition = versionObject.zone
+        println "Partition: $parsePartition.ext.partition"
     }
 }
 
-// TODO must return a hash with TS project as key and timestamp as value
 task parseVersionsTxt {
     dependsOn unzipReport
 
     doLast {
-        def contents = file("${createWorkingDirectory.ext.workDir}/versions.txt").text
-        // todo parse
-        parseVersionsTxt.ext.versionMapping = [
-            "project": 123L,
-        ]
+        def contents = file("${project.workingDir}/version.json").text
+        def jsonSlurper = new JsonSlurper()
+        def versionObject = jsonSlurper.parseText(contents)
+        parseVersionsTxt.ext.versionMapping = [:]
+        versionObject.components.each{
+            def projectName = parseProject(it.key)
+            parseVersionsTxt.ext.versionMapping[projectName] = it.value
+        }
+        println "Version Mapping: $parseVersionsTxt.ext.versionMapping"
     }
 }
 
@@ -87,7 +94,7 @@ task uploadReport() {
     dependsOn unzipReport, parseVersionsTxt, parsePartition
 
     doLast {
-        def reportFile = file("${createWorkingDirectory.ext.workDir}/coverage.xml")
+        def reportFile = file("${project.workingDir}/coverage.xml")
         def versionMapping = parseVersionsTxt.ext.versionMapping
         def partition = parsePartition.ext.partition
         def message = "Coverage from $partition"
@@ -128,6 +135,7 @@ task archiveReport {
             from report
             into destination
         }
+        delete report
     }
 }
 
@@ -165,5 +173,14 @@ def uploadExternalReport(reportFile, project, timestamp, message, partition) {
         }
         request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
     }
+}
+
+def parseProject(gitUrl) {
+    // URLs look like this: ssh://somepath/PROJECT.git
+    def projectMatcher = gitUrl =~ /.*\/([^\/\.]*)\.git/
+    if (!projectMatcher) {
+        fail("Unable to parse Git URL: $gitUrl")
+    }
+    return projectMatcher[0][1]
 }
 
