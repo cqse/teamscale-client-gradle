@@ -31,6 +31,7 @@ ext.teamscale = [
     ],
 ]
 
+// creates a temporary directory into which to unpack the zips
 ext.workingDir = File.createTempDir()
 ext.workingDir.deleteOnExit()
 
@@ -139,6 +140,7 @@ task archiveReport {
     }
 }
 
+// main task
 task process {
     dependsOn uploadReport, archiveReport
     finalizedBy cleanUpWorkingDirectory
