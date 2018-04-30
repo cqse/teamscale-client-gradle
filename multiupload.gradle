@@ -83,7 +83,15 @@ task parseVersionsTxt {
         def jsonSlurper = new JsonSlurper()
         def versionObject = jsonSlurper.parseText(contents)
         parseVersionsTxt.ext.versionMapping = [:]
-        versionObject.components.each{
+        versionObject.components.each {
+            if (it.key == "SHA") {
+                // ignore the SHA property, we don't need it
+                // this is still in the files because we added
+                // it during the pilot but we don't actually need it
+                // this check and the SHA property can simply be
+                // removed in the future
+                return
+            }
             def projectName = parseProject(it.key)
             parseVersionsTxt.ext.versionMapping[projectName] = it.value
         }
