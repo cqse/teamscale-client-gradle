@@ -1,0 +1,117 @@
+apply from: "$rootDir/gradle/base-teamscale.gradle"
+
+// TODO find a way to general import buildscript deps...
+buildscript {
+	dependencies {
+		classpath fileTree("$rootDir/gradle/lib").include("**.jar")
+	}
+}
+
+ext {
+	vsts = [
+		// Map of VSTS/TFS URLs to login credentials if NTLM should not be used
+		credentials: [
+			// E.g. Basic AUTH:
+			// 'https://my-account.visualstudio.com': [
+			// 	type: 'basic',
+			// 	username: 'foo',
+			// 	password: 'bar'
+			// ]
+		],
+
+		// Map of VSTS builds to process
+		builds: [
+			// Sample:
+			// 'https://my-account.visualstudio.com': [
+			// 	'MyProject': [
+			// 		'MyBuild': [
+			// 			logs: true
+			// 		]
+			// 	]
+			// ]
+		],
+
+		cacheFile: file("${project.name}_vsts_cache.json"),
+
+		httpClient: { url, credentials ->
+			return groovyx.net.http.OkHttpBuilder.configure {
+				request.uri = url
+				request.headers['Authorization'] = "Basic " + "${credentials.username}:${credentials.password}".bytes.encodeBase64().toString()
+			}
+		}
+	]
+}
+
+def buildDefinitions = [:]
+def cache = [
+	lastProcessedCompletedTime: [:]
+]
+
+task collectBuildDefinitions {
+	doLast {
+		vsts.builds.each { vstsUrl, vstsProjects ->
+			vstsProjects.each { vstsProjectName, vstsBuilds ->
+				def http = vsts.httpClient(vstsUrl, vsts.credentials[vstsUrl])
+				def response = http.get {
+					request.uri.path = "/$vstsProjectName/_apis/build/definitions"
+					request.uri.query = [
+						'api-version': '4.1',
+						'includeLatestBuilds': true
+					]
+				}
+
+				response.value.each { vstsBuildDefinition ->
+					if (!vstsBuilds.containsKey(vstsBuildDefinition.name)) {
+						return;
+					}
+
+					def buildDefinitionKey = [url: vstsUrl, project: vstsProjectName, name: vstsBuildDefinition.name]
+					buildDefinitions[buildDefinitionKey] = [
+						id: vstsBuildDefinition.id,
+						lastCompletedTime: java.time.Instant.parse(vstsBuildDefinition.latestCompletedBuild.finishTime),
+						http: http
+					]
+				}
+			}
+		}
+	}
+}
+
+task collectNewBuilds(dependsOn: collectBuildDefinitions) {
+	doLast {
+		if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
+			cache = new groovy.json.JsonSlurper().parseText(vsts.cacheFile.text)
+		}
+
+		buildDefinitions.each { definition, definitionData ->
+			def cacheKey = "$definition.url/$definition.project/$definition.name"
+			def lastProcessedCompletedTime = cache.lastProcessedCompletedTime[cacheKey]
+			if (!lastProcessedCompletedTime) {
+				lastProcessedCompletedTime = java.time.Instant.EPOCH
+			} else {
+				lastProcessedCompletedTime = java.time.Instant.parse(lastProcessedCompletedTime)
+				if (definitionData.lastCompletedTime <= lastProcessedCompletedTime) {
+					return
+				}
+			}
+
+			def response = definitionData.http.get {
+				request.uri.path = "/$definition.project/_apis/build/builds"
+				request.uri.query = [
+					'api-version': '4.1',
+					'definitions': definitionData.id,
+					'minTime': lastProcessedCompletedTime.plusNanos(1),
+					'status': 'completed',
+					'queryOrder': 'finishTimeAscending',
+				]
+			}
+
+			definitionData.builds = response.value
+
+			// TODO update step by step?
+			cache.lastProcessedCompletedTime[cacheKey] = definitionData.lastCompletedTime.toString()
+		}
+
+		vsts.cacheFile.write(new groovy.json.JsonBuilder(cache).toPrettyString())
+	}
+}
