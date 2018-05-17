@@ -8,3 +8,5 @@
 /test/build
 /projects/*
 !/projects/.gitkeep
+.idea/
+*.swp

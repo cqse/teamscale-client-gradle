@@ -49,14 +49,13 @@ ext {
 				pattern: /(?:[\d\s\.:]*\d+>)?\s*(.*)\(([0-9]+)(?:,[0-9]+)?\).*warning[:\s]*((?:CS|SCS|SEC)\w*):\s?(.+?)\s+(?:\[([^\[]+)\]$)/,
 				convert: { matches ->
 					def match = matches[0]
-					// TODO doesn't replace all \\
 					def path = match[1].replace('\\', '/')
 					def project = match[5].replace('\\', '/').split('/').dropRight(1).join('/') // removes the csproject
 					if (!path.startsWith(project)) {
 						path = "$project/$path"
 					}
 
-					return new Finding(id: match[3], message: match[4], file: match[1], line: match[2])
+					return new Finding(id: match[3], message: match[4], file: path, line: match[2])
 				}
 			]
 		],
@@ -151,7 +150,7 @@ task vstsCollectNewBuilds(dependsOn: vstsCollectBuildDefinitions) {
 
 		// TODO move after build info is uploaded
 		if (vsts.cacheFile) {
-			//vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
+			vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
 		}
 	}
 }
@@ -192,23 +191,37 @@ task vstsParseBuildLogs(dependsOn: vstsCollectNewBuilds) {
 	}
 }
 
-task vstsUpload(dependsOn: vstsParseBuildLogs) {
+task vstsUploadBuildFindings(dependsOn: vstsParseBuildLogs) {
 	doLast {
 		def http = teamscale.httpClient(teamscale)
 		def builds = buildDefinitions.collectMany { _, definitionData -> definitionData.builds }.sort { it.queueTime }
 		builds.each { build ->
+            // Upload findings
 			println "  Uploading ${build.findings.size()} findings to $teamscale.project"
-			println "     -> " + http.post(String) {
-				//request.uri.path = "/p/$project/finding-upload"
+		    println "     -> " + http.put {
+				request.uri.path = "/p/$teamscale.project/add-external-findings"
 				request.contentType = 'application/json'
+                // TODO: Partition and Message
 				request.uri.query = [
-					t: build.queueTime.toEpochMilli(),
-					adjusttimestamp: true,
-					message: "Findings from build XXX",
-					partition: "TODO"
+					//"t": build.queueTime.toEpochMilli(),
+					"message": "test",
+					"partition": "test",
+                    "skip-session": "true"
 				]
-				// TODO use JsonBuilder.Options and JsonOutput.prettyPrint to ignore originalClassName and contentHash fields
-				request.body = new JsonBuilder(build.findings).toPrettyString()
+
+                def fileFindings = build.findings.groupBy({ finding -> finding.file }).collect {
+                    k, v -> ["path" : k, "findings": v.collect {
+                        finding ->
+                        [
+                            "findingTypeId": finding.id,
+                            "message": finding.message,
+                            "startLine": finding.line,
+                            "endLine": finding.line
+                        ]
+                    }]
+                }
+
+				request.body = fileFindings
 			}
 		}
 	}
