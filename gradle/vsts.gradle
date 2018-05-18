@@ -204,8 +204,8 @@ task vstsUploadBuildFindings(dependsOn: vstsParseBuildLogs) {
                 // TODO: Partition and Message
 				request.uri.query = [
 					//"t": build.queueTime.toEpochMilli(),
-					"message": "test",
-					"partition": "test",
+					"message": "Uploading Build Findings",
+					"partition": "build findings",
                     "skip-session": "true"
 				]
 
