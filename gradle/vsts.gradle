@@ -13,6 +13,10 @@ class Finding {
 	String line
 }
 
+
+// TODO: add build time to uploads
+
+
 // TODO find a way to general import buildscript deps...
 buildscript {
 	dependencies {
@@ -69,6 +73,27 @@ ext {
 			}
 		}
 	]
+
+    pprint = { input ->
+        println new JsonBuilder(input).toPrettyString()
+    }
+
+    appendPartitionName = { partition, divider, definition, numberOfDefinitions ->
+        if(numberOfDefinitions > 1) {
+            assert definition.options.partition : "Definition '$definition.name' has $numberOfDefinitions definitions:" +
+            "\nYou need to set the 'partition' property for every definition in your 'project.gradle'"
+
+            partition += divider + definition.options.partition
+        }
+
+        return partition
+    }
+
+    getExecutionTime = { startDate, endDate ->
+        def start = Instant.parse(startDate).toEpochMilli()
+        def end = Instant.parse(endDate).toEpochMilli()
+        return (end - start) / 1000
+    }
 }
 
 def buildDefinitions = [:]
@@ -76,7 +101,7 @@ def cache = [
 	lastProcessedCompletedTime: [:]
 ]
 
-task vstsCollectBuildDefinitions {
+task collecBuildDefinitions {
 	doLast {
 		vsts.builds.each { vstsUrl, vstsProjects ->
 			vstsProjects.each { vstsProjectName, vstsBuilds ->
@@ -94,7 +119,13 @@ task vstsCollectBuildDefinitions {
 						return;
 					}
 
-					def buildDefinitionKey = [url: vstsUrl, project: vstsProjectName, name: vstsBuildDefinition.name]
+					def buildDefinitionKey = [
+                        url: vstsUrl,
+                        project: vstsProjectName,
+                        name: vstsBuildDefinition.name,
+                        options: vstsBuilds[vstsBuildDefinition.name]
+                    ]
+
 					buildDefinitions[buildDefinitionKey] = [
 						id: vstsBuildDefinition.id,
 						lastCompletedTime: Instant.parse(vstsBuildDefinition.latestCompletedBuild.finishTime),
@@ -107,7 +138,7 @@ task vstsCollectBuildDefinitions {
 	}
 }
 
-task vstsCollectNewBuilds(dependsOn: vstsCollectBuildDefinitions) {
+task collectNewBuilds(dependsOn: collecBuildDefinitions) {
 	doLast {
 		if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
 			cache = new JsonSlurper().parseText(vsts.cacheFile.text)
@@ -130,12 +161,14 @@ task vstsCollectNewBuilds(dependsOn: vstsCollectBuildDefinitions) {
 				request.uri.query = [
 					'api-version': '4.1',
 					'definitions': definitionData.id,
+                    // TODO: not working perfectly -> SampleApp old build from 2017, cache time is May 2018
 					'minTime': lastProcessedCompletedTime.plusNanos(1),
 					'status': 'completed',
 					'queryOrder': 'finishTimeAscending',
 				]
 			}
 
+            // TODO: Check that the build status is "completed"
 			response.value.each { build ->
 				definitionData.builds += [
 					details: build,
@@ -150,12 +183,12 @@ task vstsCollectNewBuilds(dependsOn: vstsCollectBuildDefinitions) {
 
 		// TODO move after build info is uploaded
 		if (vsts.cacheFile) {
-			vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
+			//vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
 		}
 	}
 }
 
-task vstsParseBuildLogs(dependsOn: vstsCollectNewBuilds) {
+task parseBuildLogs(dependsOn: collectNewBuilds) {
 	doLast {
 		buildDefinitions.each { definition, definitionData ->
 			definitionData.builds.each { build ->
@@ -191,7 +224,128 @@ task vstsParseBuildLogs(dependsOn: vstsCollectNewBuilds) {
 	}
 }
 
-task vstsUploadBuildFindings(dependsOn: vstsParseBuildLogs) {
+task getTestResults(dependsOn: collectNewBuilds) {
+    doLast {
+		buildDefinitions.each { definition, definitionData ->
+			definitionData.builds.each { build ->
+                def testRuns = definitionData.http.get {
+                    request.uri.path = "/$definition.project/_apis/test/Runs"
+                    request.uri.query = [
+                        "api-version" : "4.1",
+                        "builduri" : "vstfs:///Build/Build/$build.details.id"
+                    ]
+                }
+
+                def results = []
+                testRuns.value.each { run ->
+                    results.add(definitionData.http.get {
+                        request.uri.path = "/$definition.project/_apis/test/runs/$run.id"
+                        request.uri.query = [:]
+                    })
+                }
+
+
+                build.testResult = results
+            }
+        }
+    }
+}
+
+task uploadTestResults(dependsOn: getTestResults) {
+    doLast {
+		def http = teamscale.httpClient(teamscale)
+        buildDefinitions.each { definition, data ->
+            data.builds.sort{ it.queueTime }.each { build ->
+                if(build.testResult.size() < 1) {
+                    println " No tests run for build $build.details.buildNumber"
+                    return
+                }
+
+                // Aggregate if there are multiple runs in one build
+                def result = ["passed": 0, "total": 0, "time": 0]
+                build.testResult.each { run ->
+                    result.passed += run.passedTests
+                    result.total += run.totalTests
+                    result.time += getExecutionTime(run.startedDate, run.completedDate)
+                }
+
+                // Upload the result
+                def partition = appendPartitionName("Test", ": ", definition, buildDefinitions.size())
+                def path = appendPartitionName("Test Success", "/", definition, buildDefinitions.size())
+
+                println " Uploading test results to $teamscale.project for build $build.details.buildNumber"
+                println "     -> " + http.put {
+                    request.uri.path = "/p/$teamscale.project/add-non-code-metrics"
+                    request.contentType = "application/json"
+                    request.uri.query = [
+                        "skip-session": true,
+                        "message": "External Analysis ($partition)",
+                        "partition": partition
+                    ]
+
+                    request.body = [[
+                        "path": path,
+                        "content": "$result.passed/$result.total tests passed",
+                        "time": result.time,
+                        "assessment" : [
+                            "GREEN" : result.passed,
+                            "RED": result.total - result.passed
+                        ]
+                    ]]
+                }
+            }
+        }
+    }
+}
+
+task uploadBuildStatus(dependsOn: collectNewBuilds) {
+    def buildResultMap = [
+        "failed" : [
+            "assessment": "RED",
+            "content": "Build is unstable"
+        ],
+        "succeeded": [
+            "assessment": "GREEN",
+            "content": "Build is stable"
+        ]
+    ]
+
+    doLast {
+		def http = teamscale.httpClient(teamscale)
+
+        buildDefinitions.each { definition, data ->
+            data.builds.sort{ it.queueTime }.each { build ->
+                if(build.details.status != "completed") {
+                    return
+                }
+
+
+                def buildResult = buildResultMap[build.details.result]
+                def partition = appendPartitionName("Build", ": ", definition, buildDefinitions.size())
+
+                println " Uploading build status to $teamscale.project for build $build.details.buildNumber"
+                println "     -> " + http.put {
+                    request.uri.path = "/p/$teamscale.project/add-non-code-metrics"
+                    request.contentType = "application/json"
+                    request.uri.query = [
+                        "skip-session": true,
+                        "message": "External Analysis ($partition)",
+                        "partition": appendPartitionName("Build", ": ", definition, buildDefinitions.size())
+                    ]
+
+                    request.body = [[
+                        "path": appendPartitionName("Build Stability", "/", definition, buildDefinitions.size()),
+                        "content": buildResult.content,
+                        "time": getExecutionTime(build.details.startTime, build.details.finishTime),
+                        "assessment" : [ "$buildResult.assessment" : 1 ]
+                    ]]
+                }
+            }
+        }
+    }
+}
+
+task uploadBuildFindings(dependsOn: parseBuildLogs) {
 	doLast {
 		def http = teamscale.httpClient(teamscale)
 		def builds = buildDefinitions.collectMany { _, definitionData -> definitionData.builds }.sort { it.queueTime }
