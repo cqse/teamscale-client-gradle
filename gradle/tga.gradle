@@ -319,7 +319,7 @@ task uploadTrace(dependsOn: collectTraces) {
 		groupedTraces.each { key, tracesPerGroup ->
 			def collate = tga.trace.upload.collate
 			if (collate == null) {
-				if (tga.trace.upload.bucket == null) {
+				if (key.bucket == null) {
 					collate = 1
 				} else {
 					collate = 200
