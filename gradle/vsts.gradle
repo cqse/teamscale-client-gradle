@@ -7,15 +7,21 @@ import java.time.Instant
 
 @Canonical
 class Finding {
-	String id
+	String findingTypeId
 	String message
-    String file
-	String line
+    String path
+    String startLine
+    String endLine
 }
 
 
-// TODO: add build time to uploads
-
+// TODO: Add build time to uploads
+// TODO: Reduce stored data (makes the debugging of information impossible); only filter the necessary data
+// TODO: Comments!
+// TODO: Utils classes or similar
+// TODO: Make Task for getting all info from build (Tests, Findings, Build Result etc.)
+// TODO: Sessions for uploading non-code and findings
+// TODO: http per definition necessary?
 
 // TODO find a way to general import buildscript deps...
 buildscript {
@@ -48,19 +54,21 @@ ext {
 			// ]
 		],
 
-		loganalyzer: [
+        loganalyzer: [] as Set,
+		availableLoganalyzer: [
 			msbuild: [
-				pattern: /(?:[\d\s\.:]*\d+>)?\s*(.*)\(([0-9]+)(?:,[0-9]+)?\).*warning[:\s]*((?:CS|SCS|SEC)\w*):\s?(.+?)\s+(?:\[([^\[]+)\]$)/,
-				convert: { matches ->
-					def match = matches[0]
-					def path = match[1].replace('\\', '/')
-					def project = match[5].replace('\\', '/').split('/').dropRight(1).join('/') // removes the csproject
-					if (!path.startsWith(project)) {
-						path = "$project/$path"
-					}
+                //pattern: /(?:[\d\s\.:]*\d+>)?\s*(.*)\(([0-9]+)(?:,[0-9]+)?\).*warning[:\s]*((?:CS|SCS|SEC)\w*):\s?(.+?)\s+(?:\[([^\[]+)\]$)/,
+                pattern: /\w+.\s+(.*?)\(([0-9]+),[0-9]+\):\s+warning\s+(\w+):\s+(.*?)\s\[(.*?)\]$/,
+                convert: { matches ->
+                    def match = matches[0]
+                    def path = match[1].replace('\\', '/')
+                    def project = match[5].replace('\\', '/').split('/').dropRight(1).join('/') // removes the csproject
+                    if (!path.startsWith(project)) {
+                        path = "$project/$path"
+                    }
 
-					return new Finding(id: match[3], message: match[4], file: path, line: match[2])
-				}
+                    return new Finding(findingTypeId: match[3], message: match[4], path: path, startLine: match[2], endLine: match[2])
+                }
 			]
 		],
 
@@ -80,9 +88,9 @@ ext {
 
     appendPartitionName = { partition, divider, definition, numberOfDefinitions ->
         if(numberOfDefinitions > 1) {
-            assert definition.options.partition : "Definition '$definition.name' has $numberOfDefinitions definitions:" +
-            "\nYou need to set the 'partition' property for every definition in your 'project.gradle'"
-
+            assert definition.options.partition : "The project '$definition.project' has $numberOfDefinitions definitions, but " +
+            "there is no partition defined for '$definition.name'.\n" +
+            "If there are multiple definitions for a project, each one has to have a 'partition' property in its config gradle-file"
             partition += divider + definition.options.partition
         }
 
@@ -101,6 +109,9 @@ def cache = [
 	lastProcessedCompletedTime: [:]
 ]
 
+/**
+ * Collects all build definitions for the project
+ */
 task collecBuildDefinitions {
 	doLast {
 		vsts.builds.each { vstsUrl, vstsProjects ->
@@ -119,6 +130,13 @@ task collecBuildDefinitions {
 						return;
 					}
 
+                    def lastCompletedTime = Instant.EPOCH
+                    if(!vstsBuildDefinition.latestCompletedBuild) {
+                        println "No build run/completed for $vstsBuildDefinition.name"
+                    } else {
+                        lastCompletedTime = Instant.parse(vstsBuildDefinition.latestCompletedBuild.finishTime)
+                    }
+
 					def buildDefinitionKey = [
                         url: vstsUrl,
                         project: vstsProjectName,
@@ -128,7 +146,7 @@ task collecBuildDefinitions {
 
 					buildDefinitions[buildDefinitionKey] = [
 						id: vstsBuildDefinition.id,
-						lastCompletedTime: Instant.parse(vstsBuildDefinition.latestCompletedBuild.finishTime),
+						lastCompletedTime: lastCompletedTime,
 						http: http,
 						builds: []
 					]
@@ -138,6 +156,10 @@ task collecBuildDefinitions {
 	}
 }
 
+/**
+ * Collects all new builds for every build definition.
+ * A build is new, if its timestamp is bigger than the last cached one.
+ */
 task collectNewBuilds(dependsOn: collecBuildDefinitions) {
 	doLast {
 		if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
@@ -161,14 +183,12 @@ task collectNewBuilds(dependsOn: collecBuildDefinitions) {
 				request.uri.query = [
 					'api-version': '4.1',
 					'definitions': definitionData.id,
-                    // TODO: not working perfectly -> SampleApp old build from 2017, cache time is May 2018
 					'minTime': lastProcessedCompletedTime.plusNanos(1),
 					'status': 'completed',
 					'queryOrder': 'finishTimeAscending',
 				]
 			}
 
-            // TODO: Check that the build status is "completed"
 			response.value.each { build ->
 				definitionData.builds += [
 					details: build,
@@ -188,42 +208,10 @@ task collectNewBuilds(dependsOn: collecBuildDefinitions) {
 	}
 }
 
-task parseBuildLogs(dependsOn: collectNewBuilds) {
-	doLast {
-		buildDefinitions.each { definition, definitionData ->
-			definitionData.builds.each { build ->
-				def logs = definitionData.http.get {
-					request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs"
-					request.uri.query = [ 'api-version': '4.1' ]
-				}
-
-				logs.value.each { logRef ->
-					// TODO maybe we should get the log content in batches of lines?
-					def log = definitionData.http.get {
-						request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs/$logRef.id"
-						request.uri.query = [ 'api-version': '4.1' ]
-					}
-
-					// Strip timestamp margin
-					// TODO use pattern or use on per-line basis
-					if (log[10] == "T" && log[27] == "Z" && log[28] == " ") {
-						log = log.stripIndent(29)
-					}
-
-					log.eachLine { line ->
-						vsts.loganalyzer.each { type, analyzer ->
-							if (line =~ analyzer.pattern) {
-								build.findings += analyzer.convert(java.util.regex.Matcher.lastMatcher)
-							}
-						}
-					}
-
-				}
-			}
-		}
-	}
-}
-
+/**
+ * Fetches the test results for each build.
+ * If the build does not run tests, the list is empty.
+ */
 task getTestResults(dependsOn: collectNewBuilds) {
     doLast {
 		buildDefinitions.each { definition, definitionData ->
@@ -251,6 +239,11 @@ task getTestResults(dependsOn: collectNewBuilds) {
     }
 }
 
+/**
+ * Uploads the test results for every definition to the teamscale server as a non-code metric.
+ * If project has multiple definitions, each definition has to define a separate partition to which the
+ * results will be uploaded to.
+ */
 task uploadTestResults(dependsOn: getTestResults) {
     doLast {
 		def http = teamscale.httpClient(teamscale)
@@ -298,6 +291,11 @@ task uploadTestResults(dependsOn: getTestResults) {
     }
 }
 
+/**
+ * Uploads the build result for every definition to the teamscale server as a non-code metric.
+ * If project has multiple definitions, each definition has to define a separate partition to which the
+ * results will be uploaded to.
+ */
 task uploadBuildStatus(dependsOn: collectNewBuilds) {
     def buildResultMap = [
         "failed" : [
@@ -318,7 +316,6 @@ task uploadBuildStatus(dependsOn: collectNewBuilds) {
                 if(build.details.status != "completed") {
                     return
                 }
-
 
                 def buildResult = buildResultMap[build.details.result]
                 def partition = appendPartitionName("Build", ": ", definition, buildDefinitions.size())
@@ -345,38 +342,221 @@ task uploadBuildStatus(dependsOn: collectNewBuilds) {
     }
 }
 
-task uploadBuildFindings(dependsOn: parseBuildLogs) {
-	doLast {
-		def http = teamscale.httpClient(teamscale)
-		def builds = buildDefinitions.collectMany { _, definitionData -> definitionData.builds }.sort { it.queueTime }
-		builds.each { build ->
-            // Upload findings
-			println "  Uploading ${build.findings.size()} findings to $teamscale.project"
-		    println "     -> " + http.put {
-				request.uri.path = "/p/$teamscale.project/add-external-findings"
-				request.contentType = 'application/json'
-                // TODO: Partition and Message
-				request.uri.query = [
-					//"t": build.queueTime.toEpochMilli(),
-					"message": "VSTS Build Findings",
-					"partition": "vsts build findings",
-                    "skip-session": "true"
-				]
+/**
+ * Fetches and parses the logs for each build. Every found finding is added to the build object in build definitions.
+ *
+ * Only the logs which actually contain warning are being parsed.
+ * If a log is longer than #maxFetchedLogLines it is fetched in batches
+ */
+task parseBuildLogs(dependsOn: collectNewBuilds) {
+    def parseLog = { log ->
+        def findings = [] as Set
+        vsts.loganalyzer.each { type ->
+            def analyzer = vsts.availableLoganalyzer[type]
+            log.eachLine { line ->
+                if (line =~ analyzer.pattern) {
+                    findings += analyzer.convert(java.util.regex.Matcher.lastMatcher)
+                }
+            }
+        }
+        return findings
+    }
 
-                def fileFindings = build.findings.groupBy({ finding -> finding.file }).collect {
-                    k, v -> ["path" : k, "findings": v.collect {
-                        finding ->
-                        [
-                            "findingTypeId": finding.id,
-                            "message": finding.message,
-                            "startLine": finding.line,
-                            "endLine": finding.line
-                        ]
-                    }]
+    def maxFetchedLogLines = 1000
+
+	doLast {
+		buildDefinitions.each { definition, definitionData ->
+			definitionData.builds.each { build ->
+                build.findings = [] as Set
+
+                // Get the information of all logs (lineCount only exists here)
+				def logs = definitionData.http.get {
+					request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs"
+					request.uri.query = [ 'api-version': '4.1' ]
+				}.value.groupBy { it.id }
+
+                // Get the timeline ( for error- and warningCount )
+                def timeline = definitionData.http.get {
+					request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/timeline"
+					request.uri.query = [ 'api-version': '4.1' ]
                 }
 
-				request.body = fileFindings
+                // Get a map with id, warningCount and linecount for logs which have errors or warnings
+                def logRefs = timeline.records.collectMany {
+                    if(it.log && it.warningCount > 0) {
+                        return [ it.log.subMap("id") +
+                                 it.subMap("warningCount") +
+                                 // groupBy creates a list. We are grouping by id so there always is only one element
+                                 logs[it.log.id][0].subMap("lineCount") ]
+                    }
+                    return []
+                }
+
+                // Parse the selected job logs
+                logRefs.each { logRef ->
+                    // Get Log in batches
+                    def currentLine = 1 // starts at 1
+                    while(currentLine < logRef.lineCount) {
+                        def log = definitionData.http.get {
+                            request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs/$logRef.id"
+                            request.uri.query = [
+                                "api-version": "4.1",
+                                "startLine": currentLine,
+                                "endLine": currentLine + maxFetchedLogLines
+                            ]
+                        }
+
+                        def findings = parseLog(log)
+                        build.findings += findings
+
+                        // TODO: Errorcount
+                        def found = findings.size()
+                        if(findings.size() != logRef.warningCount) {
+                            println "    $found findings found, but the log indicates $logRef.warningCount warning(s)"
+                        }
+
+                        // endline is inclusiv. Therefore we need to add 1
+                        currentLine += maxFetchedLogLines + 1
+                    }
+                }
 			}
 		}
 	}
+}
+
+/**
+ * Uploads the findings which are reported during the build to the teamscale server.
+ * See #parseBuildLogs for more details on which findings are created.
+ */
+task uploadBuildFindings(dependsOn: parseBuildLogs) {
+	doLast {
+		def http = teamscale.httpClient(teamscale)
+        buildDefinitions.each { definition, data ->
+            data.builds.sort{ it.queueTime }.each { build ->
+                def partition = appendPartitionName("Findings", ": ", definition, buildDefinitions.size())
+
+                // Upload findings
+                println "  Uploading ${build.findings.size()} findings to '$teamscale.project' for build $build.details.buildNumber"
+                println "     -> " + http.put {
+                    request.uri.path = "/p/$teamscale.project/add-external-findings"
+                    request.contentType = 'application/json'
+                    request.uri.query = [
+                        //"t": build.queueTime.toEpochMilli(),
+                        "message": "External Analysis ($partition)",
+                        "partition": partition,
+                        "skip-session": "true"
+                    ]
+
+                    def fileFindings = build.findings.groupBy({ finding -> finding.path }).collect { k, v ->
+                        [ "path" : k, "findings" : v ]
+                    }
+
+                    request.body = fileFindings
+                }
+            }
+        }
+    }
+}
+
+/** Gets the information for each artifact of a build, such that that parts can be downloaded */
+task getArtifacts(dependsOn: collectNewBuilds) {
+    def extractContainerId = { artifact ->
+        def match = artifact.resource.data =~ /^\#\/([0-9]+)\/${artifact.name}$/
+        if(match.find()) {
+            return match.group(1)
+        }
+        return false;
+    }
+
+    doLast {
+		def http = teamscale.httpClient(teamscale)
+        buildDefinitions.each { definition, data ->
+            data.builds.sort{ it.queueTime }.each { build ->
+                def artifacts = data.http.get {
+                    request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/artifacts"
+                    request.uri.query = [
+                        "api-version": "4.1"
+                    ]
+                }.value.collectEntries {
+                    def id = extractContainerId(it)
+                    if(id) {
+                        return [it.name, id]
+                    }
+                    return []
+                }
+
+                build.artifacts = artifacts
+            }
+        }
+    }
+}
+
+task downloadReports(dependsOn: getArtifacts) {
+    // TODO: create filter for artifacts and files
+    def include = { name, filter -> 
+        return 
+    }
+
+    doLast {
+		def http = teamscale.httpClient(teamscale)
+        buildDefinitions.each { definition, data ->
+            data.builds.sort{ it.queueTime }.each { build ->
+                // Check if reports are configured
+                if(!definition.options.reports) {
+                    println "    No reports configured for $definition.name"
+                    return
+                }
+
+                definition.options.reports.each { recordType, filter -> 
+                    // Get files, which should be downloaded
+                    def artifacts = build.artifacts.findAll { k,v -> k ==~ /${filter.artifact}/ }
+                    def files = artifacts.collectMany { name, id ->
+                        return data.http.get {
+                            request.uri.path = "/_apis/resources/Containers/$id"
+                            request.uri.query = [
+                                "itemPath": name 
+                            ]
+                        }.value.collectMany { 
+                            (it.itemType == "file" && it.path ==~ /${filter.file}/ ? [it.subMap("path", "contentLocation")] : []) 
+                        }
+                    }
+                    
+                    files.each { file -> 
+                        // Download report
+                        def fileName = file.path.split("/").last()
+                        File tmpFile = new File("tmp/" + fileName)
+                        tmpFile.getParentFile().mkdirs()
+
+                        def content = data.http.get {
+                            request.uri = file.contentLocation
+                            groovyx.net.http.optional.Download.toFile(delegate, tmpFile)
+                        }
+
+                        try {
+                            // Upload the report
+                            println "Uploading '$fileName' to $teamscale.project"
+                            println "    -> " + http.post { 
+                                request.uri.path = "/p/$teamscale.project/external-report"
+                                request.contentType = "multipart/form-data"
+                                request.uri.query = [
+                                    "format": recordType,
+                                    "message": "External Analysis ($recordType)",
+                                    "partition": "$recordType",
+                                ]
+
+                                request.body = groovyx.net.http.MultipartContent.multipart {
+                                    field "report", tmpFile.text
+                                }
+                                
+                                request.encoder "multipart/form-data", groovyx.net.http.OkHttpEncoders.&multipart
+                            }
+                        } finally {
+                            tmpFile.delete()
+                        }
+                    }
+
+                }
+            }
+        }
+    }
 }

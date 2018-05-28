@@ -2,11 +2,15 @@
 /gradle/dist
 /gradle/lib
 /wrapper/
-/projects/
 /settings.local.gradle
 /gradle.properties
 /test/build
-/projects/*
-!/projects/.gitkeep
 .idea/
 *.swp
+/tmp/
+
+# projects
+projects/*.*
+projects/cs/*
+projects/java/*
+!/projects/**/build.gradle
