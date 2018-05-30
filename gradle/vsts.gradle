@@ -12,16 +12,62 @@ class Finding {
     String path
     String startLine
     String endLine
+    String endColumn
+    String startOffSet
+    String endOffSet
 }
 
 
-// TODO: Add build time to uploads
-// TODO: Reduce stored data (makes the debugging of information impossible); only filter the necessary data
-// TODO: Comments!
-// TODO: Utils classes or similar
+@Canonical
+class RoslynReport {
+    List<Run> runs = [new Run()]
+    String version = "1.0"
+
+    public boolean addFinding(Finding finding) {
+        return runs[0].results.add(new RoslynResult(finding))
+    }
+
+    public boolean addFindings(LinkedHashSet<Finding> findings) {
+        findings.each { addFinding(it) }
+    }
+
+    @Canonical
+    static class Run {
+        Object tool = ["name": "roslyn"]
+        List<RoslynResult> results = []
+        List<Object> rules = []
+    }
+
+    @Canonical
+    class RoslynResult {
+        String ruleId
+        String message
+        Object locations
+
+        public RoslynResult(Finding finding) {
+            ruleId = finding.findingTypeId
+            message = finding.message
+            locations = [[
+                "analysisTarget": [
+                    "uri": finding.path,
+                    "region": [
+                        "startLine": finding.startLine,
+                        "endLine": finding.endLine,
+                        // TODO: parse if possible
+                        "startColumn": finding.startOffSet ?: 1,
+                        "endColumn": finding.endOffSet ?: 10000
+                    ]
+                ]
+            ]]
+        }
+    }
+}
+
+// (TP)
 // TODO: Make Task for getting all info from build (Tests, Findings, Build Result etc.)
 // TODO: Sessions for uploading non-code and findings
-// TODO: http per definition necessary?
+// TODO: Roslyn Report is possible. Also you can update the roslyn rules with "custom-roslyn-findings" service
+// TODO: Better data management
 
 // TODO find a way to general import buildscript deps...
 buildscript {
@@ -81,27 +127,6 @@ ext {
 			}
 		}
 	]
-
-    pprint = { input ->
-        println new JsonBuilder(input).toPrettyString()
-    }
-
-    appendPartitionName = { partition, divider, definition, numberOfDefinitions ->
-        if(numberOfDefinitions > 1) {
-            assert definition.options.partition : "The project '$definition.project' has $numberOfDefinitions definitions, but " +
-            "there is no partition defined for '$definition.name'.\n" +
-            "If there are multiple definitions for a project, each one has to have a 'partition' property in its config gradle-file"
-            partition += divider + definition.options.partition
-        }
-
-        return partition
-    }
-
-    getExecutionTime = { startDate, endDate ->
-        def start = Instant.parse(startDate).toEpochMilli()
-        def end = Instant.parse(endDate).toEpochMilli()
-        return (end - start) / 1000
-    }
 }
 
 def buildDefinitions = [:]
@@ -109,6 +134,66 @@ def cache = [
 	lastProcessedCompletedTime: [:]
 ]
 
+// ### Methods
+def pprint = { input ->
+    println new JsonBuilder(input).toPrettyString()
+}
+
+/** Appends a suffix to the partition if the project has more than one definition */
+def appendPartitionName = { partition, divider, definition, numberOfDefinitions ->
+    if(numberOfDefinitions > 1) {
+        assert definition.options.partition : "The project '$definition.project' has $numberOfDefinitions definitions, but " +
+        "there is no partition defined for '$definition.name'.\n" +
+        "If there are multiple definitions for a project, each one has to have a 'partition' property in its config gradle-file"
+        partition += divider + definition.options.partition
+    }
+
+    return partition
+}
+
+/** Calculates the differences between two dates */
+def getExecutionTime = { startDate, endDate ->
+    def start = Instant.parse(startDate).toEpochMilli()
+    def end = Instant.parse(endDate).toEpochMilli()
+    return (end - start) / 1000
+}
+
+/**
+ * Returns the timestamp of the build.
+ * If the definition defines a branch, it is added to the timestapm */
+def getBuildTimestamp = { definition, build ->
+
+    return (definition.options.branch ? definition.options.branch + ":" : "") + build.queueTime.toEpochMilli()
+}
+
+/**
+ * Uploads the given report.
+ * http is a HTTP-Client for a teamscale
+ */
+def uploadReport = { http, partition, type, report, t ->
+    uploadReportContent(http, partition, type, report.text, t)
+}
+
+def uploadReportContent = { http, partition, type, content, t ->
+    return http.post {
+        request.uri.path = "/p/$teamscale.project/external-report"
+        request.contentType = "multipart/form-data"
+        request.uri.query = [
+            //"t": t,
+            "format": type,
+            "message": "External Analysis ($type)",
+            "partition": partition,
+        ]
+
+        request.body = groovyx.net.http.MultipartContent.multipart {
+            field "report", content
+        }
+
+        request.encoder "multipart/form-data", groovyx.net.http.OkHttpEncoders.&multipart
+    }
+}
+
+// ### Tasks
 /**
  * Collects all build definitions for the project
  */
@@ -132,7 +217,7 @@ task collecBuildDefinitions {
 
                     def lastCompletedTime = Instant.EPOCH
                     if(!vstsBuildDefinition.latestCompletedBuild) {
-                        println "No build run/completed for $vstsBuildDefinition.name"
+                        println " No build run/completed for $vstsBuildDefinition.name"
                     } else {
                         lastCompletedTime = Instant.parse(vstsBuildDefinition.latestCompletedBuild.finishTime)
                     }
@@ -232,7 +317,6 @@ task getTestResults(dependsOn: collectNewBuilds) {
                     })
                 }
 
-
                 build.testResult = results
             }
         }
@@ -250,7 +334,7 @@ task uploadTestResults(dependsOn: getTestResults) {
         buildDefinitions.each { definition, data ->
             data.builds.sort{ it.queueTime }.each { build ->
                 if(build.testResult.size() < 1) {
-                    println " No tests run for build $build.details.buildNumber"
+                    println " No tests run for build $definition.name:$build.details.buildNumber"
                     return
                 }
 
@@ -266,11 +350,12 @@ task uploadTestResults(dependsOn: getTestResults) {
                 def partition = appendPartitionName("Test", ": ", definition, buildDefinitions.size())
                 def path = appendPartitionName("Test Success", "/", definition, buildDefinitions.size())
 
-                println " Uploading test results to $teamscale.project for build $build.details.buildNumber"
+                println " Uploading test results to $teamscale.project for $definition.name:$build.details.buildNumber"
                 println "     -> " + http.put {
                     request.uri.path = "/p/$teamscale.project/add-non-code-metrics"
                     request.contentType = "application/json"
                     request.uri.query = [
+                        "t": getBuildTimestamp(definition, build),
                         "skip-session": true,
                         "message": "External Analysis ($partition)",
                         "partition": partition
@@ -312,6 +397,7 @@ task uploadBuildStatus(dependsOn: collectNewBuilds) {
 		def http = teamscale.httpClient(teamscale)
 
         buildDefinitions.each { definition, data ->
+            pprint(data.builds.last().details)
             data.builds.sort{ it.queueTime }.each { build ->
                 if(build.details.status != "completed") {
                     return
@@ -320,11 +406,12 @@ task uploadBuildStatus(dependsOn: collectNewBuilds) {
                 def buildResult = buildResultMap[build.details.result]
                 def partition = appendPartitionName("Build", ": ", definition, buildDefinitions.size())
 
-                println " Uploading build status to $teamscale.project for build $build.details.buildNumber"
+                println " Uploading build status to $teamscale.project for build $definition.name:$build.details.buildNumber"
                 println "     -> " + http.put {
                     request.uri.path = "/p/$teamscale.project/add-non-code-metrics"
                     request.contentType = "application/json"
                     request.uri.query = [
+                        "t": getBuildTimestamp(definition, build),
                         "skip-session": true,
                         "message": "External Analysis ($partition)",
                         "partition": appendPartitionName("Build", ": ", definition, buildDefinitions.size())
@@ -349,6 +436,23 @@ task uploadBuildStatus(dependsOn: collectNewBuilds) {
  * If a log is longer than #maxFetchedLogLines it is fetched in batches
  */
 task parseBuildLogs(dependsOn: collectNewBuilds) {
+    /** Checks if the log in this record should be downloaded */
+    def includeLogOfRecord = {definition, record ->
+        if(!record.log || !(record.type ==~ /Task|Job/)) {
+            return false
+        }
+
+        if(definition.options.taskNamePattern) {
+            return (record.name ==~ definition.options.taskNamePattern)
+        }
+
+        // If we would include every task, take the job logs instead, as it contains the log of every
+        // task, thus reducing the number of calls to the server
+        // TODO: Maybe also look for jobs with warnings first instead of returning the complete log?
+        return record.type == "Job"
+    }
+
+    /** Parses the given log with all specified analyzer */
     def parseLog = { log ->
         def findings = [] as Set
         vsts.loganalyzer.each { type ->
@@ -362,7 +466,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
         return findings
     }
 
-    def maxFetchedLogLines = 1000
+    def maxFetchedLogLines = 10000
 
 	doLast {
 		buildDefinitions.each { definition, definitionData ->
@@ -381,21 +485,22 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 					request.uri.query = [ 'api-version': '4.1' ]
                 }
 
-                // Get a map with id, warningCount and linecount for logs which have errors or warnings
+                // Get a map with id and linecount for logs
                 def logRefs = timeline.records.collectMany {
-                    if(it.log && it.warningCount > 0) {
+                    if(includeLogOfRecord(definition, it)) {
                         return [ it.log.subMap("id") +
-                                 it.subMap("warningCount") +
-                                 // groupBy creates a list. We are grouping by id so there always is only one element
+                                 it.subMap("name") +
+                                 // groupBy creates a list. We are grouping by id, so there always is only the one element
                                  logs[it.log.id][0].subMap("lineCount") ]
                     }
                     return []
                 }
+                println " Parsing the logs of the following tasks in $definition.name:$build.details.buildNumber: " + logRefs.name
 
                 // Parse the selected job logs
                 logRefs.each { logRef ->
                     // Get Log in batches
-                    def currentLine = 1 // starts at 1
+                    def currentLine = 0
                     while(currentLine < logRef.lineCount) {
                         def log = definitionData.http.get {
                             request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs/$logRef.id"
@@ -406,14 +511,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
                             ]
                         }
 
-                        def findings = parseLog(log)
-                        build.findings += findings
-
-                        // TODO: Errorcount
-                        def found = findings.size()
-                        if(findings.size() != logRef.warningCount) {
-                            println "    $found findings found, but the log indicates $logRef.warningCount warning(s)"
-                        }
+                        build.findings += parseLog(log)
 
                         // endline is inclusiv. Therefore we need to add 1
                         currentLine += maxFetchedLogLines + 1
@@ -422,6 +520,32 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 			}
 		}
 	}
+}
+
+task convertFindingsToRoslynReport(dependsOn: parseBuildLogs) {
+    doLast {
+        def http = teamscale.httpClient(teamscale)
+        buildDefinitions.each { definition, data ->
+            data.builds.sort{ it.queueTime }.each { build ->
+                // TODO: Check if the findings are in fact C# Findings
+                if(!build.findings) {
+                    return
+                }
+
+                // Create the report
+                def report = new RoslynReport();
+                report.addFinding(build.findings.first())
+                pprint report
+                report = new JsonBuilder(report).toString()
+
+                def partition = appendPartitionName("Roslyn Report", ": ", definition, buildDefinitions.size())
+
+                // upload
+                println " Uploading ${build.findings.size()} roslyn findings to '$teamscale.project' for $definition.name:$build.details.buildNumber"
+                println "     -> " + uploadReportContent(http, partition, "roslyn", report, getBuildTimestamp(definition, build))
+            }
+        }
+    }
 }
 
 /**
@@ -436,12 +560,13 @@ task uploadBuildFindings(dependsOn: parseBuildLogs) {
                 def partition = appendPartitionName("Findings", ": ", definition, buildDefinitions.size())
 
                 // Upload findings
-                println "  Uploading ${build.findings.size()} findings to '$teamscale.project' for build $build.details.buildNumber"
+                println " Uploading ${build.findings.size()} findings to '$teamscale.project' for $definition.name:$build.details.buildNumber"
                 println "     -> " + http.put {
                     request.uri.path = "/p/$teamscale.project/add-external-findings"
                     request.contentType = 'application/json'
                     request.uri.query = [
-                        //"t": build.queueTime.toEpochMilli(),
+                        // TODO: Uncomment
+                        //"t": getBuildTimestamp(definition, build),
                         "message": "External Analysis ($partition)",
                         "partition": partition,
                         "skip-session": "true"
@@ -491,37 +616,43 @@ task getArtifacts(dependsOn: collectNewBuilds) {
     }
 }
 
-task downloadReports(dependsOn: getArtifacts) {
-    // TODO: create filter for artifacts and files
-    def include = { name, filter -> 
-        return 
-    }
-
+/**
+ * Fetches and uploads external analysis tool report (e.g. FindBugs) to teamscale.
+ * This requires some configuration, see this template:
+ * .... "{definiton}": [ "reports" : [ "{reportType}": [ "artifact": "{regex}", "file": "{regex}" ]]]
+ * The reportType needs to be one of the EReportFormat.java
+ * The artifact is the archive on the VSTS which contains the report file. In order to match both, you need to
+ * specify regexes for both.
+ */
+task uploadReports(dependsOn: getArtifacts) {
     doLast {
 		def http = teamscale.httpClient(teamscale)
         buildDefinitions.each { definition, data ->
-            data.builds.sort{ it.queueTime }.each { build ->
-                // Check if reports are configured
-                if(!definition.options.reports) {
-                    println "    No reports configured for $definition.name"
-                    return
-                }
+            // Check if reports are configured
+            if(!definition.options.reports) {
+                println " No reports configured for $definition.name"
+                return
+            }
 
-                definition.options.reports.each { recordType, filter -> 
+            data.builds.sort{ it.queueTime }.each { build ->
+                definition.options.reports.each { reportType, filter ->
+                    def partition = appendPartitionName("$reportType", ": ", definition, buildDefinitions.size())
+
                     // Get files, which should be downloaded
                     def artifacts = build.artifacts.findAll { k,v -> k ==~ /${filter.artifact}/ }
                     def files = artifacts.collectMany { name, id ->
                         return data.http.get {
                             request.uri.path = "/_apis/resources/Containers/$id"
                             request.uri.query = [
-                                "itemPath": name 
+                                "itemPath": name
                             ]
-                        }.value.collectMany { 
-                            (it.itemType == "file" && it.path ==~ /${filter.file}/ ? [it.subMap("path", "contentLocation")] : []) 
+                        }.value.collectMany {
+                            def fileName = it.path.split("/").last()
+                            (it.itemType == "file" && fileName ==~ /${filter.file}/ ? [it.subMap("path", "contentLocation")] : [])
                         }
                     }
-                    
-                    files.each { file -> 
+
+                    files.each { file ->
                         // Download report
                         def fileName = file.path.split("/").last()
                         File tmpFile = new File("tmp/" + fileName)
@@ -533,30 +664,16 @@ task downloadReports(dependsOn: getArtifacts) {
                         }
 
                         try {
-                            // Upload the report
-                            println "Uploading '$fileName' to $teamscale.project"
-                            println "    -> " + http.post { 
-                                request.uri.path = "/p/$teamscale.project/external-report"
-                                request.contentType = "multipart/form-data"
-                                request.uri.query = [
-                                    "format": recordType,
-                                    "message": "External Analysis ($recordType)",
-                                    "partition": "$recordType",
-                                ]
-
-                                request.body = groovyx.net.http.MultipartContent.multipart {
-                                    field "report", tmpFile.text
-                                }
-                                
-                                request.encoder "multipart/form-data", groovyx.net.http.OkHttpEncoders.&multipart
-                            }
+                            // Upload  report to teamscale
+                            println " Uploading '$fileName' to $teamscale.project for $definition.name:$build.details.buildNumber"
+                            println "     -> " + uploadReport(http, partition, reportType, tmpFile)
                         } finally {
                             tmpFile.delete()
                         }
                     }
-
                 }
             }
         }
     }
 }
+
