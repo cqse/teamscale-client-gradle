@@ -319,14 +319,14 @@ task uploadTrace(dependsOn: collectTraces) {
 		groupedTraces.each { key, tracesPerGroup ->
 			def collate = tga.trace.upload.collate
 			if (collate == null) {
-				if (tga.trace.upload.bucket == null) {
+				if (key.bucket == null) {
 					collate = 1
 				} else {
 					collate = 200
 				}
 			}
 			
-			tracesPerGroup.sort{ it.lastModified() }.collate(tga.trace.upload.collate).each { traces ->
+			tracesPerGroup.sort{ it.lastModified() }.collate(collate).each { traces ->
 				def timestamp = tga.trace.upload.timestamp(traces.last())
 				def version = key.version
 				def partition = key.partition
