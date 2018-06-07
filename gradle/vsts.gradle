@@ -229,6 +229,11 @@ task collecBuildDefinitions {
                         options: vstsBuilds[vstsBuildDefinition.name]
                     ]
 
+                    // TODO: make better
+                    if(!buildDefinitionKey.options.filterBranch) {
+                        buildDefinitionKey.options = [ "filterBranch" : {it}]
+                    }
+
 					buildDefinitions[buildDefinitionKey] = [
 						id: vstsBuildDefinition.id,
 						lastCompletedTime: lastCompletedTime,
@@ -251,23 +256,23 @@ task collectNewBuilds(dependsOn: collecBuildDefinitions) {
 			cache = new JsonSlurper().parseText(vsts.cacheFile.text)
 		}
 
-		buildDefinitions.each { definition, definitionData ->
+		buildDefinitions.each { definition, data ->
 			def cacheKey = "$definition.url/$definition.project/$definition.name"
 			def lastProcessedCompletedTime = cache.lastProcessedCompletedTime[cacheKey]
 			if (!lastProcessedCompletedTime) {
 				lastProcessedCompletedTime = Instant.EPOCH
 			} else {
 				lastProcessedCompletedTime = Instant.parse(lastProcessedCompletedTime)
-				if (definitionData.lastCompletedTime <= lastProcessedCompletedTime) {
+				if (data.lastCompletedTime <= lastProcessedCompletedTime) {
 					return
 				}
 			}
 
-			def response = definitionData.http.get {
+			def response = data.http.get {
 				request.uri.path = "/$definition.project/_apis/build/builds"
 				request.uri.query = [
 					'api-version': '4.1',
-					'definitions': definitionData.id,
+					'definitions': data.id,
 					'minTime': lastProcessedCompletedTime.plusNanos(1),
 					'status': 'completed',
 					'queryOrder': 'finishTimeAscending',
@@ -275,15 +280,26 @@ task collectNewBuilds(dependsOn: collecBuildDefinitions) {
 			}
 
 			response.value.each { build ->
-				definitionData.builds += [
-					details: build,
-					queueTime: Instant.parse(build.queueTime),
-					findings: new HashSet<Finding>()
-				]
+                if(build.sourceBranch ==~ /^refs\/pull/) {
+                    return
+                }
+
+                def gitRef = ~/^refs\/heads\//
+                def source = build.sourceBranch - gitRef
+                def targetBranch = definition.options.filterBranch(source)
+
+                if(targetBranch instanceof String) {
+                    data.builds += [
+                        details: build,
+                        targetBranch: targetBranch,
+                        queueTime: Instant.parse(build.queueTime),
+                        findings: new HashSet<Finding>()
+                    ]
+                }
 			}
 
 			// TODO update step by step?
-			cache.lastProcessedCompletedTime[cacheKey] = definitionData.lastCompletedTime.toString()
+			cache.lastProcessedCompletedTime[cacheKey] = data.lastCompletedTime.toString()
 		}
 
 		// TODO move after build info is uploaded
