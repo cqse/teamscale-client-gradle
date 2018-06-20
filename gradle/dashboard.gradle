@@ -1,0 +1,354 @@
+apply from: "$rootDir/gradle/base-teamscale.gradle"
+
+import groovyx.net.http.HttpException
+import groovy.json.JsonSlurper
+import groovy.json.JsonBuilder
+import groovy.transform.Canonical
+import groovy.xml.XmlUtil
+
+// TODO find a way to general import buildscript deps...
+buildscript {
+	dependencies {
+		classpath fileTree("$rootDir/gradle/lib").include("**.jar")
+	}
+}
+
+ext {
+	teamscale.url = "http://..."
+	teamscale.username = "admin"
+	teamscale.accesskey = "tokentoken"
+
+	/** Tool for which the dashboard is created. Can be "tqe", "tsa" (or "tga") */
+	TOOL = ""
+
+	/** The path to the applications.json of the porfolio dashboard */
+	PORTFOLIO_DATA_PATH = ""
+
+	/** The name of the dashboard which is the template for all others */
+	DASHBOARD_TEMPLATE = ""
+
+	/** Checks if a dashboard should be overwritten if it already exist */
+	OVERWRITE = false
+
+	/** Handles the case if a dashboard should be created if the project does not exist */
+	PROJECT_MUST_EXIST = true
+
+	/**
+	 * Mapping from an analysis profile to its threshold profile.
+	 * The default value is taken if no other mapping can be found.
+	 */
+	THRESHOLD_MAPPING = [
+	        "default": "Teamscale Default"
+	]
+
+	/**
+	 * Activates the options which tries to extract the threshold from the old dashboard
+	 * This overwrites the THRESHOLD_MAPPING if an old dashboard exists
+	 */
+	THRESHOLD_FROM_OLD = true
+
+	/** Mapping from the goal to its short description */
+	QUALITY_GOAL_DESCRIPTIONS = [
+		0: "TBD",
+		1: "indifferent",
+		2: "preserving",
+		3: "improving",
+		4: "perfective"
+	]
+}
+
+// ### Definitions ###
+/** Contains all needed info about the project */
+@Canonical
+class ProjectInfo {
+	String id
+	String name
+	int qualityGoal
+	@Nullable
+	String profile
+}
+
+/** Wrapper for the Dashboard XML */
+class Dashboard {
+	groovy.util.slurpersupport.NodeChild xml
+
+	Dashboard(xml) {
+		this.xml = xml
+	}
+
+	String getName() {
+		return "" + this.xml.payload.owner + "/" + this.xml.payload.name
+	}
+
+	String toString() {
+		return XmlUtil.serialize(this.xml)
+	}
+}
+
+// ### Methods ###
+/** Custom handler for the failure of a request */
+ext.failure = { resp, reader ->
+	println "############################ Response ##################################"
+	println resp.getUri()
+	println reader
+	println "########################################################################"
+	throw new HttpException(resp, reader)
+}
+
+/**
+ * Checks if the project with the given id exists
+ */
+ext.getProjectInfo = { id ->
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/create-project/$id"
+
+		response.failure {
+			return null
+		}
+	}
+}
+
+/**
+ * Fetches the info for all projects from the applications.json from the portfolio dashboard and teamscale
+ *
+ * @param tool String "tqe" or "tga"
+ * @param dataPath String Path to the applications.json
+ *
+ * @return List<ProjectInfo>
+ */
+ext.getProjectInfos = { tool, dataPath ->
+	def propertiesFile = new File(dataPath)
+	assert propertiesFile.exists(): "File \"$dataPath\" does not exist"
+
+	def data = new JsonSlurper().parse(propertiesFile)
+
+	def projectInfos = []
+	data.each { project ->
+		if (!project[tool]) {
+			return
+		}
+
+		def id = project[tool].teamscale.project.split('/').last()
+		def name = project.name
+		def qualityGoal = project[tool].qualityGoal
+		def profile = getProjectInfo(id)?.profile?.text()
+
+		assert id && name && qualityGoal != null: "Insufficient data"
+
+		projectInfos.add(new ProjectInfo(id, name, qualityGoal, profile))
+	}
+
+	return projectInfos
+}
+
+/**
+ * Returns the Dashboard template
+ *
+ * @return String
+ */
+ext.getDashboardTemplate = {
+	return downloadDashboard(DASHBOARD_TEMPLATE, "tmp/test")
+}
+
+/**
+ * Downloads the dashboard with the given name.
+ * If the saveTo parameter is not set the dashboard will only be downloaded to a temp file, which will be deleted.
+ *
+ * @param name String
+ * @param saveTo String Path where the dashboard will be saved to
+ * @return String The dashboard XML
+ */
+ext.downloadDashboard = {name, saveTo = null ->
+	def http = teamscale.httpClient(teamscale)
+	def path = saveTo ?: "tmp/tmp.tsdashboard"
+
+	try {
+		// The request does return a file handle, but if the dashboard doesn't exist it will still write the file
+		// with the 404 message of the server. This cannot be parsed further in the script, so we want to return null
+		def file = new File("$rootDir/$path")
+		def result = http.get {
+			request.uri.path = "/dashboard-export/${name}.tsdashboard"
+			groovyx.net.http.optional.Download.toFile(delegate, file)
+			response.failure failure
+			response.when("404") { resp, reader ->
+				println "WARNING: Dashboard \"$name\" does not exist on $teamscale.url"
+				return null
+			}
+		}
+
+		return result?.text
+	} finally {
+		if(!saveTo) {
+			file?.delete()
+		}
+	}
+}
+
+/**
+ * Returns a list of all dashboards in Teamscale
+ *
+ * @return List<String>
+ */
+ext.getDashboards = {
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/dashboards"
+	}.childNodes().collect {
+		return it.text()
+	}
+}
+
+/**
+ * Uploads the given dashboard to teamscale
+ *
+ * @param dashboard Dashboard
+ * @param projectId String
+ */
+ext.uploadDashboard = { dashboard, projectId ->
+	def http = teamscale.httpClient(teamscale)
+	print "Uploading dashboard for $projectId to $teamscale.url: "
+	println http.post {
+		request.uri.path = "/dashboard-export"
+		request.encoder "multipart/form-data", groovyx.net.http.OkHttpEncoders.&multipart
+		request.contentType = "multipart/form-data"
+
+		request.body = groovyx.net.http.MultipartContent.multipart {
+			field "dashboardDescriptor", dashboard.toString()
+		}
+
+		response.failure failure
+	}
+}
+
+/** Sets the sharing for the given dashboard */
+ext.setSharing = { dashboard, projectInfo ->
+	// TODO: Group sharing for TSA
+	dashboard.payload.projectAccessEntries.children().findAll {true}.replaceNode {}
+	dashboard.payload.projectAccessEntries.appendNode {
+		'com.teamscale.index.dashboard.DashboardAccessEntry'() {
+			userOrGroup "$projectInfo.id"
+			accessRight  "READ"
+		}
+	}
+}
+
+/**
+ * Creates a dashboard from the template and the given information.
+ *
+ * @param template String
+ * @param info ProjectInfo
+ * @return Dashboard
+ */
+ext.createDashboard = { template, projectInfo ->
+	// parse the XML
+	def xml = new XmlSlurper().parseText(template)
+
+	// change XML
+	xml.payload.name = projectInfo.name
+
+	// Set sharing
+	setSharing(xml, projectInfo)
+
+	// get threshold
+	def threshold = getThreshold(projectInfo)
+
+	// change JSON
+	def json = new JsonSlurper().parseText(xml.payload.descriptorJSON.text())
+	json.widgets.each { widget ->
+		// Label Title
+		if(widget["widget-id"] == "label") {
+			widget.Title = widget.Title
+				.replaceFirst(/<[^>]+>/, projectInfo.name)
+				.replace("<QG>", projectInfo.qualityGoal as String)
+				.replace("<DESCRIPTION>", QUALITY_GOAL_DESCRIPTIONS[projectInfo.qualityGoal])
+			return
+		}
+
+		// Project paths
+		if(widget.Path) {
+			widget.Path.project = projectInfo.id
+		}
+
+		// Thresholds
+		if(widget["Metric Threshold Configuration"]) {
+			widget["Metric Threshold Configuration"] = threshold
+		}
+
+	}
+	xml.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
+
+	return new Dashboard(xml)
+}
+
+/**
+ * Returns the name of a threshold profile for the given analysis profile (name).
+ * The mapping must be defined in THRESHOLD_MAPPING.
+ * If no mapping can be found, the "default" mapping is returned, null otherwise.
+ * This does not break the dashboard though, it will just have the teamscale or project default threshold settings.
+ */
+ext.getThreshold = { projectInfo ->
+	// Get from old dashboard
+	def dashboardName = "admin/" + projectInfo.name
+	if(THRESHOLD_FROM_OLD && getDashboards().contains(dashboardName)) {
+		def old = new XmlSlurper().parseText(downloadDashboard(dashboardName))
+		def thresholds = new JsonSlurper().parseText(old.payload.descriptorJSON.text())
+			.widgets.findAll { it["Metric Threshold Configuration"] }
+			."Metric Threshold Configuration" as Set
+		if (thresholds.size() > 1) {
+			println "WARNING: Old dashboard ${projectInfo.getName()} has more than one threshold defined: $thresholds"
+		}
+
+		if (thresholds.size() == 1) {
+			// If the old dashboard does not define any thresholds
+			return thresholds[0]
+		}
+	}
+
+	// Get from mapping
+	if (projectInfo.profile) {
+		if (THRESHOLD_MAPPING.containsKey(projectInfo.profile)) {
+			return THRESHOLD_MAPPING[projectInfo.profile]
+		} else if(THRESHOLD_MAPPING.containsKey("default")) {
+			return THRESHOLD_MAPPING["default"]
+		}
+
+	}
+	println "WARNING: No threshold found for \"$projectInfo.id\" with the profile \"$projectInfo.profile\""
+	return null
+}
+
+/** Returns all created thresholds profiles from teamscale */
+ext.getThresholds = {
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/metric-threshold-configurations"
+	}.childNodes().collect {
+		return it.text()
+	}
+}
+
+
+// ### Tasks ###
+/** Creates and uploads a dashboard for all projects defined in the portfolio dashboard */
+task createUniformDashboardForAllProjects {
+	doLast {
+		def template = getDashboardTemplate()
+		if(!template) {
+			return
+		}
+		def propertyInfos = getProjectInfos(TOOL, PORTFOLIO_DATA_PATH)
+		def existingDashboards = getDashboards()
+
+		propertyInfos.each { propertyInfo ->
+			// Check if project exists
+			if (PROJECT_MUST_EXIST && !propertyInfo.profile) {
+				println "WARNING: \"$propertyInfo.id\" does not exist on $teamscale.url... Skipping"
+				return
+			}
+
+			def dashboard = createDashboard(template, propertyInfo)
+			uploadDashboard dashboard, propertyInfo.id
+		}
+	}
+}
