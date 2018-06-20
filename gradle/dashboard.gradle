@@ -370,7 +370,7 @@ task listThresholdsForProjects {
 		propertyInfos.each { propertyInfo ->
 			def dashboardName = "admin/" + propertyInfo.name
 			if (existingDashboards.contains(dashboardName)) {
-				println "Dashboard \"$dashboardName\": " + getThresholdsForDashboard(dashboardName)
+				println "$dashboardName: ".padRight(50) + getThresholdsForDashboard(dashboardName)
 			}
 		}
 	}
