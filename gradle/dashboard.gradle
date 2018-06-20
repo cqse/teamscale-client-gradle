@@ -349,7 +349,7 @@ task createUniformDashboardForAllProjects {
 
 			def dashboard = createDashboard(template, propertyInfo)
 
-			if (existingDashboards.contains(dashboard.getName())) {
+			if (!OVERWRITE && existingDashboards.contains(dashboard.getName())) {
 				println "WARNING: Dashboard \"${dashboard.getName()}\" already exists... Skipping"
 				return
 			}
