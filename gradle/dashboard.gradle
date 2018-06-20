@@ -364,8 +364,14 @@ task createUniformDashboardForAllProjects {
 
 task listThresholdsForProjects {
 	doLast {
-		getDashboards().each { dashboardName ->
-			println "Dashboard \"$dashboardName\": " + getThresholdsForDashboard(dashboardName)
+		def propertyInfos = getProjectInfos(TOOL, PORTFOLIO_DATA_PATH)
+		def existingDashboards = getDashboards()
+
+		propertyInfos.each { propertyInfo ->
+			def dashboardName = "admin/" + propertyInfo.name
+			if (existingDashboards.contains(dashboardName)) {
+				println "Dashboard \"$dashboardName\": " + getThresholdsForDashboard(dashboardName)
+			}
 		}
 	}
 }
