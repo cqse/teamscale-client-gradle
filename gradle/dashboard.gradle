@@ -163,15 +163,14 @@ ext.downloadDashboard = {name, saveTo = null ->
 	def http = teamscale.httpClient(teamscale)
 	def path = saveTo ?: "tmp/tmp.tsdashboard"
 
+	def file = new File("$rootDir/$path")
 	try {
 		// The request does return a file handle, but if the dashboard doesn't exist it will still write the file
 		// with the 404 message of the server. This cannot be parsed further in the script, so we want to return null
-		def file = new File("$rootDir/$path")
 		def result = http.get {
 			request.uri.path = "/dashboard-export/${name}.tsdashboard"
 			groovyx.net.http.optional.Download.toFile(delegate, file)
-			response.failure failure
-			response.when("404") { resp, reader ->
+			response.failure { resp, reader ->
 				println "WARNING: Dashboard \"$name\" does not exist on $teamscale.url"
 				return null
 			}
@@ -291,10 +290,7 @@ ext.getThreshold = { projectInfo ->
 	// Get from old dashboard
 	def dashboardName = "admin/" + projectInfo.name
 	if(THRESHOLD_FROM_OLD && getDashboards().contains(dashboardName)) {
-		def old = new XmlSlurper().parseText(downloadDashboard(dashboardName))
-		def thresholds = new JsonSlurper().parseText(old.payload.descriptorJSON.text())
-			.widgets.findAll { it["Metric Threshold Configuration"] }
-			."Metric Threshold Configuration" as Set
+		def thresholds = getThresholdsForDashboard(dashboardName)
 		if (thresholds.size() > 1) {
 			println "WARNING: Old dashboard ${projectInfo.getName()} has more than one threshold defined: $thresholds"
 		}
@@ -316,6 +312,13 @@ ext.getThreshold = { projectInfo ->
 	}
 	println "WARNING: No threshold found for \"$projectInfo.id\" with the profile \"$projectInfo.profile\""
 	return null
+}
+
+ext.getThresholdsForDashboard = { dashboardName ->
+	def old = new XmlSlurper().parseText(downloadDashboard(dashboardName))
+	return new JsonSlurper().parseText(old.payload.descriptorJSON.text())
+		.widgets.findAll { it["Metric Threshold Configuration"] }
+		."Metric Threshold Configuration" as Set
 }
 
 /** Returns all created thresholds profiles from teamscale */
@@ -355,6 +358,14 @@ task createUniformDashboardForAllProjects {
 			}
 
 			uploadDashboard dashboard, propertyInfo.id
+		}
+	}
+}
+
+task listThresholdsForProjects {
+	doLast {
+		getDashboards().each { dashboardName ->
+			println "Dashboard \"$dashboardName\": " + getThresholdsForDashboard(dashboardName)
 		}
 	}
 }
