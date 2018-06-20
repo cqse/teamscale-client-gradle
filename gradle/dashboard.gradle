@@ -148,7 +148,7 @@ ext.getProjectInfos = { tool, dataPath ->
  * @return String
  */
 ext.getDashboardTemplate = {
-	return downloadDashboard(DASHBOARD_TEMPLATE, "tmp/test")
+	return downloadDashboard(DASHBOARD_TEMPLATE)
 }
 
 /**
