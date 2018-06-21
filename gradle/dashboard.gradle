@@ -294,7 +294,9 @@ task deleteAllDashboards {
 		def http = teamscale.httpClient(teamscale)
 		getDashboards().each { dashboard ->
 			http.delete {
-				request.uri.path = "/dashboards/$dashboard"
+				def name = URLEncoder.encode(dashboard, "UTF-8")
+				request.uri.path = "/dashboards/$name"
+				response.failure failure
 			}
 		}
 	}
