@@ -33,20 +33,6 @@ ext {
 	/** Handles the case if a dashboard should be created if the project does not exist */
 	PROJECT_MUST_EXIST = true
 
-	/**
-	 * Mapping from an analysis profile to its threshold profile.
-	 * The default value is taken if no other mapping can be found.
-	 */
-	THRESHOLD_MAPPING = [
-	        "default": "Teamscale Default"
-	]
-
-	/**
-	 * Activates the options which tries to extract the threshold from the old dashboard
-	 * This overwrites the THRESHOLD_MAPPING if an old dashboard exists
-	 */
-	THRESHOLD_FROM_OLD = true
-
 	/** Mapping from the goal to its short description */
 	QUALITY_GOAL_DESCRIPTIONS = [
 		0: "TBD",
@@ -249,9 +235,6 @@ ext.createDashboard = { template, projectInfo ->
 	// Set sharing
 	setSharing(xml, projectInfo)
 
-	// get threshold
-	def threshold = getThreshold(projectInfo)
-
 	// change JSON
 	def json = new JsonSlurper().parseText(xml.payload.descriptorJSON.text())
 	json.widgets.each { widget ->
@@ -268,69 +251,11 @@ ext.createDashboard = { template, projectInfo ->
 		if(widget.Path) {
 			widget.Path.project = projectInfo.id
 		}
-
-		// Thresholds
-		if(widget["Metric Threshold Configuration"]) {
-			widget["Metric Threshold Configuration"] = threshold
-		}
-
 	}
 	xml.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
 
 	return new Dashboard(xml)
 }
-
-/**
- * Returns the name of a threshold profile for the given analysis profile (name).
- * The mapping must be defined in THRESHOLD_MAPPING.
- * If no mapping can be found, the "default" mapping is returned, null otherwise.
- * This does not break the dashboard though, it will just have the teamscale or project default threshold settings.
- */
-ext.getThreshold = { projectInfo ->
-	// Get from old dashboard
-	def dashboardName = "admin/" + projectInfo.name
-	if(THRESHOLD_FROM_OLD && getDashboards().contains(dashboardName)) {
-		def thresholds = getThresholdsForDashboard(dashboardName)
-		if (thresholds.size() > 1) {
-			println "WARNING: Old dashboard ${projectInfo.getName()} has more than one threshold defined: $thresholds"
-		}
-
-		if (thresholds.size() == 1) {
-			// If the old dashboard does not define any thresholds
-			return thresholds[0]
-		}
-	}
-
-	// Get from mapping
-	if (projectInfo.profile) {
-		if (THRESHOLD_MAPPING.containsKey(projectInfo.profile)) {
-			return THRESHOLD_MAPPING[projectInfo.profile]
-		} else if(THRESHOLD_MAPPING.containsKey("default")) {
-			return THRESHOLD_MAPPING["default"]
-		}
-
-	}
-	println "WARNING: No threshold found for \"$projectInfo.id\" with the profile \"$projectInfo.profile\""
-	return null
-}
-
-ext.getThresholdsForDashboard = { dashboardName ->
-	def old = new XmlSlurper().parseText(downloadDashboard(dashboardName))
-	return new JsonSlurper().parseText(old.payload.descriptorJSON.text())
-		.widgets.findAll { it["Metric Threshold Configuration"] }
-		."Metric Threshold Configuration" as Set
-}
-
-/** Returns all created thresholds profiles from teamscale */
-ext.getThresholds = {
-	def http = teamscale.httpClient(teamscale)
-	return http.get {
-		request.uri.path = "/metric-threshold-configurations"
-	}.childNodes().collect {
-		return it.text()
-	}
-}
-
 
 // ### Tasks ###
 /** Creates and uploads a dashboard for all projects defined in the portfolio dashboard */
@@ -358,20 +283,6 @@ task createUniformDashboardForAllProjects {
 			}
 
 			uploadDashboard dashboard, propertyInfo.id
-		}
-	}
-}
-
-task listThresholdsForProjects {
-	doLast {
-		def propertyInfos = getProjectInfos(TOOL, PORTFOLIO_DATA_PATH)
-		def existingDashboards = getDashboards()
-
-		propertyInfos.each { propertyInfo ->
-			def dashboardName = "admin/" + propertyInfo.name
-			if (existingDashboards.contains(dashboardName)) {
-				println "$dashboardName: ".padRight(50) + getThresholdsForDashboard(dashboardName)
-			}
 		}
 	}
 }
