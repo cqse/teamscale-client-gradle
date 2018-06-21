@@ -48,7 +48,8 @@ ext {
 @Canonical
 class ProjectInfo {
 	String id
-	String name
+	String qualifiedName
+	String dashboardName
 	int qualityGoal
 	@Nullable
 	String profile
@@ -116,13 +117,14 @@ ext.getProjectInfos = { tool, dataPath ->
 		}
 
 		def id = project[tool].teamscale.project.split('/').last()
-		def name = project.name
+		def qualifiedName = project.name
+		def dashboardName = URLDecoder.decode(project[tool].teamscale.dashboard.split("admin%2F").last(), "utf-8")
 		def qualityGoal = project[tool].qualityGoal
 		def profile = getProjectInfo(id)?.profile?.text()
 
-		assert id && name && qualityGoal != null: "Insufficient data"
+		assert id &&  qualifiedName && dashboardName && qualityGoal != null: "Insufficient data"
 
-		projectInfos.add(new ProjectInfo(id, name, qualityGoal, profile))
+		projectInfos.add(new ProjectInfo(id, qualifiedName, dashboardName, qualityGoal, profile))
 	}
 
 	return projectInfos
@@ -230,7 +232,7 @@ ext.createDashboard = { template, projectInfo ->
 	def xml = new XmlSlurper().parseText(template)
 
 	// change XML
-	xml.payload.name = projectInfo.name
+	xml.payload.name = projectInfo.dashboardName
 
 	// Set sharing
 	setSharing(xml, projectInfo)
@@ -241,7 +243,7 @@ ext.createDashboard = { template, projectInfo ->
 		// Label Title
 		if(widget["widget-id"] == "label") {
 			widget.Title = widget.Title
-				.replaceFirst(/<[^>]+>/, projectInfo.name)
+				.replaceFirst(/<[^>]+>/, projectInfo.qualifiedName)
 				.replace("<QG>", projectInfo.qualityGoal as String)
 				.replace("<DESCRIPTION>", QUALITY_GOAL_DESCRIPTIONS[projectInfo.qualityGoal])
 			return
@@ -283,6 +285,27 @@ task createUniformDashboardForAllProjects {
 			}
 
 			uploadDashboard dashboard, propertyInfo.id
+		}
+	}
+}
+
+task deleteAllDashboards {
+	doLast {
+		def http = teamscale.httpClient(teamscale)
+		getDashboards().each { dashboard ->
+			http.delete {
+				request.uri.path = "/dashboards/$dashboard"
+			}
+		}
+	}
+}
+
+task backupAllDashboards {
+	doLast {
+		getDashboards().each { dashboard ->
+			def name = URLEncoder.encode(dashboard, "UTF-8")
+			new File("$rootDir/tmp/backup/").mkdirs()
+			downloadDashboard(dashboard, "tmp/backup/${name}.tsdashboard")
 		}
 	}
 }
