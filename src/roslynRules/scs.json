@@ -1,0 +1,322 @@
+{
+    "SCS0001": {
+        "id": "SCS0001",
+        "shortDescription": "Command Injection",
+        "fullDescription": "The dynamic value passed to the command execution should be validated.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0002": {
+        "id": "SCS0002",
+        "shortDescription": "SQL Injection (LINQ)",
+        "fullDescription": "LINQ: How to Query for Information",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0003": {
+        "id": "SCS0003",
+        "shortDescription": "XPath Injection",
+        "fullDescription": "The dynamic value passed to the XPath query should be validated.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0004": {
+        "id": "SCS0004",
+        "shortDescription": "Certificate Validation Disabled",
+        "fullDescription": "Certificate Validation has been disabled. The communication could be intercepted.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0005": {
+        "id": "SCS0005",
+        "shortDescription": "Weak Random Number Generator",
+        "fullDescription": "The random numbers generated could be predicted.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0006": {
+        "id": "SCS0006",
+        "shortDescription": "Weak hashing function",
+        "fullDescription": "MD5 or SHA1 have known collision weaknesses and are no longer considered strong hashing algorithms.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0007": {
+        "id": "SCS0007",
+        "shortDescription": "XML eXternal Entity Injection (XXE)",
+        "fullDescription": "The XML parser is configured incorrectly. The operation could be vulnerable to XML eXternal Entity (XXE) processing.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0008": {
+        "id": "SCS0008",
+        "shortDescription": "Cookie Without SSL Flag",
+        "fullDescription": "It is recommended to specify the Secure flag to new cookie.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0009": {
+        "id": "SCS0009",
+        "shortDescription": "Cookie Without HttpOnly Flag",
+        "fullDescription": "It is recommended to specify the HttpOnly flag to new cookie.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0010": {
+        "id": "SCS0010",
+        "shortDescription": "Weak cipher algorithm",
+        "fullDescription": "DES and 3DES are not considered a strong cipher for modern applications. Currently, NIST recommends the usage of AES block ciphers instead.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0011": {
+        "id": "SCS0011",
+        "shortDescription": "Weak CBC Mode",
+        "fullDescription": "The CBC mode alone is susceptible to padding oracle attack.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0012": {
+        "id": "SCS0012",
+        "shortDescription": "Weak ECB Mode",
+        "fullDescription": "ECB mode will produce the same result for identical blocks (ie: 16 bytes for AES). An attacker could be able to guess the encrypted message. The use of AES in CBC mode with a HMAC is recommended guaranteeing integrity and confidentiality.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0013": {
+        "id": "SCS0013",
+        "shortDescription": "Weak Cipher Mode",
+        "fullDescription": "The cipher text produced is susceptible to alteration by an adversary.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0014": {
+        "id": "SCS0014",
+        "shortDescription": "SQL Injection (WebControls)",
+        "fullDescription": "Unsafe usage of System.Web.UI.WebControls.SqlDataSource, System.Web.UI.WebControls.SqlDataSourceView or Microsoft.Whos.Framework.Data.SqlUtility.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0015": {
+        "id": "SCS0015",
+        "shortDescription": "Hardcoded Password",
+        "fullDescription": "The password configuration to this API appears to be hardcoded.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0016": {
+        "id": "SCS0016",
+        "shortDescription": "Cross-Site Request Forgery (CSRF)",
+        "fullDescription": "Anti-forgery token is missing.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0017": {
+        "id": "SCS0017",
+        "shortDescription": "Request Validation Disabled (Attribute)",
+        "fullDescription": "Request validation is disabled. Request validation allows the filtering of some XSS patterns submitted to the application.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0018": {
+        "id": "SCS0018",
+        "shortDescription": "Path Traversal",
+        "fullDescription": "A path traversal attack (also known as directory traversal) aims to access files and directories that are stored outside the expected directory.By manipulating variables that reference files with \u201cdot-dot-slash (../)\u201d sequences and its variations or by using absolute file paths, it may be possible to access arbitrary files and directories stored on file system including application source code or configuration and critical system files.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0019": {
+        "id": "SCS0019",
+        "shortDescription": "OutputCache Conflict",
+        "fullDescription": "Caching conflicts with authorization.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0020": {
+        "id": "SCS0020",
+        "shortDescription": "SQL Injection (OLE DB)",
+        "fullDescription": "Use parametrized queries to mitigate SQL injection.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0021": {
+        "id": "SCS0021",
+        "shortDescription": "Request Validation Disabled (Configuration File)",
+        "fullDescription": "The validateRequest which provides additional protection against XSS is disabled in configuration file.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0022": {
+        "id": "SCS0022",
+        "shortDescription": "Event Validation Disabled",
+        "fullDescription": "The enableEventValidation is disabled in configuration file.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0023": {
+        "id": "SCS0023",
+        "shortDescription": "View State Not Encrypted",
+        "fullDescription": "The viewStateEncryptionMode is not set to Always in configuration file.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0024": {
+        "id": "SCS0024",
+        "shortDescription": "View State MAC Disabled",
+        "fullDescription": "The enableViewStateMac is disabled in configuration file. (This feature cannot be disabled starting .NET 4.5.1)",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0025": {
+        "id": "SCS0025",
+        "shortDescription": "SQL Injection (ODBC)",
+        "fullDescription": "Use parametrized queries to mitigate SQL injection.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0026": {
+        "id": "SCS0026",
+        "shortDescription": "SQL Injection (MsSQL Data Provider)",
+        "fullDescription": "Use parametrized queries to mitigate SQL injection.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0027": {
+        "id": "SCS0027",
+        "shortDescription": "Open Redirect",
+        "fullDescription": "The dynamic value passed to the Redirect should be validated.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0028": {
+        "id": "SCS0028",
+        "shortDescription": "Insecure Deserialization",
+        "fullDescription": "Untrusted data passed for deserialization.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0029": {
+        "id": "SCS0029",
+        "shortDescription": "Cross-Site Scripting (XSS)",
+        "fullDescription": "A potential XSS was found. The endpoint returns a variable from the client input that has not been encoded. To protect against stored XSS attacks, make sure any dynamic content coming from user or data store cannot be used to inject JavaScript on a page. Most modern frameworks will escape dynamic content by default automatically (Razor for example) or by using special syntax (<%: content %>, <%= HttpUtility.HtmlEncode(content) %>).",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0032": {
+        "id": "SCS0032",
+        "shortDescription": "Password RequiredLength Too Small",
+        "fullDescription": "The minimal length of a password is recommended to be set at least to 8.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0033": {
+        "id": "SCS0033",
+        "shortDescription": "Password Complexity",
+        "fullDescription": "PasswordValidator should have at least two requirements for better security (RequiredLength, RequireDigit, RequireLowercase, RequireUppercase and/or RequireNonLetterOrDigit).",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    },
+    "SCS0034": {
+        "id": "SCS0034",
+        "shortDescription": "Password RequiredLength Not Set",
+        "fullDescription": "The RequiredLength property must be set with a minimum value of 8.",
+        "defaultLevel": "error",
+        "properties": {
+            "category": ".NET Security Code Scan",
+            "isEnabledByDefault": true
+        }
+    }
+}

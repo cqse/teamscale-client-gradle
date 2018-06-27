@@ -41,6 +41,8 @@ ext {
 		3: "improving",
 		4: "perfective"
 	]
+
+	DUMMY_PROJECT = "dummy"
 }
 
 // ### Definitions ###
@@ -73,15 +75,6 @@ class Dashboard {
 }
 
 // ### Methods ###
-/** Custom handler for the failure of a request */
-ext.failure = { resp, reader ->
-	println "############################ Response ##################################"
-	println resp.getUri()
-	println reader
-	println "########################################################################"
-	throw new HttpException(resp, reader)
-}
-
 /**
  * Checks if the project with the given id exists
  */
@@ -211,13 +204,18 @@ ext.uploadDashboard = { dashboard, projectId ->
 /** Sets the sharing for the given dashboard */
 ext.setSharing = { dashboard, projectInfo ->
 	// TODO: Group sharing for TSA
-	dashboard.payload.projectAccessEntries.children().findAll {true}.replaceNode {}
-	dashboard.payload.projectAccessEntries.appendNode {
-		'com.teamscale.index.dashboard.DashboardAccessEntry'() {
-			userOrGroup "$projectInfo.id"
-			accessRight  "READ"
+	dashboard.payload.projectAccessEntries.children().each { child ->
+		if(child.userOrGroup == DUMMY_PROJECT) {
+			child.userOrGroup = projectInfo.id
 		}
 	}
+	//dashboard.payload.projectAccessEntries.children().findAll {true}.replaceNode {}
+	//dashboard.payload.projectAccessEntries.appendNode {
+	//	'com.teamscale.index.dashboard.DashboardAccessEntry'() {
+	//		userOrGroup "$projectInfo.id"
+	//		accessRight  "READ"
+	//	}
+	//}
 }
 
 /**
@@ -253,6 +251,11 @@ ext.createDashboard = { template, projectInfo ->
 		if(widget.Path) {
 			widget.Path.project = projectInfo.id
 		}
+
+		// Baselines
+		if(widget.Trend && widget.Trend.type == "BASELINE") {
+			widget.Trend.value.project = projectInfo.id
+		}
 	}
 	xml.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
 
@@ -270,6 +273,7 @@ task createUniformDashboardForAllProjects {
 		def propertyInfos = getProjectInfos(TOOL, PORTFOLIO_DATA_PATH)
 		def existingDashboards = getDashboards()
 
+		propertyInfos = propertyInfos.subList(0, 2)
 		propertyInfos.each { propertyInfo ->
 			// Check if project exists
 			if (PROJECT_MUST_EXIST && !propertyInfo.profile) {
@@ -294,9 +298,11 @@ task deleteAllDashboards {
 		def http = teamscale.httpClient(teamscale)
 		getDashboards().each { dashboard ->
 			http.delete {
-				def name = URLEncoder.encode(dashboard, "UTF-8")
-				request.uri.path = "/dashboards/$name"
-				response.failure failure
+				request.uri.path = "/dashboards/$dashboard"
+				response.failure { resp, reader ->
+					println request.uri
+					println reader
+				}
 			}
 		}
 	}
@@ -306,7 +312,7 @@ task backupAllDashboards {
 	doLast {
 		getDashboards().each { dashboard ->
 			def name = URLEncoder.encode(dashboard, "UTF-8")
-			new File("$rootDir/tmp/backup/").mkdirs()
+			new File("$rootDir/tmp/backup/").mkdirs()createMonthly
 			downloadDashboard(dashboard, "tmp/backup/${name}.tsdashboard")
 		}
 	}

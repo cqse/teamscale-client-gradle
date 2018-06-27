@@ -1,0 +1,134 @@
+apply from: "$rootDir/gradle/base-teamscale.gradle"
+
+import groovy.json.JsonBuilder
+
+ext {
+	teamscale.url = "http://..."
+	teamscale.username = "admin"
+	teamscale.accesskey = "tokentoken"
+
+
+	// The issue query for the monthly assessment
+	// START and END will be replaced with dates
+	ISSUE_QUERY = "('Work Item Type' != Task and closed=true and inState(closed=true) >= START and inState(closed=true) < END) or ('Work Item Type' = Task and hasParent(closed=true and inState(closed=true) >= START and inState(closed=true) < END)) or ('Work Item Type' = Task and parent = '' and closed=true and inState(closed=true) >= START and inState(closed=true) < END)"
+}
+
+/** Returns all projects currently configured in teamscale */
+def getProjects = {
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/projects"
+	}.childNodes().collect {
+		return it.text()
+	}
+}
+
+def createBaseline = { project, name, date ->
+	def timestamp = Math.max(date.getTime() as long, getFirstCommitTimestamp(project))
+
+	def http = teamscale.httpClient(teamscale)
+	println "Creating Baseline \"$name\" for \"$project\""
+	println "    -> " + http.put {
+		request.uri.path = "/p/$project/baselines/$name"
+		request.contentType = "application/json"
+		request.body = new JsonBuilder([
+			"description" : "",
+			"name" : name,
+			"timestamp" : timestamp
+		]).toPrettyString()
+		response.failure failure
+	}
+}
+
+/** Returns all baselines currently defined for the given project */
+def getBaselines = { project ->
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/p/$project/baselines"
+		response.failure failure
+	}.childNodes().collect {
+		return it.text()
+	}
+}
+
+/**
+ * Returns the timestamp of the first commit of the given project.
+ * Should be used to prevent the creation of a baseline before the project even started.
+ */
+ext.getFirstCommitTimestamp = { project ->
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/p/$project/repository-activity-summary"
+		response.failure failure
+	}.firstCommit.text() as long
+}
+
+/**
+ * Creates the issue query defined in ISSUE_QUERY for this project for the month and year defined
+ * by the given date.
+ */
+def createIssueQuery = { project, date ->
+	date = date.clone()
+
+	def dateShort = date.format("Y-MM")
+	def dateFull = { it.format("Y-MM-dd") }
+
+	def name = "Monthly Assessment $dateShort"
+	def query = ISSUE_QUERY.replaceAll("START", dateFull(date))
+
+	date.month++
+	query = query.replaceAll("END", dateFull(date))
+
+	def http = teamscale.httpClient(teamscale)
+	println "Creating Issue Query for $dateShort for \"$project\""
+	println "    -> " + http.put {
+		request.uri.path = "/p/$project/issue-metrics/$name"
+		request.contentType = "application/json"
+		request.body = [
+			"name" : name,
+			"query" : query
+		]
+		response.failure failure
+	}
+}
+
+/**
+ * Creates/adjust the baselines "This Month" and "Previous Month", as well as creating an issue query
+ * for the monthly assessment of the last month.
+ */
+task createMonthlyBaselinesAndQuery {
+	doLast {
+		def projects = getProjects()
+		projects.each { project ->
+			// Baselines
+			def date = new Date()
+			date.clearTime()
+			date.date = 1
+
+			createBaseline project, "This Month", date
+
+			date.month--
+			createBaseline project, "Previous Month", date
+
+
+			// TODO: Check if it has an issue tracker
+			createIssueQuery project, date
+		}
+	}
+}
+
+/**
+ * Goes through all projects and if a project does not have a "Report Last" baseline,
+ * it will be created as the first commit of the project (at the very start).
+ */
+task createReportLastIfMissing {
+	doLast {
+		def projects = getProjects()
+
+		projects.each { project ->
+			if(!getBaselines(project).contains("Report Last")) {
+				createBaseline project, "Report Last", 0
+			}
+		}
+	}
+}

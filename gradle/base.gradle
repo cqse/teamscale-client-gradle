@@ -1,3 +1,6 @@
+import groovyx.net.http.HttpException
+import groovy.json.JsonBuilder
+
 buildscript {
 	dependencies {
 		classpath fileTree("$rootDir/gradle/lib").include("**.jar")
@@ -9,7 +12,7 @@ ext {
 		if (line.endsWith("\n")) {
 			line += "\r\n"
 		}
-		
+
 		if (!file.exists()) {
 			file.text = line
 		} else {
@@ -19,7 +22,7 @@ ext {
 			file.append(line)
 		}
 	}
-	
+
 	fileTreeFiltered = { dir, config ->
 		if (config.subdir) {
 			dir = file("$dir/${config.subdir}")
@@ -36,7 +39,7 @@ ext {
 			os.toString().trim()
 		}
 	}
-	
+
 	isDotNetPdb = { file ->
 		def lines = new ByteArrayOutputStream().withStream { os ->
 			exec {
@@ -45,7 +48,7 @@ ext {
 			}
 			os.toString().readLines()
 		}
-		
+
 		return !lines.any{it.startsWith('0x')}
 	}
 
@@ -60,18 +63,32 @@ ext {
 			path = path.substring(prefix.length())
 			if (path.startsWith('/') || path.startsWith('\\')) {
 				path = path.substring(1)
-			} 
+			}
 		}
-		
+
 		return path
 	}
-	
+
 	/** Wraps an object as and array unless it is already iterable (having an each method). */
 	wrapAsArray = { objectOrArray ->
 		if (!objectOrArray.metaClass.respondsTo(objectOrArray, "each")) {
 			objectOrArray = [objectOrArray]
 		}
-		
+
 		return objectOrArray
+	}
+
+	/** Custom failure handler for request. More verbose. */
+	failure = { resp, reader ->
+		println "############################ Response ##################################"
+		println resp.getUri()
+		println reader
+		println "########################################################################"
+		throw new HttpException(resp, reader)
+	}
+
+	/** Debug command for a readable print (pretty print) */
+	def pprint = { input ->
+		println new JsonBuilder(input).toPrettyString()
 	}
 }

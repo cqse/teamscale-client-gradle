@@ -8,9 +8,7 @@
 .idea/
 *.swp
 /tmp/
+*.iml
 
 # projects
-projects/*.*
-projects/cs/*
-projects/java/*
-!/projects/**/build.gradle
+projects/*
