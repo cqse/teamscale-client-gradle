@@ -21,6 +21,7 @@ ext {
                         ]
                     ],
 
+
                     // With this option you can manage from which branches the builds should be included.
                     // If the option is ommited every build is taken.
                     // If you want to exclude a branch, you can return null, otherwise you can return a string, which
@@ -32,7 +33,10 @@ ext {
                             return source
                         }
                         return null
-                    }
+                    },
+
+					// Disables the upload of the test results if true
+					"uploadTestResults": false
                 ],
                 // If you aren't providing any options you can just write it like this
                 "second-def": [:]
