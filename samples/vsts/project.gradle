@@ -6,14 +6,14 @@ ext {
                 "definition": [
                     // ### options ###
                     // Used when build logs are being downloaded (for parsing warning etc.)
-                    // You can select specific Tasks for which the logs should be downloaded. If this options is 
+                    // You can select specific Tasks for which the logs should be downloaded. If this options is
                     // omitted all logs will be downloaded, which can take a lot longer
                     "taskNamePattern": "regex",
 
                     // If you want to upload reports, like a findbugs XML, you need to provide this option.
                     // "reports" is a Map where the key is a report format from EReportFormat and the value is
-                    // a Map where "artifact" is a regex to filter the artifacts and "file" to filter the files in the 
-                    // filtered artifacts
+                    // a Map where "artifact" is a regex to filter the artifacts and "file" to filter the files in the
+                    // chosen artifacts
                     "reports": [
                         "findbugs": [
                             "artifact": "regex",
@@ -23,7 +23,7 @@ ext {
 
                     // With this option you can manage from which branches the builds should be included.
                     // If the option is ommited every build is taken.
-                    // If you want to exclude a branch, you can return null, otherwise you can return a string, which 
+                    // If you want to exclude a branch, you can return null, otherwise you can return a string, which
                     // contains the name of branch on the teamscale server you want to upload this build to.
                     // "source" is the branch on the VSTS and the return value is the branch on teamscale
                     // If you just want to upload it to the default branch return "".

@@ -88,7 +88,7 @@ ext {
 	}
 
 	/** Debug command for a readable print (pretty print) */
-	def pprint = { input ->
+	pprint = { input ->
 		println new JsonBuilder(input).toPrettyString()
 	}
 }
