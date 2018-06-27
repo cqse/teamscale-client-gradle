@@ -1,6 +1,5 @@
 apply from: "$rootDir/gradle/base-teamscale.gradle"
 
-import groovyx.net.http.HttpException
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import groovy.transform.Canonical
@@ -76,7 +75,7 @@ class Dashboard {
 
 // ### Methods ###
 /** Checks if the project with the given id exists */
-ext.getProjectInfo = { id ->
+def getProjectInfo(id) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "/create-project/$id"
@@ -92,7 +91,7 @@ ext.getProjectInfo = { id ->
  *
  * @return List<ProjectInfo>
  */
-ext.getProjectInfos = { tool, dataPath ->
+def getProjectInfos(tool, dataPath) {
 	def propertiesFile = new File(dataPath)
 	assert propertiesFile.exists(): "File \"$dataPath\" does not exist"
 
@@ -119,7 +118,7 @@ ext.getProjectInfos = { tool, dataPath ->
 }
 
 /** Returns the Dashboard template */
-ext.getDashboardTemplate = {
+def getDashboardTemplate() {
 	return downloadDashboard(DASHBOARD_TEMPLATE)
 }
 
@@ -127,7 +126,7 @@ ext.getDashboardTemplate = {
  * Downloads the dashboard with the given name.
  * If the saveTo parameter is not set the dashboard will only be downloaded to a temp file, which will be deleted.
  */
-ext.downloadDashboard = {name, saveTo = null ->
+def downloadDashboard(name, saveTo = null) {
 	def http = teamscale.httpClient(teamscale)
 	def path = saveTo ?: "tmp/tmp.tsdashboard"
 
@@ -153,7 +152,7 @@ ext.downloadDashboard = {name, saveTo = null ->
 }
 
 /** Returns a list of all dashboards in Teamscale */
-ext.getDashboards = {
+def getDashboards() {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "/dashboards"
@@ -167,7 +166,7 @@ ext.getDashboards = {
  *
  * @param dashboard Dashboard
  */
-ext.uploadDashboard = { dashboard, projectId ->
+def uploadDashboard(dashboard, projectId) {
 	def http = teamscale.httpClient(teamscale)
 	print "Uploading dashboard for $projectId to $teamscale.url: "
 	println http.post {
@@ -184,7 +183,7 @@ ext.uploadDashboard = { dashboard, projectId ->
 }
 
 /** Sets the sharing for the given dashboard */
-ext.setSharing = { dashboard, projectInfo ->
+def setSharing(dashboard, projectInfo) {
 	// TODO: Group sharing for TSA
 	dashboard.payload.projectAccessEntries.children().each { child ->
 		if(child.userOrGroup == DUMMY_PROJECT) {
@@ -199,7 +198,7 @@ ext.setSharing = { dashboard, projectInfo ->
  * @param info ProjectInfo
  * @return Dashboard
  */
-ext.createDashboard = { template, projectInfo ->
+def createDashboard(template, projectInfo) {
 	// parse the XML
 	def xml = new XmlSlurper().parseText(template)
 
@@ -247,7 +246,6 @@ task createUniformDashboardForAllProjects {
 		def propertyInfos = getProjectInfos(TOOL, PORTFOLIO_DATA_PATH)
 		def existingDashboards = getDashboards()
 
-		propertyInfos = propertyInfos.subList(0, 2)
 		propertyInfos.each { propertyInfo ->
 			// Check if project exists
 			if (PROJECT_MUST_EXIST && !propertyInfo.profile) {

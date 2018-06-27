@@ -14,7 +14,7 @@ ext {
 }
 
 /** Returns all projects currently configured in teamscale */
-def getProjects = {
+def getProjects() {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "/projects"
@@ -23,7 +23,7 @@ def getProjects = {
 	}
 }
 
-def createBaseline = { project, name, date ->
+def createBaseline(project, name, date) {
 	def timestamp = Math.max(date.getTime() as long, getFirstCommitTimestamp(project))
 
 	def http = teamscale.httpClient(teamscale)
@@ -41,7 +41,7 @@ def createBaseline = { project, name, date ->
 }
 
 /** Returns all baselines currently defined for the given project */
-def getBaselines = { project ->
+def getBaselines(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "/p/$project/baselines"
@@ -55,7 +55,7 @@ def getBaselines = { project ->
  * Returns the timestamp of the first commit of the given project.
  * Should be used to prevent the creation of a baseline before the project even started.
  */
-ext.getFirstCommitTimestamp = { project ->
+def getFirstCommitTimestamp(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "/p/$project/repository-activity-summary"
@@ -67,7 +67,7 @@ ext.getFirstCommitTimestamp = { project ->
  * Creates the issue query defined in ISSUE_QUERY for this project for the month and year defined
  * by the given date.
  */
-def createIssueQuery = { project, date ->
+def createIssueQuery(project, date) {
 	date = date.clone()
 
 	def dateShort = date.format("Y-MM")
