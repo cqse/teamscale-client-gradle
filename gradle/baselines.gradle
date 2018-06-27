@@ -98,8 +98,7 @@ def createIssueQuery = { project, date ->
  */
 task createMonthlyBaselinesAndQuery {
 	doLast {
-		def projects = getProjects()
-		projects.each { project ->
+		getProjects().each { project ->
 			// Baselines
 			def date = new Date()
 			date.clearTime()
@@ -110,8 +109,6 @@ task createMonthlyBaselinesAndQuery {
 			date.month--
 			createBaseline project, "Previous Month", date
 
-
-			// TODO: Check if it has an issue tracker
 			createIssueQuery project, date
 		}
 	}
@@ -123,9 +120,7 @@ task createMonthlyBaselinesAndQuery {
  */
 task createReportLastIfMissing {
 	doLast {
-		def projects = getProjects()
-
-		projects.each { project ->
+		getProjects().each { project ->
 			if(!getBaselines(project).contains("Report Last")) {
 				createBaseline project, "Report Last", 0
 			}

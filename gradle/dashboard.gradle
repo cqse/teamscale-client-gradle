@@ -75,9 +75,7 @@ class Dashboard {
 }
 
 // ### Methods ###
-/**
- * Checks if the project with the given id exists
- */
+/** Checks if the project with the given id exists */
 ext.getProjectInfo = { id ->
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
@@ -91,9 +89,6 @@ ext.getProjectInfo = { id ->
 
 /**
  * Fetches the info for all projects from the applications.json from the portfolio dashboard and teamscale
- *
- * @param tool String "tqe" or "tga"
- * @param dataPath String Path to the applications.json
  *
  * @return List<ProjectInfo>
  */
@@ -123,11 +118,7 @@ ext.getProjectInfos = { tool, dataPath ->
 	return projectInfos
 }
 
-/**
- * Returns the Dashboard template
- *
- * @return String
- */
+/** Returns the Dashboard template */
 ext.getDashboardTemplate = {
 	return downloadDashboard(DASHBOARD_TEMPLATE)
 }
@@ -135,10 +126,6 @@ ext.getDashboardTemplate = {
 /**
  * Downloads the dashboard with the given name.
  * If the saveTo parameter is not set the dashboard will only be downloaded to a temp file, which will be deleted.
- *
- * @param name String
- * @param saveTo String Path where the dashboard will be saved to
- * @return String The dashboard XML
  */
 ext.downloadDashboard = {name, saveTo = null ->
 	def http = teamscale.httpClient(teamscale)
@@ -165,11 +152,7 @@ ext.downloadDashboard = {name, saveTo = null ->
 	}
 }
 
-/**
- * Returns a list of all dashboards in Teamscale
- *
- * @return List<String>
- */
+/** Returns a list of all dashboards in Teamscale */
 ext.getDashboards = {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
@@ -183,7 +166,6 @@ ext.getDashboards = {
  * Uploads the given dashboard to teamscale
  *
  * @param dashboard Dashboard
- * @param projectId String
  */
 ext.uploadDashboard = { dashboard, projectId ->
 	def http = teamscale.httpClient(teamscale)
@@ -209,19 +191,11 @@ ext.setSharing = { dashboard, projectInfo ->
 			child.userOrGroup = projectInfo.id
 		}
 	}
-	//dashboard.payload.projectAccessEntries.children().findAll {true}.replaceNode {}
-	//dashboard.payload.projectAccessEntries.appendNode {
-	//	'com.teamscale.index.dashboard.DashboardAccessEntry'() {
-	//		userOrGroup "$projectInfo.id"
-	//		accessRight  "READ"
-	//	}
-	//}
 }
 
 /**
  * Creates a dashboard from the template and the given information.
  *
- * @param template String
  * @param info ProjectInfo
  * @return Dashboard
  */
@@ -293,6 +267,7 @@ task createUniformDashboardForAllProjects {
 	}
 }
 
+/** Deletes ALL dashboards (without asking)! */
 task deleteAllDashboards {
 	doLast {
 		def http = teamscale.httpClient(teamscale)
@@ -308,6 +283,7 @@ task deleteAllDashboards {
 	}
 }
 
+/** Exports all dashboards to the tmp/backup directory */
 task backupAllDashboards {
 	doLast {
 		getDashboards().each { dashboard ->
