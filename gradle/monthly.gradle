@@ -7,10 +7,12 @@ ext {
 	teamscale.username = "admin"
 	teamscale.accesskey = "tokentoken"
 
-
 	// The issue query for the monthly assessment
 	// START and END will be replaced with dates
-	ISSUE_QUERY = "('Work Item Type' != Task and closed=true and inState(closed=true) >= START and inState(closed=true) < END) or ('Work Item Type' = Task and hasParent(closed=true and inState(closed=true) >= START and inState(closed=true) < END)) or ('Work Item Type' = Task and parent = '' and closed=true and inState(closed=true) >= START and inState(closed=true) < END)"
+	ISSUE_QUERY = "('Work Item Type' != Task and closed=true and inState(closed=true) >= START and " +
+		"inState(closed=true) < END) or ('Work Item Type' = Task and hasParent(closed=true and " +
+		"inState(closed=true) >= START and inState(closed=true) < END)) or ('Work Item Type' = Task and " +
+		"parent = '' and closed=true and inState(closed=true) >= START and inState(closed=true) < END)"
 }
 
 /** Returns all projects currently configured in teamscale */
@@ -32,19 +34,19 @@ def createBaseline(project, name, date) {
 		request.uri.path = "/p/$project/baselines/$name"
 		request.contentType = "application/json"
 		request.body = new JsonBuilder([
-			"description" : "",
-			"name" : name,
-			"timestamp" : timestamp
+			"description": "",
+			"name"       : name,
+			"timestamp"  : timestamp
 		]).toPrettyString()
 		response.failure failure
 	}
 }
 
-/** Returns all baselines currently defined for the given project */
+/** Returns all monthly currently defined for the given project */
 def getBaselines(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/p/$project/baselines"
+		request.uri.path = "/p/$project/monthly"
 		response.failure failure
 	}.childNodes().collect {
 		return it.text()
@@ -86,30 +88,62 @@ def createIssueQuery(project, date) {
 		request.contentType = "application/json"
 		request.body = [
 			"name" : name,
-			"query" : query
+			"query": query
 		]
 		response.failure failure
 	}
 }
 
+/** Returns a date without a time at the start of the current month */
+def getDateAtStartOfCurrentMonth() {
+	def date = new Date()
+	date.clearTime()
+	date.date = 1
+	return date
+}
+
+/** Checks whether the given project has any issues */
+def hasIssues(project) {
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "/p/$project/issues"
+		response.failure failure
+	}.childNodes().collect {
+		return it.text()
+	}.size() > 0
+}
+
 /**
- * Creates/adjust the baselines "This Month" and "Previous Month", as well as creating an issue query
+ * Creates/adjust the monthly "This Month" and "Previous Month", as well as creating an issue query
  * for the monthly assessment of the last month.
  */
-task createMonthlyBaselinesAndQuery {
+task createMonthlyBaselines {
 	doLast {
 		getProjects().each { project ->
-			// Baselines
-			def date = new Date()
-			date.clearTime()
-			date.date = 1
+			def date = getDateAtStartOfCurrentMonth()
 
 			createBaseline project, "This Month", date
-
 			date.month--
 			createBaseline project, "Previous Month", date
+		}
+	}
+}
 
-			createIssueQuery project, date
+/**
+ * Creates an issue query which shows all issues/work items which have been closed
+ * in the last month
+ */
+task createAssessmentIssueQueryForLastMonth {
+	doLast {
+		getProjects().each { project ->
+			if (hasIssues(project)) {
+				def date = getDateAtStartOfCurrentMonth()
+				date.month--
+
+				createIssueQuery project, date
+			} else {
+				println "Issue query not created for \"$project\", because it has no issues."
+			}
 		}
 	}
 }
@@ -121,7 +155,7 @@ task createMonthlyBaselinesAndQuery {
 task createReportLastIfMissing {
 	doLast {
 		getProjects().each { project ->
-			if(!getBaselines(project).contains("Report Last")) {
+			if (!getBaselines(project).contains("Report Last")) {
 				createBaseline project, "Report Last", 0
 			}
 		}
