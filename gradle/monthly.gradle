@@ -46,7 +46,7 @@ def createBaseline(project, name, date) {
 def getBaselines(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/p/$project/monthly"
+		request.uri.path = "/p/$project/baselines"
 		response.failure failure
 	}.childNodes().collect {
 		return it.text()
