@@ -156,8 +156,7 @@ task createReportLastIfMissing {
 	doLast {
 		getProjects().each { project ->
 			if (!getBaselines(project).contains("Report Last")) {
-				println "Creating baseline \"Report Last\" for $project"
-				createBaseline project, "Report Last", 0
+				createBaseline project, "Report Last", new Date(0)
 			}
 		}
 	}
