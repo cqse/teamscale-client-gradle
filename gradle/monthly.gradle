@@ -42,7 +42,7 @@ def createBaseline(project, name, date) {
 	}
 }
 
-/** Returns all monthly currently defined for the given project */
+/** Returns all currently defined for the given project */
 def getBaselines(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
@@ -94,7 +94,7 @@ def createIssueQuery(project, date) {
 	}
 }
 
-/** Returns a date without a time at the start of the current month */
+/** Returns a date without a time, at the start of the current month */
 def getDateAtStartOfCurrentMonth() {
 	def date = new Date()
 	date.clearTime()
@@ -156,6 +156,7 @@ task createReportLastIfMissing {
 	doLast {
 		getProjects().each { project ->
 			if (!getBaselines(project).contains("Report Last")) {
+				println "Creating baseline \"Report Last\" for $project"
 				createBaseline project, "Report Last", 0
 			}
 		}
