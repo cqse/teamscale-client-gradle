@@ -14,16 +14,16 @@ ext {
 	teamscale = [
 		// The Teamscale server URL
 		url: "http://localhost:8080",
-		
-		// The user uploads are performed with. 
+
+		// The user uploads are performed with.
 		username: "admin",
-		
+
 		// The user access token. Must be set!. Gather from Teamscale Web UI, password will not work!
 		accesskey: null,
-		
+
 		// The project id. Must be set!
 		project: null,
-		
+
 		// Configuration of HTTP Timeouts
 		timeout: [
 			connect: 60,
@@ -36,11 +36,17 @@ ext {
 
 		httpClient: { teamscale ->
 			assert teamscale.accesskey != null
-			
+
 			return groovyx.net.http.OkHttpBuilder.configure {
+				teamscale.url = teamscale.url.replaceAll("/\$", "")
+
 				request.uri = teamscale.url
+
+				// Workaround for a HTTPBuilder Problem/Bug
+				teamscale.prefix = new URL(teamscale.url).getPath()
+
 				request.headers['Authorization'] = "Basic " + "${teamscale.username}:${teamscale.accesskey}".bytes.encodeBase64().toString()
-				
+
 				clientConfig.clientCustomizer { okhttp3.OkHttpClient.Builder builder ->
 					builder.connectTimeout(teamscale.timeout.connect, java.util.concurrent.TimeUnit.SECONDS);
 					builder.writeTimeout(teamscale.timeout.write, java.util.concurrent.TimeUnit.SECONDS);

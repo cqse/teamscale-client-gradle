@@ -78,7 +78,7 @@ class Dashboard {
 def getProjectInfo(id) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/create-project/$id"
+		request.uri.path = "$teamscale.prefix/create-project/$id"
 
 		response.failure {
 			return null
@@ -135,7 +135,7 @@ def downloadDashboard(name, saveTo = null) {
 		// The request does return a file handle, but if the dashboard doesn't exist it will still write the file
 		// with the 404 message of the server. This cannot be parsed further in the script, so we want to return null
 		def result = http.get {
-			request.uri.path = "/dashboard-export/${name}.tsdashboard"
+			request.uri.path = "$teamscale.prefix/dashboard-export/${name}.tsdashboard"
 			groovyx.net.http.optional.Download.toFile(delegate, file)
 			response.failure { resp, reader ->
 				println "WARNING: Dashboard \"$name\" does not exist on $teamscale.url"
@@ -155,7 +155,7 @@ def downloadDashboard(name, saveTo = null) {
 def getDashboards() {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/dashboards"
+		request.uri.path = "$teamscale.prefix/dashboards"
 	}.childNodes().collect {
 		return it.text()
 	}
@@ -170,7 +170,7 @@ def uploadDashboard(dashboard, projectId) {
 	def http = teamscale.httpClient(teamscale)
 	print "Uploading dashboard for $projectId to $teamscale.url: "
 	println http.post {
-		request.uri.path = "/dashboard-export"
+		request.uri.path = "$teamscale.prefix/dashboard-export"
 		request.encoder "multipart/form-data", groovyx.net.http.OkHttpEncoders.&multipart
 		request.contentType = "multipart/form-data"
 
@@ -271,7 +271,7 @@ task deleteAllDashboards {
 		def http = teamscale.httpClient(teamscale)
 		getDashboards().each { dashboard ->
 			http.delete {
-				request.uri.path = "/dashboards/$dashboard"
+				request.uri.path = "$teamscale.prefix/dashboards/$dashboard"
 				response.failure { resp, reader ->
 					println request.uri
 					println reader

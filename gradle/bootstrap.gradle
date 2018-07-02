@@ -13,7 +13,7 @@ configurations {
 }
 
 dependencies {
-	build 'io.github.http-builder-ng:http-builder-ng-okhttp:0.17.0'
+	build 'io.github.http-builder-ng:http-builder-ng-okhttp:1.0.3'
 }
 
 task bootstrap(type: Copy) {

@@ -19,7 +19,7 @@ ext {
 def getProjects() {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/projects"
+		request.uri.path = "$teamscale.prefix/projects"
 		response.failure failure
 	}.childNodes().collect {
 		return it.text()
@@ -32,7 +32,7 @@ def createBaseline(project, name, date) {
 	def http = teamscale.httpClient(teamscale)
 	println "Creating Baseline \"$name\" for \"$project\""
 	println "    -> " + http.put {
-		request.uri.path = "/p/$project/baselines/$name"
+		request.uri.path = "$teamscale.prefix/p/$project/baselines/$name"
 		request.contentType = "application/json"
 		request.body = new JsonBuilder([
 			"description": "",
@@ -47,7 +47,7 @@ def createBaseline(project, name, date) {
 def getBaselines(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/p/$project/baselines"
+		request.uri.path = "$teamscale.prefix/p/$project/baselines"
 		response.failure failure
 	}.childNodes().collect {
 		return it.text()
@@ -61,7 +61,7 @@ def getBaselines(project) {
 def getFirstCommitTimestamp(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/p/$project/repository-activity-summary"
+		request.uri.path = "$teamscale.prefix/p/$project/repository-activity-summary"
 		response.failure failure
 	}.firstCommit.text() as long
 }
@@ -85,7 +85,7 @@ def createIssueQuery(project, date) {
 	def http = teamscale.httpClient(teamscale)
 	println "Creating Issue Query for $dateShort for \"$project\""
 	println "    -> " + http.put {
-		request.uri.path = "/p/$project/issue-metrics/$name"
+		request.uri.path = "$teamscale.prefix/p/$project/issue-metrics/$name"
 		request.contentType = "application/json"
 		request.body = [
 			"name" : name,
@@ -107,7 +107,7 @@ def getDateAtStartOfCurrentMonth() {
 def hasIssues(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
-		request.uri.path = "/p/$project/issues"
+		request.uri.path = "$teamscale.prefix/p/$project/issues"
 		response.failure failure
 	}.childNodes().collect {
 		return it.text()
