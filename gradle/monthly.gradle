@@ -20,6 +20,7 @@ def getProjects() {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "/projects"
+		response.failure failure
 	}.childNodes().collect {
 		return it.text()
 	}
