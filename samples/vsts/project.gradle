@@ -6,21 +6,23 @@ ext {
                 "definition": [
                     // ### options ###
                     // Used when build logs are being downloaded (for parsing warning etc.)
-                    // You can select specific Tasks for which the logs should be downloaded. If this options is
-                    // omitted all logs will be downloaded, which can take a lot longer
+                    // You can select specific tasks by name for which the logs should be downloaded. If this options is
+                    // omitted all logs will be downloaded, which can take a lot longer.
                     "taskNamePattern": "regex",
 
                     // If you want to upload reports, like a findbugs XML, you need to provide this option.
                     // "reports" is a Map where the key is a report format from EReportFormat and the value is
                     // a Map where "artifact" is a regex to filter the artifacts and "file" to filter the files in the
-                    // chosen artifacts
+                    // chosen artifacts.
                     "reports": [
                         "findbugs": [
                             "artifact": "regex",
-                            "file": "regex"
+                            "file": "regex",
+							// Defines a transformation which should be done on the report. You can find all available
+							// transformations in the code inside of the method `transformReport`
+							"transformation": "" // (optional)
                         ]
                     ],
-
 
                     // With this option you can manage from which branches the builds should be included.
                     // If the option is ommited every build is taken.
@@ -36,7 +38,12 @@ ext {
                     },
 
 					// Disables the upload of the test results if true
-					"uploadTestResults": false
+					// Per default this is true. If you are sure that there are no tests, disable it.
+					"uploadTestResults": true,
+
+					// If a project has more than one definition, all definitions must have this property in order to
+					// distinguish the uploads from the different partitions
+					"partition": "partition"
                 ],
                 // If you aren't providing any options you can just write it like this
                 "second-def": [:]
