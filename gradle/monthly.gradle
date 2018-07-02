@@ -162,3 +162,17 @@ task createReportLastIfMissing {
 		}
 	}
 }
+
+/**
+ * Goes through all projects and if a project does not have a "TGA Baseline" baseline,
+ * it will be created as the first commit of the project (at the very start).
+ */
+task createTGAStartIfMissing {
+	doLast {
+		getProjects().each { project ->
+			if (!getBaselines(project).contains("TGA Start")) {
+				createBaseline project, "TGA Start", new Date(0)
+			}
+		}
+	}
+}
