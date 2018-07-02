@@ -38,12 +38,12 @@ ext {
 			assert teamscale.accesskey != null
 
 			return groovyx.net.http.OkHttpBuilder.configure {
-				teamscale.url = teamscale.url.replaceAll("/\$", "")
 
 				request.uri = teamscale.url
 
 				// Workaround for a HTTPBuilder Problem/Bug
-				teamscale.prefix = new URL(teamscale.url).getPath()
+				teamscale.url = teamscale.url.replaceAll("/\$", "")
+				teamscale.prefix = new URL(teamscale.url).getPath() ?: ""
 
 				request.headers['Authorization'] = "Basic " + "${teamscale.username}:${teamscale.accesskey}".bytes.encodeBase64().toString()
 
