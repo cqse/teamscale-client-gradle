@@ -1,0 +1,39 @@
+apply from: "$rootDir/gradle/dashboard.gradle"
+ext {
+	// The teamscale instance
+	teamscale.url = "http://localhost:8080"
+	teamscale.username = "admin"
+	teamscale.accesskey = "L8wX8JvOtaQWqtwulstaZuQVzbVr7p67"
+
+	// Tool for which the dashboard is created. Can be "tqe", "tsa" (or "tga")
+	TOOL = "tqe"
+
+	// The path to the applications.json of the porfolio dashboard
+	PORTFOLIO_DATA_PATH = "[...]/applications.json"
+
+	// The name of the dashboard which is the template for all others
+	DASHBOARD_TEMPLATE = "admin/Template"
+
+	// ### Options ###
+	// If you omit the following options the default options will be taken (seen here)
+
+	// Checks if a dashboard should be overwritten if it already exist
+	OVERWRITE = false
+
+	// Handles the case where dashboard should be created if the project does not exist in teamscale,
+	// but is defined in the portfolio properties.
+	PROJECT_MUST_EXIST = true
+
+	// Mapping from the goal to its short description
+	QUALITY_GOAL_DESCRIPTIONS = [
+		0: "TBD",
+		1: "indifferent",
+		2: "preserving",
+		3: "improving",
+		4: "perfective"
+	]
+
+	// Id of the dummy project. Will be used for replacing values, for example, in sharing
+	DUMMY_PROJECT = "dummy"
+}
+
