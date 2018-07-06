@@ -1,0 +1,9 @@
+apply from: "$rootDir/gradle/monthly.gradle"
+
+ext {
+	teamscale.url = "http://localhost:8080/"
+	teamscale.username = "admin"
+	teamscale.accesskey = "tokentoken"
+
+	// no options
+}

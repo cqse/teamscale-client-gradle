@@ -17,22 +17,23 @@ ext {
 	teamscale.username = "admin"
 	teamscale.accesskey = "tokentoken"
 
-	/** Tool for which the dashboard is created. Can be "tqe", "tsa" (or "tga") */
+	// Tool for which the dashboard is created. Can be "tqe", "tsa" (or "tga")
 	TOOL = ""
 
-	/** The path to the applications.json of the porfolio dashboard */
+	// The path to the applications.json of the porfolio dashboard
 	PORTFOLIO_DATA_PATH = ""
 
-	/** The name of the dashboard which is the template for all others */
+	// The name of the dashboard which is the template for all others
 	DASHBOARD_TEMPLATE = ""
 
-	/** Checks if a dashboard should be overwritten if it already exist */
+	// Checks if a dashboard should be overwritten if it already exist
 	OVERWRITE = false
 
-	/** Handles the case if a dashboard should be created if the project does not exist */
+	// Handles the case where dashboard should be created if the project does not exist in teamscale,
+	// but is defined in the portfolio properties.
 	PROJECT_MUST_EXIST = true
 
-	/** Mapping from the goal to its short description */
+	// Mapping from the goal to its short description
 	QUALITY_GOAL_DESCRIPTIONS = [
 		0: "TBD",
 		1: "indifferent",
@@ -41,6 +42,7 @@ ext {
 		4: "perfective"
 	]
 
+	// Id of the dummy project. Will be used for replacing values, for example, in sharing
 	DUMMY_PROJECT = "dummy"
 }
 
