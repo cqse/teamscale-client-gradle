@@ -242,16 +242,16 @@ def uploadExternalReports(http, reports, definition, build) {
 			"message"  : "External Analysis (${reports.keySet().join(",")})"
 		]
 		setRequestTimeParameter(build, request)
+		response.failure failure
 	}
 
 	// Upload the reports
 	reports.keySet().each { type ->
 		if (reports.get(type).size() > 0) {
-			println " Uploading ${reports.get(type).size()} $type report(s) to " +
-				"$teamscale.project for $definition.name:$build.details.buildNumber"
+			log("Uploading ${reports.get(type).size()} $type report(s)", definition, build)
 		}
 		reports.get(type).each { content ->
-			println "     -> " + uploadExternalReport(http, type, content, definition, build, sessionId)
+			println "    -> " + uploadExternalReport(http, type, content, definition, build, sessionId)
 		}
 	}
 
@@ -306,10 +306,12 @@ def getFileContentsForTypeAndFilter(http, build, filter) {
 	return []
 }
 
-/** Prints the standard upload message. See 'http.get' instances for usage examples */
-def printBuildUpload(message, definition, build, append = "") {
-	println " Uploading $message to $teamscale.project for $definition.name:$build.details.buildNumber $append"
-	print "     -> "
+def log(message, definition = "", build = "") {
+	if(definition) {
+		build = build ? ":$build.details.buildNumber" : ""
+		definition = definition ? "[$definition.name$build] ": ""
+	}
+	println(definition + message)
 }
 
 /** Transforms the given report according to the defined transformation. */
@@ -318,7 +320,7 @@ def transformReport(report, transformation) {
 		case "coverage":
 			return "TEST"
 		default:
-			println "     -> transformation not found. Skipping"
+			println "    -> transformation not found. Skipping"
 			return report
 	}
 }
@@ -357,7 +359,7 @@ task collectBuildDefinitions {
 
 					def lastCompletedTime = Instant.EPOCH
 					if (!vstsBuildDefinition.latestCompletedBuild) {
-						println " No build run/completed for $vstsBuildDefinition.name"
+						log("No build run/completed for $vstsBuildDefinition.name")
 					} else {
 						lastCompletedTime = Instant.parse(vstsBuildDefinition.latestCompletedBuild.finishTime)
 					}
@@ -422,7 +424,7 @@ task collectNewBuilds(dependsOn: collectBuildDefinitions) {
 			} else {
 				lastProcessedCompletedTime = Instant.parse(lastProcessedCompletedTime)
 				if (data.lastCompletedTime <= lastProcessedCompletedTime) {
-					println "No new builds for $definition.name since $lastProcessedCompletedTime"
+					log("No new builds since $lastProcessedCompletedTime", definition)
 					return
 				}
 			}
@@ -545,9 +547,8 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 	doLast {
 		buildDefinitions.each { definition, definitionData ->
 			if (!definition.options.taskNamePattern) {
-				println "WARNING: Option taskNamePattern is not defined for ${definition.name}. This means " +
-					"that every log is parsed.\nSet this option to reduce the amount of data that needs to be " +
-					"downloaded and parsed. See samples/vsts/project for an description."
+				log("WARNING: Option \"taskNamePattern\" is not defined, making this very inefficient. " +
+					"See samples/vsts/project.gradle", definition)
 			}
 
 			definitionData.builds.each { build ->
@@ -577,7 +578,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 					}
 					return []
 				}
-				println " Parsing the logs of the following tasks in $definition.name:$build.details.buildNumber: " + logRefs.name
+				log("Parsing the logs of the following tasks: $logRefs.name", definition, build)
 
 				// Parse the selected job logs
 				logRefs.each { logRef ->
@@ -634,8 +635,8 @@ task uploadRoslynRules() {
 				}.profile
 
 				// upload
-				println " Uploading '$rulesPath' to '$analysisProfile' for '$teamscale.project'"
-				println "     -> " + http.post {
+				log("Uploading '$rulesPath' to '$analysisProfile'")
+				http.post {
 					request.uri.path = "$teamscale.prefix/custom-roslyn-findings"
 					request.contentType = "multipart/form-data"
 					request.uri.query = [
@@ -713,7 +714,7 @@ task collectExternalReports(dependsOn: getArtifacts) {
 		buildDefinitions.each { definition, data ->
 			// Check if reports are configured
 			if (!definition.options.reports) {
-				println " No reports configured for $definition.name"
+				log("No reports configured", definition)
 				return
 			}
 
@@ -724,7 +725,7 @@ task collectExternalReports(dependsOn: getArtifacts) {
 					def contents = getFileContentsForTypeAndFilter(data.http, build, options)
 
 					if(options.transformation && contents.size() > 0) {
-						println " Converting ${contents.size()} $reportType report(s) with the \"$options.transformation\" transformation"
+						log("Converting ${contents.size()} $reportType report(s) with the \"$options.transformation\" transformation", definition, build)
 						contents = contents.collect { content ->
 							return transformReport(content, options.transformation)
 						}
@@ -741,9 +742,7 @@ task collectExternalReports(dependsOn: getArtifacts) {
  * Uploads external analysis tool reports (e.g. FindBugs) to teamscale.
  * This requires some configuration in order to make it work, see the sample file samples/vsts/project.gradle
  */
-task uploadExternalReports() {
-	dependsOn collectExternalReports
-
+task uploadExternalReports(dependsOn: collectExternalReports) {
 	doLast {
 		def http = teamscale.httpClient(teamscale)
 		buildDefinitions.each { definition, data ->
@@ -779,7 +778,7 @@ task uploadTestResults(dependsOn: getTestResults) {
 
 				if (build.details.result == "failed" && result.total == 0) {
 					// Build probably failed before the tests could run
-					println " Skipping failed build: $definition.name:$build.details.buildNumber"
+					log("Skipping failed build", definition, build)
 					return
 				}
 
@@ -788,8 +787,8 @@ task uploadTestResults(dependsOn: getTestResults) {
 				def path = appendPartitionName("Test Success", "/", definition)
 				def message = "External Analysis ($partition): ${result.passed}/${result.total} passed"
 
-				printBuildUpload("test results", definition, build, ": $result")
-				println http.put {
+				log("Uploading test results: $result", definition, build)
+				http.put {
 					request.uri.path = "$teamscale.prefix/p/$teamscale.project/add-non-code-metrics"
 					request.contentType = "application/json"
 					request.uri.query = [
@@ -845,8 +844,8 @@ task uploadBuildStatus(dependsOn: collectNewBuilds) {
 				def partition = appendPartitionName("Build", ": ", definition)
 				def message = "External Analysis ($partition): build $build.details.result"
 
-				printBuildUpload("build status", definition, build)
-				println http.put {
+				log("Uploading build status", definition, build)
+				http.put {
 					request.uri.path = "$teamscale.prefix/p/$teamscale.project/add-non-code-metrics"
 					request.contentType = "application/json"
 					request.uri.query = [
@@ -880,15 +879,15 @@ task uploadBuildFindings(dependsOn: parseBuildLogs) {
 		buildDefinitions.each { definition, data ->
 			data.builds.sort { it.queueTime }.each { build ->
 				if (build.details.result == "failed" && build.findings.size() == 0) {
-					println " Skipping failed build: $definition.name:$build.details.buildNumber"
+					log("Skipping failed build", definition, build)
 					return
 				}
 
 				def partition = appendPartitionName("Findings", ": ", definition)
 
 				// Upload findings
-				printBuildUpload("${build.findings.size()} finding(s)", definition, build)
-				println http.put {
+				log("Uploading ${build.findings.size()} finding(s)", definition, build)
+				http.put {
 					request.uri.path = "$teamscale.prefix/p/$teamscale.project/add-external-findings"
 					request.contentType = 'application/json'
 					request.uri.query = [
