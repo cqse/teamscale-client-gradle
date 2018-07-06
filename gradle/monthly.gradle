@@ -30,8 +30,7 @@ def createBaseline(project, name, date) {
 	def timestamp = Math.max(date.getTime() as long, getFirstCommitTimestamp(project))
 
 	def http = teamscale.httpClient(teamscale)
-	println "Creating Baseline \"$name\" for \"$project\""
-	println "    -> " + http.put {
+	return http.put {
 		request.uri.path = "$teamscale.prefix/p/$project/baselines/$name"
 		request.contentType = "application/json"
 		request.body = new JsonBuilder([
@@ -83,8 +82,7 @@ def createIssueQuery(project, date) {
 	query = query.replaceAll("END", dateFull(date))
 
 	def http = teamscale.httpClient(teamscale)
-	println "Creating Issue Query for $dateShort for \"$project\""
-	println "    -> " + http.put {
+	return http.put {
 		request.uri.path = "$teamscale.prefix/p/$project/issue-metrics/$name"
 		request.contentType = "application/json"
 		request.body = [
@@ -114,18 +112,38 @@ def hasIssues(project) {
 	}.size() > 0
 }
 
+def log(project, message) {
+	println "[$project] $message"
+}
+
+/** Creates a baseline at the very start of the project if it has none with that name. */
+def createDefaultBaselineIfMissing(project, baseline) {
+	if (!getBaselines(project).contains(baseline)) {
+		log(project, "Creating baseline: \"$baseline\"")
+		createBaseline project, baseline, new Date(0)
+	} else {
+		log(project, "Skipping")
+	}
+}
+
 /**
  * Creates/adjust the monthly "This Month" and "Previous Month", as well as creating an issue query
  * for the monthly assessment of the last month.
  */
 task createMonthlyBaselines {
+	def thisMonth = "This Month"
+	def prevMonth = "Previous Month"
+
 	doLast {
 		getProjects().each { project ->
 			def date = getDateAtStartOfCurrentMonth()
 
-			createBaseline project, "This Month", date
+			log(project, "Creating baseline: \"$thisMonth\"")
+			createBaseline(project, thisMonth, date)
 			date.month--
-			createBaseline project, "Previous Month", date
+
+			log(project, "Creating baseline: \"$prevMonth\"")
+			createBaseline project, prevMonth, date
 		}
 	}
 }
@@ -141,9 +159,10 @@ task createAssessmentIssueQueryForLastMonth {
 				def date = getDateAtStartOfCurrentMonth()
 				date.month--
 
-				createIssueQuery project, date
+				log(project, "Creating issues query for ${date.format("YY-MM")}")
+				createIssueQuery(project, date)
 			} else {
-				println "Issue query not created for \"$project\", because it has no issues."
+				log(project, "Query not created, because it doesn't have any issues")
 			}
 		}
 	}
@@ -156,23 +175,19 @@ task createAssessmentIssueQueryForLastMonth {
 task createReportLastIfMissing {
 	doLast {
 		getProjects().each { project ->
-			if (!getBaselines(project).contains("Report Last")) {
-				createBaseline project, "Report Last", new Date(0)
-			}
+			createDefaultBaselineIfMissing(project, "Report Last")
 		}
 	}
 }
 
 /**
- * Goes through all projects and if a project does not have a "TGA Baseline" baseline,
+ * Goes through all projects and if a project does not have a "TGA Start" baseline,
  * it will be created as the first commit of the project (at the very start).
  */
 task createTGAStartIfMissing {
 	doLast {
 		getProjects().each { project ->
-			if (!getBaselines(project).contains("TGA Start")) {
-				createBaseline project, "TGA Start", new Date(0)
-			}
+			createDefaultBaselineIfMissing(project, "TGA Start")
 		}
 	}
 }

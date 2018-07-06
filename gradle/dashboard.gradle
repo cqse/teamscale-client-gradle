@@ -138,7 +138,7 @@ def downloadDashboard(name, saveTo = null) {
 			request.uri.path = "$teamscale.prefix/dashboard-export/${name}.tsdashboard"
 			groovyx.net.http.optional.Download.toFile(delegate, file)
 			response.failure { resp, reader ->
-				println "WARNING: Dashboard \"$name\" does not exist on $teamscale.url"
+				println "[WARNING] Dashboard \"$name\" does not exist on $teamscale.url"
 				return null
 			}
 		}
@@ -168,8 +168,8 @@ def getDashboards() {
  */
 def uploadDashboard(dashboard, projectId) {
 	def http = teamscale.httpClient(teamscale)
-	print "Uploading dashboard for $projectId to $teamscale.url: "
-	println http.post {
+	println "[$projectId] Uploading dashboard \"${dashboard.getName()}\""
+	http.post {
 		request.uri.path = "$teamscale.prefix/dashboard-export"
 		request.encoder "multipart/form-data", groovyx.net.http.OkHttpEncoders.&multipart
 		request.contentType = "multipart/form-data"
@@ -249,14 +249,14 @@ task createUniformDashboardForAllProjects {
 		propertyInfos.each { propertyInfo ->
 			// Check if project exists
 			if (PROJECT_MUST_EXIST && !propertyInfo.profile) {
-				println "WARNING: \"$propertyInfo.id\" does not exist on $teamscale.url... Skipping"
+				println "[WARNING] \"$propertyInfo.id\" does not exist on $teamscale.url"
 				return
 			}
 
 			def dashboard = createDashboard(template, propertyInfo)
 
 			if (!OVERWRITE && existingDashboards.contains(dashboard.getName())) {
-				println "WARNING: Dashboard \"${dashboard.getName()}\" already exists... Skipping"
+				println "[WARNING] Dashboard \"${dashboard.getName()}\" already exists"
 				return
 			}
 
