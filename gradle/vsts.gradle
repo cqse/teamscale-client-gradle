@@ -147,8 +147,8 @@ ext {
 
 def buildDefinitions = [:]
 def cache = [
-	lastProcessedCompletedTime: [:],
-	uploadedRoslynRules       : [] as HashSet
+	lastProcessedCompletedTime: [:] //,
+	//uploadedRoslynRules       : [] as HashSet
 ]
 
 /** Reads the content of the cache file if it exists */
@@ -232,6 +232,14 @@ def uploadExternalReport(http, type, content, definition, build, sessionId = nul
 /** Uploads the given list of reports */
 def uploadExternalReports(http, reports, definition, build) {
 	def partition = appendPartitionName("Metrics", ": ", definition)
+
+	reports = reports.findAll { entry ->
+		return entry.value.size () > 0
+	}
+
+	if (!(reports.size() > 0)) {
+		return
+	}
 
 	// Workaround with the session ids, because the `external-report` service does not provide method
 	// to obtain a session-id
@@ -546,7 +554,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 
 	doLast {
 		buildDefinitions.each { definition, definitionData ->
-			if (!definition.options.taskNamePattern) {
+			if (definitionData.builds.size() > 0 && !definition.options.taskNamePattern) {
 				log("WARNING: Option \"taskNamePattern\" is not defined, making this very inefficient. " +
 					"See samples/vsts/project.gradle", definition)
 			}
