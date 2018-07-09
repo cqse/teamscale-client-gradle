@@ -141,7 +141,14 @@ ext {
 		DISABLE_CACHE: false
 	]
 
+	// Maximum number of lines of log which will be fetched in one go
 	MAX_FETCHED_LOG_LINES = 10000
+
+	// Maximum number of files which are allowed to be matched by a file regex.
+	MAX_MATCHED_FILES = 10
+
+	// Path to the code coverage exe
+	CODE_COVERAGE_EXE = ""
 }
 
 
@@ -152,7 +159,7 @@ def cache = [
 ]
 
 /** Reads the content of the cache file if it exists */
-def get_cache = {
+def getCache = {
 	if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
 		cache = new JsonSlurper().parseText(vsts.cacheFile.text)
 	}
@@ -160,7 +167,7 @@ def get_cache = {
 }
 
 /** Writes the cache to the project file */
-def write_cache = {
+def writeCache = {
 	if (vsts.cacheFile && !DEBUG.DISABLE_CACHE) {
 		vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
 	}
@@ -234,7 +241,7 @@ def uploadExternalReports(http, reports, definition, build) {
 	def partition = appendPartitionName("Metrics", ": ", definition)
 
 	reports = reports.findAll { entry ->
-		return entry.value.size () > 0
+		return entry.value.size() > 0
 	}
 
 	if (!(reports.size() > 0)) {
@@ -279,9 +286,12 @@ def uploadExternalReports(http, reports, definition, build) {
  * Returns a map where the key is the type and the value is a list of the contents of all
  * matched files.
  */
-def getFileContentsForTypeAndFilter(http, build, filter) {
+def getFileContentsForTypeAndFilter(http, options, definition, build) {
 	// Get files, which should be downloaded
-	def artifacts = build.artifacts.findAll { k, v -> k ==~ /${filter.artifact}/ }
+	def artifacts = build.artifacts.findAll { k, v -> k ==~ /${options.artifact}/ }
+
+	assert artifacts.size() > 0: "No artifacts matched for the pattern: \"$options.artifact\""
+
 	def files = artifacts.collectMany { name, id ->
 		return http.get {
 			request.uri.path = "$teamscale.prefix/_apis/resources/Containers/$id"
@@ -291,13 +301,16 @@ def getFileContentsForTypeAndFilter(http, build, filter) {
 			response.failure(failure)
 		}.value.collectMany {
 			def fileName = it.path.split("/").last()
-			if (it.itemType == "file" && fileName ==~ /${filter.file}/) {
+			if (it.itemType == "file" && fileName ==~ /${options.file}/) {
 				return [it.subMap("path", "contentLocation")]
 			} else {
 				[]
 			}
 		}
 	}
+
+	assert files.size() < MAX_MATCHED_FILES: getLogMessage("'$options.file' matched ${files.size()} files. " +
+		"Maximum allowed: $MAX_MATCHED_FILES", definition)
 
 	// Download the content of the files
 	def fileContents = files.collect { file ->
@@ -308,28 +321,69 @@ def getFileContentsForTypeAndFilter(http, build, filter) {
 		}.text
 	}
 
-	if(fileContents.size() > 0) {
+	if (fileContents.size() > 0) {
 		return fileContents
 	}
 	return []
 }
 
 def log(message, definition = "", build = "") {
-	if(definition) {
+	println getLogMessage(message, definition, build)
+}
+
+def getLogMessage(message, definition = "", build = "") {
+	if (definition) {
 		build = build ? ":$build.details.buildNumber" : ""
-		definition = definition ? "[$definition.name$build] ": ""
+		definition = definition ? "[$definition.name$build] " : ""
 	}
-	println(definition + message)
+	return definition + message
 }
 
 /** Transforms the given report according to the defined transformation. */
 def transformReport(report, transformation) {
-	switch(transformation) {
-		case "coverage":
-			return "TEST"
+	switch (transformation) {
+		case "VSTSCoverage":
+			return transformVstsCoverage(report)
 		default:
+			def tmpXml
 			println "    -> transformation not found. Skipping"
 			return report
+	}
+}
+
+def transformVstsCoverage(coverage) {
+	assert CODE_COVERAGE_EXE: "CODE_COVERAGE_EXE must be defined for the conversion of vsts coverage data"
+	def xmlPath = "$rootDir/tmp/tmp.xml"
+
+	def tmpCoverage
+	def tmpXml
+	try {
+		tmpCoverage = new File("$rootDir/tmp/tmp.coverage")
+		tmpCoverage.write(coverage)
+
+		def command = ["cmd", "/c", "$CODE_COVERAGE_EXE", "analyze", "/output:$rootDir\\tmp\\tmp.xml",
+					   "$rootDir\\tmp\\tmp.coverage"].execute()
+		//def command = ["bash", "-c", "echo -e 'test' > $xmlPath"].execute()
+		def outputStream = new StringBuffer()
+		def errorStream = new StringBuffer()
+		command.waitForProcessOutput(outputStream, errorStream)
+		def output = outputStream.toString().trim()
+		def error = errorStream.toString().trim()
+
+		if (output) {
+			new File("$rootDir/tmp/transformation.log").write(output)
+		}
+
+		if (error) {
+			log("    -> failed: ${error}")
+			return null
+		}
+
+		tmpXml = new File("$xmlPath")
+		return tmpXml.text
+	} finally {
+		tmpCoverage?.delete()
+		tmpXml?.delete()
 	}
 }
 
@@ -422,7 +476,7 @@ task collectNewBuilds(dependsOn: collectBuildDefinitions) {
 	}
 
 	doLast {
-		get_cache()
+		getCache()
 
 		buildDefinitions.each { definition, data ->
 			def cacheKey = "$definition.url/$definition.project/$definition.name"
@@ -475,8 +529,6 @@ task collectNewBuilds(dependsOn: collectBuildDefinitions) {
 			// TODO update step by step?
 			cache.lastProcessedCompletedTime[cacheKey] = data.lastCompletedTime.toString()
 		}
-
-		write_cache()
 	}
 }
 
@@ -586,6 +638,12 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 					}
 					return []
 				}
+
+				if(definition.options.taskNamePattern) {
+					assert logRefs.size() > 0: "The pattern \"$definition.options.taskNamePattern\" does not match " +
+						"any task, therefore no findings can be extracted from the logs"
+				}
+
 				log("Parsing the logs of the following tasks: $logRefs.name", definition, build)
 
 				// Parse the selected job logs
@@ -623,7 +681,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 task uploadRoslynRules() {
 	doLast {
 		// check cache
-		get_cache()
+		getCache()
 
 		// upload rules
 		def diff = vsts.availableRoslynReportRules - cache.uploadedRoslynRules
@@ -673,12 +731,13 @@ task uploadRoslynRules() {
 		}
 
 		// set cache
-		write_cache()
+		writeCache()
 	}
 }
 
 /** Gets the information for each artifact of a build, such that that parts can be downloaded */
 task getArtifacts(dependsOn: collectNewBuilds) {
+	// Extracts the id of the artifact, which can be used to download it
 	def extractContainerId = { artifact ->
 		def match = artifact.resource.data =~ /^\#\/([0-9]+)\/${artifact.name}$/
 		if (match.find()) {
@@ -727,16 +786,21 @@ task collectExternalReports(dependsOn: getArtifacts) {
 			}
 
 			data.builds.sort { it.queueTime }.each { build ->
-				build.reports += definition.options.reports.collectEntries { reportType, options->
-					assert options.artifact && options.file: "Artifact and file regex must be defined for the " +
-						"\"$reportType\" report. Check the config"
-					def contents = getFileContentsForTypeAndFilter(data.http, build, options)
+				build.reports += definition.options.reports.collectEntries { reportType, options ->
+					assert options.artifact && options.file: getLogMessage("Artifact and file regex must both be defined " +
+						"for the \"$reportType\" report. Check the config", definition)
+					def contents = getFileContentsForTypeAndFilter(data.http, options, definition, build)
+					if(contents.size() == 0) {
+						log("Regex '$options.file' matched 0 files", definition, build)
+					}
 
-					if(options.transformation && contents.size() > 0) {
-						log("Converting ${contents.size()} $reportType report(s) with the \"$options.transformation\" transformation", definition, build)
+					if (options.transformation && contents.size() > 0) {
+						log("Converting ${contents.size()} $reportType report(s) with the \"$options.transformation\" " +
+							"transformation (Output: tmp/transformation.log)", definition, build)
 						contents = contents.collect { content ->
 							return transformReport(content, options.transformation)
 						}
+						contents.removeAll([null])
 					}
 
 					return ["$reportType": contents]
@@ -950,4 +1014,8 @@ task uploadVstsBuildData() {
 	dependsOn uploadBuildFindings
 	dependsOn uploadTestResults
 	dependsOn uploadExternalReports
+
+	doLast {
+		writeCache()
+	}
 }

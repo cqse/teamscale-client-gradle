@@ -21,7 +21,7 @@ ext {
                             "artifact": "regex",
                             "file": "regex",
 							// Defines a transformation which should be done on the report. You can find all available
-							// transformations in the code inside of the method `transformReport`
+							// transformations in the method `transformReport` in vsts.gradle
 							"transformation": "" // (optional)
                         ]
                     ],
@@ -52,4 +52,8 @@ ext {
             ]
         ]
     ]
+
+	// If you are converting coverage reports from the vsts, provide the path to the coverage exe here,
+	// such that the reports can be transformed
+	CODE_COVERAGE_EXE = "...\\CodeCoverage.exe"
 }
