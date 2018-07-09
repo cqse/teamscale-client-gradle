@@ -356,19 +356,23 @@ def transformReport(report, transformation) {
 def transformVstsCoverage(coverage) {
 	assert CODE_COVERAGE_EXE: "CODE_COVERAGE_EXE must be defined for the conversion of vsts coverage data"
 
-	def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "\"$coverage.absolutePath\"\""].execute()
-	//def command = ["bash", "-c", "echo  \"Path to tmp file: $coverage.absolutePath\""].execute()
+	// Grabbing the output of the command has a ton of \u0000 characters; probably encoding
+	// println prints the String normal, but pprint shows the problem
+	def xml = new File("$rootDir/tmp/tmp.xml")
+	def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",  "\"$coverage.absolutePath\"\""].execute()
 
-	def outputStream = new StringBuffer()
 	def errorStream = new StringBuffer()
-	command.waitForProcessOutput(outputStream, errorStream)
+	command.waitForProcessOutput(null, errorStream)
 
 	if (errorStream) {
 		log("    -> failed: ${errorStream.toString().trim()}")
 		return null
 	}
 
-	return outputStream.toString()
+	def content = xml.text
+	xml.delete()
+
+	return content
 }
 
 // ### Tasks
