@@ -240,10 +240,6 @@ def uploadExternalReport(http, type, content, definition, build, sessionId = nul
 def uploadExternalReports(http, reports, definition, build) {
 	def partition = appendPartitionName("Metrics", ": ", definition)
 
-	reports = reports.findAll { entry ->
-		return entry.value.size() > 0
-	}
-
 	if (!(reports.size() > 0)) {
 		return
 	}
@@ -285,12 +281,11 @@ def uploadExternalReports(http, reports, definition, build) {
  * Delete the files if you're done with them!
  */
 def getFilesWithFilter(http, options, definition, build) {
-	// Get files, which should be downloaded
 	def artifacts = build.artifacts.findAll { k, v -> k ==~ /${options.artifact}/ }
 
 	assert artifacts.size() > 0: "No artifacts matched for the pattern: \"$options.artifact\""
 
-	def filesNames = artifacts.collectMany { name, id ->
+	def files = artifacts.collectMany { name, id ->
 		return http.get {
 			request.uri.path = "$teamscale.prefix/_apis/resources/Containers/$id"
 			request.uri.query = [
@@ -298,31 +293,24 @@ def getFilesWithFilter(http, options, definition, build) {
 			]
 			response.failure(failure)
 		}.value.collectMany {
-			def fileName = it.path.split("/").last()
-			if (it.itemType == "file" && fileName ==~ /${options.file}/) {
+			if (it.itemType == "file" && it.path ==~ /${options.file}/) {
 				return [it.subMap("path", "contentLocation")]
-			} else {
-				[]
 			}
+			return []
 		}
 	}
 
-	assert filesNames.size() < MAX_MATCHED_FILES: getLogMessage("'$options.file' matched ${files.size()} files. " +
+	assert files.size() < MAX_MATCHED_FILES: getLogMessage("'$options.file' matched ${files.size()} files. " +
 		"Maximum allowed: $MAX_MATCHED_FILES", definition)
 
-	// Download the content of the files
-	def files = filesNames.collect { file ->
+	// Download the files
+	return files.collect { file ->
 		return http.get {
 			request.uri = file.contentLocation
 			groovyx.net.http.optional.Download.toTempFile(delegate)
 			response.failure(failure)
 		}
 	}
-
-	if (files.size() > 0) {
-		return files
-	}
-	return []
 }
 
 def log(message, definition = "", build = "") {
@@ -349,17 +337,17 @@ def transformReport(report, transformation) {
 			return report.text
 		default:
 			println "    -> transformation not found. Skipping"
-			return report.text
+			return null
 	}
 }
 
 def transformVstsCoverage(coverage) {
 	assert CODE_COVERAGE_EXE: "CODE_COVERAGE_EXE must be defined for the conversion of vsts coverage data"
 
-	// Grabbing the output of the command has a ton of \u0000 characters; probably encoding
-	// println prints the String normal, but pprint shows the problem
+	// Grabbing the output of the command has a ton of \u0000 characters; probably encoding problems
 	def xml = new File("$rootDir/tmp/tmp.xml")
-	def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",  "\"$coverage.absolutePath\"\""].execute()
+	def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",
+				   "\"$coverage.absolutePath\"\""].execute()
 
 	def errorStream = new StringBuffer()
 	command.waitForProcessOutput(null, errorStream)
@@ -429,9 +417,10 @@ task collectBuildDefinitions {
 					]
 
 					if (definitions.size() > 1) {
-						assert buildDefinitionKey.options.partition: "The project '$buildDefinitionKey.project' has ${definitions.size()} definitions, but " +
-							"there is no partition defined for '$buildDefinitionKey.name'.\n" +
-							"If there are multiple definitions for a project, each one has to have a 'partition' property in its config gradle-file"
+						assert buildDefinitionKey.options.partition: "The project '$buildDefinitionKey.project' " +
+							"has ${definitions.size()} definitions, but there is no partition defined for " +
+							"'$buildDefinitionKey.name'.\nIf there are multiple definitions for a project, " +
+							"each one has to have a 'partition' property in its config gradle-file"
 					}
 				}
 			}
@@ -494,7 +483,7 @@ task collectNewBuilds(dependsOn: collectBuildDefinitions) {
 			response.value.each { build ->
 				def branchName = build.sourceBranch
 
-				// Filter which builds we want to include
+				// Filter which builds should be included
 				if (!includeBuildByBranch(branchName) || !["succeeded", "failed"].contains(build.result)) {
 					return
 				}
@@ -627,7 +616,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 					return []
 				}
 
-				if(definition.options.taskNamePattern) {
+				if (definition.options.taskNamePattern) {
 					assert logRefs.size() > 0: "The pattern \"$definition.options.taskNamePattern\" does not match " +
 						"any task, therefore no findings can be extracted from the logs"
 				}
@@ -664,7 +653,8 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
  * Takes the roslyn rules, defined in the files provided by vsts.availableRoslynReportRules and uploads them
  * to the teamscale service via the `custom-roslyn-findings`
  *
- * TODO (BETA): the service is not usable at the moment (15.06.18), because of a bug in the custom-roslyn-findings service
+ * TODO (BETA): the service is not usable at the moment (15.06.18), because of a bug
+ * https://jira.cqse.eu/browse/TS-15538
  */
 task uploadRoslynRules() {
 	doLast {
@@ -720,6 +710,34 @@ task uploadRoslynRules() {
 
 		// set cache
 		writeCache()
+	}
+}
+
+/**
+ * Converts the findings to a roslyn report and uploads it
+ *
+ * TODO (BETA): Depends on uploadRoslynRules, which is not working correctly at the moment
+ * https://jira.cqse.eu/browse/TS-15538
+ */
+task uploadFindingsAsRoslynReport(dependsOn: parseBuildLogs) {
+	doLast {
+		def http = teamscale.httpClient(teamscale)
+		buildDefinitions.each { definition, data ->
+			data.builds.sort { it.queueTime }.each { build ->
+				// TODO: Check if the findings are in fact C# Findings
+				if (!build.findings) {
+					return
+				}
+
+				// Create the report
+				def report = new RoslynReport()
+				report.addFindings(build.findings)
+				report = new JsonBuilder(report).toString()
+
+				// upload
+				uploadExternalReports(http, ["roslyn": [report]], definition, build)
+			}
+		}
 	}
 }
 
@@ -780,22 +798,25 @@ task collectExternalReports(dependsOn: getArtifacts) {
 					def files = []
 					try {
 						files = getFilesWithFilter(data.http, options, definition, build)
-						if(files.size() == 0) {
+						if (files.size() == 0) {
 							log("Regex '$options.file' matched 0 files", definition, build)
 							return [:]
 						}
 
-						if(options.transformation && files.size > 0) {
+						if (options.transformation && files.size > 0) {
 							log("Converting ${files.size()} $reportType report(s) with the " +
 								"\"$options.transformation\" transformation", definition, build)
 						}
 
 						def contents = files.collect { file ->
-								return transformReport(file, options.transformation)
+							return transformReport(file, options.transformation)
 						}
 						contents.removeAll([null])
 
-						return ["$reportType": contents]
+						if (contents.size() > 0) {
+							return ["$reportType": contents]
+						}
+						return [:]
 					} finally {
 						files.each { file ->
 							file.delete()
@@ -816,9 +837,7 @@ task uploadExternalReports(dependsOn: collectExternalReports) {
 		def http = teamscale.httpClient(teamscale)
 		buildDefinitions.each { definition, data ->
 			data.builds.sort { it.queueTime }.each { build ->
-				if (build.reports.size() > 0) {
-					uploadExternalReports(http, build.reports, definition, build)
-				}
+				uploadExternalReports(http, build.reports, definition, build)
 			}
 		}
 	}
@@ -973,33 +992,6 @@ task uploadBuildFindings(dependsOn: parseBuildLogs) {
 					request.body = fileFindings
 					response.failure(failure)
 				}
-			}
-		}
-	}
-}
-
-/**
- * Converts the findings to a Roslyreport and uploads it
- *
- * TODO (BETA): Depends on uploadRoslynRules, which is not working correctly at the moment
- */
-task uploadFindingsAsRoslynReport(dependsOn: parseBuildLogs) {
-	doLast {
-		def http = teamscale.httpClient(teamscale)
-		buildDefinitions.each { definition, data ->
-			data.builds.sort { it.queueTime }.each { build ->
-				// TODO: Check if the findings are in fact C# Findings
-				if (!build.findings) {
-					return
-				}
-
-				// Create the report
-				def report = new RoslynReport()
-				report.addFindings(build.findings)
-				report = new JsonBuilder(report).toString()
-
-				// upload
-				uploadExternalReports(http, ["roslyn": [report]], definition, build)
 			}
 		}
 	}
