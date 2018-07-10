@@ -26,17 +26,19 @@ ext {
                         ]
                     ],
 
-                    // With this option you can manage from which branches the builds should be included.
-                    // If the option is ommited every build is taken.
+                    // With this option you can manage from which branches the builds should be included and to which
+					// branch they should be uploaded.
+                    // If the option is ommited every build is taken and uploaded to the default main branch.
                     // If you want to exclude a branch, you can return null, otherwise you can return a string, which
                     // is the name of the branch on the teamscale server you want to upload this build to.
                     // "source" is the branch on the VSTS and the return value is the branch on teamscale
                     // If you just want to upload it to the default branch return  the empty string "".
                     "branchMapping": { source ->
                         if(source ==~ /regex/) {
-                            return ""
+                            return "" // default branch
                         }
-                        return null
+                        return null // exclude build
+						//return "test" // upload "$source" to "test"
                     },
 
 					// Disables the upload of the test results if true
@@ -44,7 +46,7 @@ ext {
 					"uploadTestResults": true,
 
 					// If a project has more than one definition, all definitions must have this property in order to
-					// distinguish the uploads from the different partitions
+					// distinguish the uploads from the different definitions
 					"partition": "partition"
                 ],
                 // If you aren't providing any options you can just write it like this
@@ -54,6 +56,6 @@ ext {
     ]
 
 	// If you are converting coverage reports from the vsts, provide the path to the coverage exe here,
-	// such that the reports can be transformed
+	// such that the reports can be transformed. Be sure to escape the backslash path in windows
 	CODE_COVERAGE_EXE = "...\\CodeCoverage.exe"
 }
