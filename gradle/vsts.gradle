@@ -392,6 +392,12 @@ task collectBuildDefinitions {
 					return vstsBuilds.containsKey(vstsBuildDefinition.name)
 				}
 
+				// Check that every definition name is valid
+				def diff = new HashSet(vstsBuilds.keySet())
+				diff.removeAll(definitions.collect {it.name})
+				assert diff.size() == 0: "No definition(s) found on \"$vstsUrl/$vstsProjectName\" with " +
+					"the following name(s): " + diff
+
 				definitions.each { vstsBuildDefinition ->
 					if (!vstsBuilds.containsKey(vstsBuildDefinition.name)) {
 						return
@@ -800,10 +806,9 @@ task collectExternalReports(dependsOn: getArtifacts) {
 					def files = []
 					try {
 						files = getFilesWithFilter(data.http, options, definition, build)
-						if (files.size() == 0) {
-							log("Regex '$options.file' matched 0 files", definition, build)
-							return [:]
-						}
+
+						assert files.size() > 0: getLogMessage("Regex '$options.file' matched 0 files", definition,
+							build)
 
 						if (options.transformation && files.size > 0) {
 							log("Converting ${files.size()} $reportType report(s) with the " +
