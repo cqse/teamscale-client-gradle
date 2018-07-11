@@ -287,7 +287,7 @@ def getFilesWithFilter(http, options, definition, build) {
 
 	def files = artifacts.collectMany { name, id ->
 		return http.get {
-			request.uri.path = "_apis/resources/Containers/$id"
+			request.uri.path = "/_apis/resources/Containers/$id"
 			request.uri.query = [
 				"itemPath": name
 			]
@@ -346,8 +346,9 @@ def transformVstsCoverage(coverage) {
 
 	// Grabbing the output of the command has a ton of \u0000 characters; probably encoding problems
 	def xml = new File("$rootDir/tmp/tmp.xml")
-	def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",
-				   "\"$coverage.absolutePath\"\""].execute()
+	//def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",
+	//			   "\"$coverage.absolutePath\"\""].execute()
+	def command = ["bash", "-c", "echo 'test' > $xml.absolutePath"].execute()
 
 	def errorStream = new StringBuffer()
 	command.waitForProcessOutput(null, errorStream)
@@ -357,6 +358,7 @@ def transformVstsCoverage(coverage) {
 		return null
 	}
 
+	assert xml.exists(): getLogMessage("Transformation of coverage data did not work. No output to $xml.absolutePath!")
 	def content = xml.text
 	xml.delete()
 
@@ -378,7 +380,7 @@ task collectBuildDefinitions {
 				def http = vsts.httpClient(vstsUrl, vsts.credentials[vstsUrl])
 
 				def response = http.get {
-					request.uri.path = "$vstsProjectName/_apis/build/definitions"
+					request.uri.path = "/$vstsProjectName/_apis/build/definitions"
 					request.uri.query = [
 						'api-version'        : '4.1',
 						'includeLatestBuilds': true
@@ -469,7 +471,7 @@ task collectNewBuilds(dependsOn: collectBuildDefinitions) {
 			}
 
 			def response = data.http.get {
-				request.uri.path = "$definition.project/_apis/build/builds"
+				request.uri.path = "/$definition.project/_apis/build/builds"
 				request.uri.query = [
 					'api-version': '4.1',
 					'definitions': data.id,
@@ -522,7 +524,7 @@ task getTestResults(dependsOn: collectNewBuilds) {
 
 			definitionData.builds.each { build ->
 				def testRuns = definitionData.http.get {
-					request.uri.path = "$definition.project/_apis/test/Runs"
+					request.uri.path = "/$definition.project/_apis/test/Runs"
 					request.uri.query = [
 						"api-version": "4.1",
 						"builduri"   : "vstfs:///Build/Build/$build.details.id"
@@ -533,10 +535,10 @@ task getTestResults(dependsOn: collectNewBuilds) {
 				def results = []
 				testRuns.value.each { run ->
 					results.add(definitionData.http.get {
-						request.uri.path = "$definition.project/_apis/test/runs/$run.id"
+						request.uri.path = "/$definition.project/_apis/test/runs/$run.id"
 						request.uri.query = [:]
+						response.failure(failure)
 					})
-					response.failure(failure)
 				}
 
 				build.testResult = results
@@ -593,14 +595,14 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 
 				// Get the information of all logs (lineCount only exists here)
 				def logs = definitionData.http.get {
-					request.uri.path = "$definition.project/_apis/build/builds/$build.details.id/logs"
+					request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs"
 					request.uri.query = ['api-version': '4.1']
 					response.failure(failure)
 				}.value.groupBy { it.id }
 
 				// Get the timeline ( for error- and warningCount )
 				def timeline = definitionData.http.get {
-					request.uri.path = "$definition.project/_apis/build/builds/$build.details.id/timeline"
+					request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/timeline"
 					request.uri.query = ['api-version': '4.1']
 					response.failure(failure)
 				}
@@ -629,7 +631,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 					def currentLine = 0
 					while (currentLine < logRef.lineCount) {
 						def log = definitionData.http.get {
-							request.uri.path = "$definition.project/_apis/build/builds/$build.details.id/logs/$logRef.id"
+							request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/logs/$logRef.id"
 							request.uri.query = [
 								"api-version": "4.1",
 								"startLine"  : currentLine,
@@ -757,7 +759,7 @@ task getArtifacts(dependsOn: collectNewBuilds) {
 		buildDefinitions.each { definition, data ->
 			data.builds.sort { it.queueTime }.each { build ->
 				def artifacts = data.http.get {
-					request.uri.path = "$definition.project/_apis/build/builds/$build.details.id/artifacts"
+					request.uri.path = "/$definition.project/_apis/build/builds/$build.details.id/artifacts"
 					request.uri.query = [
 						"api-version": "4.1"
 					]
@@ -903,6 +905,54 @@ task uploadTestResults(dependsOn: getTestResults) {
 }
 
 /**
+ * Checks if VSTS found coverage data and if it did, download, transform and upload it to teamscale.
+ */
+task uploadBuildCoverage(dependsOn: collectNewBuilds) {
+	doLast {
+		def http = teamscale.httpClient(teamscale)
+
+		buildDefinitions.each { definition, data ->
+			data.builds.sort { it.queueTime }.each { build ->
+				def coverageData = data.http.get {
+					request.uri = "/$definition.project/_apis/test/codeCoverage"
+					request.uri.query = [
+						"buildId": "$build.details.id",
+						"flags": 2 // ¯\_(ツ)_/¯
+					]
+				}
+
+				if(coverageData.count < 1) {
+					if(build.details.result == "failed") {
+						log("Skipping failed build", definition, build)
+					} else {
+						log("No coverage data found", definition, build)
+					}
+					return
+				}
+
+				// Download coverage data
+				def coverageFiles = coverageData.value.collect { coverage ->
+					data.http.get {
+						request.uri = coverage.codeCoverageFileUrl
+						groovyx.net.http.optional.Download.toTempFile(delegate)
+						response.failure(failure)
+					}
+				}
+
+				// Convert data
+				log("Converting ${coverageFiles.size()} coverage file(s)", definition, build)
+				def results = coverageFiles.collect { file ->
+					return transformVstsCoverage(file)
+				}
+
+				// upload data
+				uploadExternalReports(http, ["VS_COVERAGE": results], definition, build)
+			}
+		}
+	}
+}
+
+/**
  * Uploads the build result for every definition to the teamscale server as a non-code metric.
  * If project has multiple definitions, each definition has to define a separate partition to which the
  * results will be uploaded to.
@@ -1003,6 +1053,7 @@ task uploadVstsBuildData() {
 	dependsOn uploadBuildFindings
 	dependsOn uploadTestResults
 	dependsOn uploadExternalReports
+	dependsOn uploadBuildCoverage
 
 	doLast {
 		writeCache()
