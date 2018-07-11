@@ -807,8 +807,10 @@ task collectExternalReports(dependsOn: getArtifacts) {
 					try {
 						files = getFilesWithFilter(data.http, options, definition, build)
 
-						assert files.size() > 0: getLogMessage("Regex '$options.file' matched 0 files", definition,
-							build)
+						if(files.size() == 0) {
+							log("Regex '$options.file' matched 0 files", definition, build)
+							return [:]
+						}
 
 						if (options.transformation && files.size > 0) {
 							log("Converting ${files.size()} $reportType report(s) with the " +
