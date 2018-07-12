@@ -923,11 +923,12 @@ task uploadBuildCoverage(dependsOn: collectNewBuilds) {
 		buildDefinitions.each { definition, data ->
 			data.builds.sort { it.queueTime }.each { build ->
 				def coverageData = data.http.get {
-					request.uri = "/$definition.project/_apis/test/codeCoverage"
+					request.uri.path = "/$definition.project/_apis/test/codeCoverage"
 					request.uri.query = [
 						"buildId": "$build.details.id",
 						"flags": 2 // ¯\_(ツ)_/¯
 					]
+					response.failure failure
 				}
 
 				if(coverageData.count < 1) {
