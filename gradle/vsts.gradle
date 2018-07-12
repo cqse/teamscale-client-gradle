@@ -346,9 +346,9 @@ def transformVstsCoverage(coverage) {
 
 	// Grabbing the output of the command has a ton of \u0000 characters; probably encoding problems
 	def xml = new File("$rootDir/tmp/tmp.xml")
-	//def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",
-	//			   "\"$coverage.absolutePath\"\""].execute()
-	def command = ["bash", "-c", "echo 'test' > $xml.absolutePath"].execute()
+	def command = ["cmd", "/C", "\"\"$CODE_COVERAGE_EXE\"", "analyze", "/output:\"$xml.absolutePath\"",
+				   "\"$coverage.absolutePath\"\""].execute()
+	//def command = ["bash", "-c", "echo 'test' > $xml.absolutePath"].execute()
 
 	def errorStream = new StringBuffer()
 	command.waitForProcessOutput(null, errorStream)
