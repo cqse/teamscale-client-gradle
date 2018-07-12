@@ -566,8 +566,8 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 			return false
 		}
 
-		if (definition.options.taskNamePattern) {
-			return (record.name ==~ definition.options.taskNamePattern)
+		if (definition.options.taskNamePattern ) {
+			return (record.name ==~ definition.options.taskNamePattern) && !(record.type ==~ /Job/)
 		}
 
 		// If we would include every task, take the job logs instead, as it contains the log of every
@@ -618,6 +618,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 					if (includeLogOfRecord(definition, it)) {
 						return [it.log.subMap("id") +
 									it.subMap("name") +
+									it.subMap("type") +
 									// groupBy creates a list. We are grouping by id, so there always is only the one element
 									logs[it.log.id][0].subMap("lineCount")]
 					}
@@ -629,7 +630,8 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 						"any task, therefore no findings can be extracted from the logs"
 				}
 
-				log("Parsing the logs of the following tasks: $logRefs.name", definition, build)
+				log("Parsing the logs of the following tasks: ${logRefs.collect { "$it.type: \"$it.name\"" }}",
+					definition, build)
 
 				// Parse the selected job logs
 				logRefs.each { logRef ->
