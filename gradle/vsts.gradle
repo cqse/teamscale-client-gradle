@@ -626,8 +626,13 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 				}
 
 				if (definition.options.taskNamePattern) {
-					assert logRefs.size() > 0: "The pattern \"$definition.options.taskNamePattern\" does not match " +
-						"any task, therefore no findings can be extracted from the logs"
+					if(build.details.result == "failed") {
+						log("Skipping failed build", definition, build)
+						return
+					} else {
+						assert logRefs.size() > 0: getLogMessage("The pattern \"$definition.options.taskNamePattern\" does not match " +
+							"any task, therefore no findings can be extracted from the logs", definition, build)
+					}
 				}
 
 				log("Parsing the logs of the following tasks: ${logRefs.collect { "$it.type: \"$it.name\"" }}",
