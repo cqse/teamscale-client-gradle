@@ -137,8 +137,9 @@ ext {
 	]
 
 	DEBUG = [
-		TIMESTAMP    : false,
-		DISABLE_CACHE: false
+		NO_TIMESTAMP    : false,
+		DISABLE_CACHE: false,
+		DRY_RUN: false
 	]
 
 	// Maximum number of lines of log which will be fetched in one go
@@ -158,21 +159,6 @@ def cache = [
 	//uploadedRoslynRules       : [] as HashSet
 ]
 
-/** Reads the content of the cache file if it exists */
-def getCache = {
-	if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
-		cache = new JsonSlurper().parseText(vsts.cacheFile.text)
-	}
-	return cache
-}
-
-/** Writes the cache to the project file */
-def writeCache = {
-	if (vsts.cacheFile && !DEBUG.DISABLE_CACHE) {
-		vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
-	}
-}
-
 // ### Methods
 /** Appends a suffix to the partition if the project has more than one definition */
 def appendPartitionName(partition, divider, definition) {
@@ -183,7 +169,7 @@ def appendPartitionName(partition, divider, definition) {
 }
 
 /** Calculates the differences between two dates */
-def getExecutionTime(startDate, endDate) {
+def getExecutionTime(CharSequence startDate, CharSequence endDate) {
 	def start = Instant.parse(startDate).toEpochMilli()
 	def end = Instant.parse(endDate).toEpochMilli()
 	return (end - start) / 1000
@@ -194,7 +180,7 @@ def setRequestTimeParameter(build, request) {
 	def branch = build.targetBranch
 	def timestamp = build.queueTime.toEpochMilli()
 
-	if (DEBUG.TIMESTAMP) {
+	if (DEBUG.NO_TIMESTAMP) {
 		timestamp = "HEAD"
 	}
 
@@ -366,6 +352,31 @@ def transformVstsCoverage(coverage) {
 }
 
 // ### Tasks
+task readCache() {
+	doLast {
+		if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
+			cache = new JsonSlurper().parseText(vsts.cacheFile.text)
+		}
+	}
+}
+
+task writeCache() {
+	// Write Cache must be after all upload task have been run
+	project.getTasks().each { task ->
+		if(task.getName().startsWith("upload")) {
+			writeCache.mustRunAfter(task)
+		}
+	}
+
+	doLast {
+		println "Write Cache"
+		if (vsts.cacheFile && !DEBUG.DISABLE_CACHE) {
+			vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
+		}
+	}
+}
+
+
 /** Collects all build definitions for the project */
 task collectBuildDefinitions {
 	def defaultOptions = [
@@ -440,7 +451,7 @@ task collectBuildDefinitions {
  * Collects all new builds for every build definition.
  * A build is new, if its timestamp is bigger than the last cached one.
  */
-task collectNewBuilds(dependsOn: collectBuildDefinitions) {
+task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 	/**
 	 * Checks if the build should be included based on the branchname.
 	 * Pull request, for example, should automatically be excluded.
@@ -461,8 +472,6 @@ task collectNewBuilds(dependsOn: collectBuildDefinitions) {
 	}
 
 	doLast {
-		getCache()
-
 		buildDefinitions.each { definition, data ->
 			def cacheKey = "$definition.url/$definition.project/$definition.name"
 			def lastProcessedCompletedTime = cache.lastProcessedCompletedTime[cacheKey]
@@ -671,11 +680,8 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
  * TODO (BETA): the service is not usable at the moment (15.06.18), because of a bug
  * https://jira.cqse.eu/browse/TS-15538
  */
-task uploadRoslynRules() {
+task uploadRoslynRules(dependsOn: readCache) {
 	doLast {
-		// check cache
-		getCache()
-
 		// upload rules
 		def diff = vsts.availableRoslynReportRules - cache.uploadedRoslynRules
 		if (diff.size() > 0) {
@@ -722,10 +728,9 @@ task uploadRoslynRules() {
 				cache.uploadedRoslynRules += rulesPath
 			}
 		}
-
-		// set cache
-		writeCache()
 	}
+
+	finalizedBy(writeCache)
 }
 
 /**
@@ -1036,7 +1041,7 @@ task uploadBuildFindings(dependsOn: parseBuildLogs) {
 					return
 				}
 
-				def partition = appendPartitionName("Findings", ": ", definition)
+				def partition = appendPartitionName("Metrics", ": ", definition)
 
 				// Upload findings
 				log("Uploading ${build.findings.size()} finding(s)", definition, build)
@@ -1062,15 +1067,37 @@ task uploadBuildFindings(dependsOn: parseBuildLogs) {
 	}
 }
 
+task clearCache(dependsOn: readCache) {
+	doLast {
+		println "Resetting 'lastProcessedCompletedTime'"
+		cache = [
+			lastProcessedCompletedTime: [:]
+		]
+	}
+	finalizedBy(writeCache)
+}
+
+task listLastProcessed(dependsOn: collectNewBuilds) {
+	doLast {
+		buildDefinitions.each { definition, data ->
+			data.builds.sort { it.queueTime }.each { build ->
+				log("\"$definition.url/$definition.project/$definition.name\": " +
+					"\"$build.details.finishTime\"", definition, build)
+			}
+		}
+	}
+}
+
+task writeCacheToLatest(dependsOn: collectNewBuilds) {
+	finalizedBy writeCache
+}
+
 /** Task combining the upload of all possible data from a build */
 task uploadVstsBuildData() {
+	dependsOn writeCache
 	dependsOn uploadBuildStatus
 	dependsOn uploadBuildFindings
 	dependsOn uploadTestResults
 	dependsOn uploadExternalReports
 	dependsOn uploadBuildCoverage
-
-	doLast {
-		writeCache()
-	}
 }
