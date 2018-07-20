@@ -3,7 +3,9 @@ apply from: "$rootDir/gradle/base-teamscale.gradle"
 import groovy.transform.Canonical
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+
 import java.time.Instant
+import java.time.format.DateTimeParseException
 
 @Canonical
 class Finding {
@@ -64,6 +66,41 @@ class RoslynReport {
 							 ]
 						 ]]
 		}
+	}
+}
+
+class Cache {
+	def LAST_PROCESSED_KEY = "lastProcessedCompletedTime"
+
+	Map<String, Map<String, String>> cache = new HashMap<>()
+
+	void parse(String cacheString) {
+		cache = new JsonSlurper().parseText(cacheString)
+	}
+
+	void setLastProcessedTime(definition, String dateString) {
+		def key = getKey(definition)
+		if(!cache.containsKey(key)) {
+			cache.put(key, [:])
+		}
+
+		cache.get(key).put(LAST_PROCESSED_KEY, dateString)
+	}
+
+	String getLastProcessedTime(definition) {
+		def key = getKey(definition)
+		if(cache.containsKey(key)) {
+			return cache.get(key).get(LAST_PROCESSED_KEY)
+		}
+		return null
+	}
+
+	String toString() {
+		return new JsonBuilder(cache).toPrettyString()
+	}
+
+	String getKey(definition) {
+		return "$definition.url/$definition.project/$definition.name"
 	}
 }
 
@@ -154,10 +191,7 @@ ext {
 
 
 def buildDefinitions = [:]
-def cache = [
-	lastProcessedCompletedTime: [:] //,
-	//uploadedRoslynRules       : [] as HashSet
-]
+def cache = new Cache()
 
 // ### Methods
 /** Appends a suffix to the partition if the project has more than one definition */
@@ -355,7 +389,7 @@ def transformVstsCoverage(coverage) {
 task readCache() {
 	doLast {
 		if (vsts.cacheFile?.exists() && vsts.cacheFile.text) {
-			cache = new JsonSlurper().parseText(vsts.cacheFile.text)
+			cache.parse(vsts.cacheFile.text)
 		}
 	}
 }
@@ -371,7 +405,7 @@ task writeCache() {
 	doLast {
 		println "Write Cache"
 		if (vsts.cacheFile && !DEBUG.DISABLE_CACHE) {
-			vsts.cacheFile.write(new JsonBuilder(cache).toPrettyString())
+			vsts.cacheFile.write(cache.toString())
 		}
 	}
 }
@@ -473,8 +507,7 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 
 	doLast {
 		buildDefinitions.each { definition, data ->
-			def cacheKey = "$definition.url/$definition.project/$definition.name"
-			def lastProcessedCompletedTime = cache.lastProcessedCompletedTime[cacheKey]
+			def lastProcessedCompletedTime = cache.getLastProcessedTime(definition)
 			if (!lastProcessedCompletedTime) {
 				lastProcessedCompletedTime = Instant.EPOCH
 			} else {
@@ -521,7 +554,7 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 			}
 
 			// TODO update step by step?
-			cache.lastProcessedCompletedTime[cacheKey] = data.lastCompletedTime.toString()
+			cache.setLastProcessedTime(definition, data.lastCompletedTime.toString())
 		}
 	}
 }
@@ -1069,26 +1102,47 @@ task uploadBuildFindings(dependsOn: parseBuildLogs) {
 
 task clearCache(dependsOn: readCache) {
 	doLast {
-		println "Resetting 'lastProcessedCompletedTime'"
-		cache = [
-			lastProcessedCompletedTime: [:]
-		]
+		cache = new Cache()
 	}
 	finalizedBy(writeCache)
 }
 
-task listLastProcessed(dependsOn: collectNewBuilds) {
+task setCacheInteractive(dependsOn: collectNewBuilds) {
 	doLast {
+		def builds = []
 		buildDefinitions.each { definition, data ->
-			data.builds.sort { it.queueTime }.each { build ->
-				log("\"$definition.url/$definition.project/$definition.name\": " +
-					"\"$build.details.finishTime\"", definition, build)
+			println "Builds which will be processed"
+			builds = data.builds.sort { it.queueTime }.reverse()
+			for(def i=1; i <= builds.size(); i++) {
+				def build = builds.get(i-1)
+				println "[$i]\t$build.details.finishTime"
 			}
+
+			cache.setLastProcessedTime(definition, builds.last().details.finishTime)
+			println ""
+			ant.input(message: "Set cache to either build number or a date in the same format " +
+				"(e.g. 2018-04-12T12:27:27.4241966Z).\n" +
+				"Setting the timestamp to a build timestamp does include the selected build!", addproperty: "choice")
+
+			def date = cache.getLastProcessedTime(definition)
+			if(ant.choice.isNumber()) {
+				def number = ant.choice.toInteger()
+				if(number < 1 || number > builds.size()) {
+					println "Invalid number selection: '$ant.choice'"
+				} else {
+					date = builds.get(ant.choice.toInteger() - 1).details.finishTime
+				}
+			} else {
+				try {
+					date = Instant.parse(ant.choice)
+				} catch(DateTimeParseException e) {
+					println "'$ant.choice' cannot be parsed"
+				}
+			}
+
+			cache.setLastProcessedTime(definition, date.toString())
 		}
 	}
-}
-
-task writeCacheToLatest(dependsOn: collectNewBuilds) {
 	finalizedBy writeCache
 }
 
