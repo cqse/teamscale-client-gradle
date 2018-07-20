@@ -697,7 +697,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
 
 						build.findings += parseLog(log)
 
-						// endline is inclusiv. Therefore we need to add 1
+						// endLine is inclusive. Therefore we need to add 1
 						currentLine += MAX_FETCHED_LOG_LINES + 1
 					}
 				}
@@ -713,7 +713,7 @@ task parseBuildLogs(dependsOn: collectNewBuilds) {
  * TODO (BETA): the service is not usable at the moment (15.06.18), because of a bug
  * https://jira.cqse.eu/browse/TS-15538
  */
-task uploadRoslynRules(dependsOn: readCache) {
+task beta_uploadRoslynRules(dependsOn: readCache) {
 	doLast {
 		// upload rules
 		def diff = vsts.availableRoslynReportRules - cache.uploadedRoslynRules
@@ -772,7 +772,7 @@ task uploadRoslynRules(dependsOn: readCache) {
  * TODO (BETA): Depends on uploadRoslynRules, which is not working correctly at the moment
  * https://jira.cqse.eu/browse/TS-15538
  */
-task uploadFindingsAsRoslynReport(dependsOn: parseBuildLogs) {
+task beta_uploadFindingsAsRoslynReport(dependsOn: parseBuildLogs) {
 	doLast {
 		def http = teamscale.httpClient(teamscale)
 		buildDefinitions.each { definition, data ->
