@@ -345,6 +345,20 @@ def getLogMessage(message, definition = "", build = "") {
 	return definition + message
 }
 
+def getAvailableBuilds(definition, data, lastProcessedTime) {
+	return data.http.get {
+		request.uri.path = "/$definition.project/_apis/build/builds"
+		request.uri.query = [
+			'api-version': '4.1',
+			'definitions': data.id,
+			'minTime'    : lastProcessedTime,
+			'status'     : 'completed',
+			'queryOrder' : 'finishTimeDescending',
+		]
+		response.failure(failure)
+	}
+}
+
 /**
  * Transforms the given report according to the defined transformation.
  * If no transformation is given, it simply returns the text of the report
@@ -518,19 +532,7 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 				}
 			}
 
-			def response = data.http.get {
-				request.uri.path = "/$definition.project/_apis/build/builds"
-				request.uri.query = [
-					'api-version': '4.1',
-					'definitions': data.id,
-					'minTime'    : lastProcessedCompletedTime.plusNanos(1),
-					'status'     : 'completed',
-					'queryOrder' : 'finishTimeAscending',
-				]
-				response.failure(failure)
-			}
-
-			response.value.each { build ->
+			getAvailableBuilds(definition, data, lastProcessedCompletedTime.plusNanos(1)).value.each { build ->
 				def branchName = build.sourceBranch
 
 				// Filter which builds should be included
@@ -1107,18 +1109,19 @@ task clearCache(dependsOn: readCache) {
 	finalizedBy(writeCache)
 }
 
-task setCacheInteractive(dependsOn: collectNewBuilds) {
+task setCacheInteractive(dependsOn: collectBuildDefinitions) {
 	doLast {
 		def builds = []
 		buildDefinitions.each { definition, data ->
 			println "Builds which will be processed"
-			builds = data.builds.sort { it.queueTime }.reverse()
+			builds = getAvailableBuilds(definition, data, 0).value.collect {
+				return it.finishTime
+			}
 			for(def i=1; i <= builds.size(); i++) {
-				def build = builds.get(i-1)
-				println "[$i]\t$build.details.finishTime"
+				println "[$i]\t${builds.get(i-1)}"
 			}
 
-			cache.setLastProcessedTime(definition, builds.last().details.finishTime)
+			cache.setLastProcessedTime(definition, builds.last())
 			println ""
 			ant.input(message: "Set cache to either build number or a date in the same format " +
 				"(e.g. 2018-04-12T12:27:27.4241966Z).\n" +
@@ -1130,7 +1133,7 @@ task setCacheInteractive(dependsOn: collectNewBuilds) {
 				if(number < 1 || number > builds.size()) {
 					println "Invalid number selection: '$ant.choice'"
 				} else {
-					date = builds.get(ant.choice.toInteger() - 1).details.finishTime
+					date = builds.get(ant.choice.toInteger() - 1)
 				}
 			} else {
 				try {
@@ -1146,12 +1149,69 @@ task setCacheInteractive(dependsOn: collectNewBuilds) {
 	finalizedBy writeCache
 }
 
-/** Task combining the upload of all possible data from a build */
+task deleteExternalUploadsInteractive(dependsOn: collectBuildDefinitions) {
+	doLast {
+		def http = teamscale.httpClient(teamscale)
+
+		def externalUploads = http.get {
+			request.uri.path = "$teamscale.prefix/p/$teamscale.project/external-result-upload"
+			request.accept = "application/json"
+			response.failure failure
+		}
+
+		def grouped = externalUploads.groupBy { it.partition }
+
+		println "From - To"
+		grouped.each { partition, uploads ->
+			println "${Instant.ofEpochMilli(uploads.first().timestamp)} - " +
+				"${Instant.ofEpochMilli(uploads.last().timestamp)} ($partition)"
+		}
+
+		println ""
+		println "Enter a partition from which the external uploads should be deleted. Click Enter to take all of them."
+		ant.input(message: "Partition: ", addproperty: "partition")
+		if (ant.partition) {
+			assert grouped.keySet().contains(ant.partition): "Invalid partition: $ant.partition"
+		}
+
+		println ""
+		println "You can now enter a date in the past which will be taken as the start point from which all" +
+			"external data is deleted up to now (e.g. ${Instant.EPOCH})"
+		ant.input(message: "Date: ", addproperty: "date")
+		println ""
+		def date = Instant.parse(ant.date)
+
+		// filter by partition
+		def uploads = []
+		if(ant.partition) {
+			uploads = grouped.get(ant.partition)
+		} else {
+			uploads = externalUploads
+		}
+
+		// filter by date
+		uploads = uploads.findAll {
+			it.timestamp > date.toEpochMilli()
+		}
+
+		println "Deleting..."
+		uploads.each { upload ->
+			http.delete {
+				request.uri.path = "$teamscale.prefix/p/$teamscale.project/external-result-upload"
+				request.uri.query = [
+					"t": "$upload.branchName:$upload.timestamp"
+				]
+			}
+		}
+	}
+}
+
+/** lTask combining the upload of all possible data from a build */
 task uploadVstsBuildData() {
-	dependsOn writeCache
 	dependsOn uploadBuildStatus
 	dependsOn uploadBuildFindings
 	dependsOn uploadTestResults
 	dependsOn uploadExternalReports
 	dependsOn uploadBuildCoverage
+	dependsOn writeCache
 }
