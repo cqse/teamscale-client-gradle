@@ -429,8 +429,7 @@ task writeCache() {
 task collectBuildDefinitions {
 	def defaultOptions = [
 		// default values
-		"branchMapping"    : { it },
-		"uploadTestResults": true
+		"branchMapping"    : { it }
 	]
 
 	doLast {
@@ -568,10 +567,6 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 task getTestResults(dependsOn: collectNewBuilds) {
 	doLast {
 		buildDefinitions.each { definition, definitionData ->
-			if (!definition.options.uploadTestResults) {
-				return
-			}
-
 			definitionData.builds.each { build ->
 				def testRuns = definitionData.http.get {
 					request.uri.path = "/$definition.project/_apis/test/Runs"
@@ -908,10 +903,6 @@ task uploadTestResults(dependsOn: getTestResults) {
 	doLast {
 		def http = teamscale.httpClient(teamscale)
 		buildDefinitions.each { definition, data ->
-			if (!definition.options.uploadTestResults) {
-				return
-			}
-
 			data.builds.sort { it.queueTime }.each { build ->
 				def result = ["passed": 0, "total": 0, "time": 0]
 				build.testResult.each { run ->
