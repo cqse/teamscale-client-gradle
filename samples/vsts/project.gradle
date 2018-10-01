@@ -41,10 +41,6 @@ ext {
 						//return "test" // upload "$source" to "test"
                     },
 
-					// Disables the upload of the test results if true
-					// Per default this is true. If you are sure that there are no tests, disable it.
-					"uploadTestResults": true,
-
 					// If a project has more than one definition, all definitions must have this property in order to
 					// distinguish the uploads from the different definitions
 					"partition": "partition"
