@@ -536,7 +536,7 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 
 				branchName = formatBranchName(branchName)
 				def targetBranch = definition.options.branchMapping(branchName)
-				if (targetBranch.startsWith("\$")) {
+				if (targetBranch && targetBranch.startsWith("\$")) {
 					// A TFS path should always be mapped to main if not stated otherwise.
 					targetBranch = ""
 				}
