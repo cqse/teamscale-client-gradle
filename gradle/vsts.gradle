@@ -510,11 +510,6 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 	/** Formats the branch to remove unneeded prefixes. */
 	def formatBranchName = { branchName ->
 		def gitRef = ~/^refs\/heads\//
-		if (branchName.startsWith("\$")) {
-			// TFS path will be ignored completely (for now)
-			return ""
-		}
-
 		return branchName - gitRef
 	}
 
@@ -541,6 +536,10 @@ task collectNewBuilds(dependsOn: [readCache, collectBuildDefinitions]) {
 
 				branchName = formatBranchName(branchName)
 				def targetBranch = definition.options.branchMapping(branchName)
+				if (targetBranch.startsWith("\$")) {
+					// A TFS path should always be mapped to main if not stated otherwise.
+					targetBranch = ""
+				}
 
 				if (targetBranch instanceof String) {
 					data.builds += [
