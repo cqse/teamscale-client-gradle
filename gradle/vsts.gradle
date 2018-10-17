@@ -333,16 +333,30 @@ def getFilesWithFilter(http, options, definition, build) {
 	}
 }
 
-def log(message, definition = "", build = "") {
+def log(message, definition = null, build = null) {
 	println getLogMessage(message, definition, build)
 }
 
-def getLogMessage(message, definition = "", build = "") {
+def getLogMessage(message, definition = null, build = null) {
+	def info = ""
+
 	if (definition) {
-		build = build ? ":$build.details.buildNumber" : ""
-		definition = definition ? "[$definition.name$build] " : ""
+		info += "[$definition.name]"
 	}
-	return definition + message
+
+	if (build) {
+		def targetBranch = build.targetBranch
+		if(targetBranch == "") {
+			targetBranch = "main"
+		}
+		info += "[$build.details.buildNumber]['$build.details.sourceBranch'->'$targetBranch']"
+	}
+
+	if(info.length() > 0) {
+		info += " "
+	}
+
+	return "$info$message"
 }
 
 def getAvailableBuilds(definition, data, lastProcessedTime) {
