@@ -17,6 +17,8 @@ repositories {
 dependencies {
     // Use the Kotlin JDK 8 standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation(group = "com.squareup.okhttp3", name = "okhttp", version = "3.11.0")
+    implementation(group = "com.google.code.gson", name = "gson", version = "2.8.5")
 
     // Use the Kotlin test library
     testImplementation("org.jetbrains.kotlin:kotlin-test")
