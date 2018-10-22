@@ -2,7 +2,6 @@ package eu.cqse.azure
 
 import com.google.gson.Gson
 import eu.cqse.azure.api.AzureFileShareService
-import eu.cqse.azure.okhttp.AzureSigningString
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import retrofit2.Retrofit

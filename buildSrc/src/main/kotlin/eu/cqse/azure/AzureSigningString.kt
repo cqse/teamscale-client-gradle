@@ -1,4 +1,4 @@
-package eu.cqse.azure.okhttp
+package eu.cqse.azure
 
 class AzureSigningString(
         var verb: String,
