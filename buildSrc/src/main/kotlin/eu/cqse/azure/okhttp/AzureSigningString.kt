@@ -1,10 +1,10 @@
-package eu.cqse.azure
+package eu.cqse.azure.okhttp
 
-import java.util.*
-import kotlin.collections.LinkedHashMap
-
-class AzureSigningString() {
-    var verb = ""
+class AzureSigningString(
+        var verb: String,
+        var account: String,
+        var container: String,
+        xMsVersion: String) {
     var contentEncoding = ""
     var contentLanguage = ""
     var contentLength = ""
@@ -16,10 +16,9 @@ class AzureSigningString() {
     var ifNoneMatch = ""
     var ifUnmodifiedSince = ""
     var range = ""
-    var headers: Map<String, String> = LinkedHashMap()
-    var account = ""
-    var container = ""
-    var queryParameters: Map<String,String> = LinkedHashMap()
+    var headers: MutableMap<String, String> = linkedMapOf("x-ms-date" to "", "x-ms-version" to xMsVersion)
+    var path = ""
+    var queryParameters: Map<String, String> = LinkedHashMap()
 
     override fun toString(): String {
         var stringToSign = "$verb\n" +
@@ -37,8 +36,8 @@ class AzureSigningString() {
         for (headerKey in headers.keys) {
             stringToSign += "\n$headerKey:${headers[headerKey]}"
         }
-        stringToSign += "\n/$account/$container"
-        for(parameter in queryParameters.keys) {
+        stringToSign += "\n/$account/$container/$path"
+        for (parameter in queryParameters.keys) {
             stringToSign += "\n$parameter:${queryParameters[parameter]}"
         }
 

@@ -5,5 +5,6 @@ data class AzureConfig(
         val url: String,
         val account: String,
         val container: String,
-        val key: String
+        val key: String,
+        val zipPath: String
 )

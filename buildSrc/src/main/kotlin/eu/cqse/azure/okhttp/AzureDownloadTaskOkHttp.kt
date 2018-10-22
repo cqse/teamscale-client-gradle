@@ -1,34 +1,42 @@
-package eu.cqse.azure
+package eu.cqse.azure.okhttp
 
 import com.google.gson.Gson
-import eu.cqse.azure.api.AzureFileShareService
-import eu.cqse.azure.okhttp.AzureSigningString
+import eu.cqse.azure.AzureConfig
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
-import retrofit2.Retrofit
-import retrofit2.converter.simplexml.SimpleXmlConverterFactory
 import java.io.File
 import java.io.FileReader
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlin.collections.ArrayList
 
-open class AzureDownloadTask : DefaultTask() {
+open class AzureDownloadTaskOkHttp : DefaultTask() {
+
+    private val dateFormat = "EEE, dd MMM YYYY HH:mm:ss"
     private val msVersion = "2018-03-28"
     private val azure = Gson().fromJson<AzureConfig>(
             FileReader(File(project.rootDir, "azure.conf")),
             AzureConfig::class.java)
-    private val azureService = Retrofit.Builder()
-            .baseUrl("${azure.scheme}://${azure.account}.${azure.url}/${azure.container}/")
-            .addConverterFactory(SimpleXmlConverterFactory.create())
+    private val https = OkHttpClient.Builder()
             .build()
-            .create(AzureFileShareService::class.java)
+    val urlBuilder = HttpUrl.Builder()
+            .scheme(azure.scheme)
+            .host("${azure.account}.${azure.url}")
+            .addPathSegment(azure.container)
+            .addPathSegment(azure.zipPath)
 
+    fun listZipFiles(): List<String> {
+        val url = urlBuilder
+                .setQueryParameter("comp", "list")
+                .setQueryParameter("restype", "directory")
+                .build()
 
-    @TaskAction
-    fun listZipFiles() {
-        val date = generateUtcTimeString()
+        val requestTimeString = generateUtcTimeString()
+
         val stringToSign = AzureSigningString(
                 verb = "GET",
                 account = azure.account,
@@ -39,17 +47,21 @@ open class AzureDownloadTask : DefaultTask() {
                     path = azure.zipPath
                     queryParameters += linkedMapOf("comp" to "list", "restype" to "directory")
                 }.toString()
-        val call = azureService.listZips(azure.zipPath, date, generateAuthHeader(stringToSign))
 
-        val response = call.execute()
+        val request = Request.Builder()
+                .url(url)
+                .get()
+                .header("x-ms-version", msVersion)
+                .header("x-ms-date", requestTimeString)
+                .header("authorization", generateAuthHeader(stringToSign))
+                .build()
 
-        if (response.isSuccessful) {
-            println(response.body())
-        } else {
-            println("$stringToSign\n")
-            println(response.errorBody()?.bytes()?.toString(Charsets.UTF_8))
-        }
+        val response = https.newCall(request).execute()
 
+        println(response.code())
+        println(response.body()?.bytes()?.toString(Charsets.UTF_8))
+
+        return ArrayList()
     }
 
     fun generateAuthHeader(stringToSign: String): String {
@@ -68,10 +80,8 @@ open class AzureDownloadTask : DefaultTask() {
 
     fun generateUtcTimeString(): String {
         val requestTime = Date()
-        val dateFormatString = "EEE, dd MMM YYYY HH:mm:ss"
-        val dateFormat = SimpleDateFormat(dateFormatString, Locale.UK)
+        val dateFormat = SimpleDateFormat(dateFormat, Locale.UK)
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return "${dateFormat.format(requestTime)} GMT"
     }
-
 }
