@@ -1,10 +1,9 @@
-package eu.cqse.azure
+package eu.cqse.azure.api
 
-class AzureSigningString(
-        var verb: String,
-        var account: String,
-        var container: String,
-        xMsVersion: String) {
+data class AzureSigningString(
+        val account: String,
+        val container: String) {
+    var verb: String = "GET"
     var contentEncoding = ""
     var contentLanguage = ""
     var contentLength = ""
@@ -16,7 +15,10 @@ class AzureSigningString(
     var ifNoneMatch = ""
     var ifUnmodifiedSince = ""
     var range = ""
-    var headers: MutableMap<String, String> = linkedMapOf("x-ms-date" to "", "x-ms-version" to xMsVersion)
+    var headers: MutableMap<String, String> = linkedMapOf(
+            "x-ms-date" to "",
+            "x-ms-type" to "",
+            "x-ms-version" to AzureFileShareService.X_MS_VERSION)
     var path = ""
     var queryParameters: Map<String, String> = LinkedHashMap()
 
@@ -34,7 +36,9 @@ class AzureSigningString(
                 "$ifUnmodifiedSince\n" +
                 range
         for (headerKey in headers.keys) {
-            stringToSign += "\n$headerKey:${headers[headerKey]}"
+            if (headers[headerKey] != "") {
+                stringToSign += "\n$headerKey:${headers[headerKey]}"
+            }
         }
         stringToSign += "\n/$account/$container/$path"
         for (parameter in queryParameters.keys) {

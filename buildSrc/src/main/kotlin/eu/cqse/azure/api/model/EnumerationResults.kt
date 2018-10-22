@@ -1,6 +1,8 @@
 package eu.cqse.azure.api.model
 
-import org.simpleframework.xml.*
+import org.simpleframework.xml.Attribute
+import org.simpleframework.xml.Element
+import org.simpleframework.xml.Root
 
 @Root(strict = false)
 data class EnumerationResults(
@@ -10,10 +12,6 @@ data class EnumerationResults(
         var shareName: String = "",
         @field:Attribute(name = "DirectoryPath")
         var directoryPath: String = "",
-        @field:Element(name="Entries")
+        @field:Element(name = "Entries")
         var entries: FileShareEntries = FileShareEntries()
-
-//        @field:ElementList(name="Entries")
-//        var entries: ArrayList<FileShareNode> = ArrayList()
-
 )
