@@ -1,9 +1,20 @@
+import eu.cqse.azure.AzureFileShareDownload
+
 allprojects {
 	apply from: "$rootDir/gradle/tga.gradle"
 	apply from: "$rootDir/gradle/report.gradle"
+	apply plugin: AzureFileShareDownload
 
 	ext {
 		dataDir = "C:/Teamscale"
+
+		azure.scheme = "https"
+		azure.url =  "file.core.windows.net"
+		azure.account = ""
+		azure.container = ""
+		azure.key = ""
+		azure.remoteZipPath = ""
+		azure.downloadDir = ""
 
 		teamscale.url = "http://localhost:8080"
 		teamscale.project = "my-project"

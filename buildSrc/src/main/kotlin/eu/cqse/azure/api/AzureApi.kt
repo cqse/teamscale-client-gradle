@@ -10,10 +10,10 @@ import javax.crypto.spec.SecretKeySpec
 
 class AzureApi(
         val account: String,
-        val container: String,
+        container: String,
         val key: String,
-        val scheme: String = "https",
-        val url: String = "file.core.windows.net"
+        scheme: String,
+        url: String
 ) {
 
     private val azureService = Retrofit.Builder()
