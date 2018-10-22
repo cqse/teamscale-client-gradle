@@ -1,6 +1,7 @@
 package eu.cqse.azure.api
 
 import eu.cqse.azure.api.model.EnumerationResults
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory
 import java.text.SimpleDateFormat
@@ -9,9 +10,9 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 class AzureApi(
-        val account: String,
+        private val account: String,
         container: String,
-        val key: String,
+        private val key: String,
         scheme: String,
         url: String
 ) {
@@ -31,12 +32,11 @@ class AzureApi(
             headers["x-ms-date"] = dateString
             this.path = path
         }.toString()
+
         val response = azureService.getFile(path, dateString, generateAuthHeader(stringToSign)).execute()
-        if (response.isSuccessful) {
-            return response.body()?.bytes()!!
-        } else {
-            throw ApiException(response.code(), response.message()).apply { details = response.errorBody()?.string() ?: "" }
-        }
+        handleError(response)
+
+        return response.body()?.bytes()!!
     }
 
     fun list(path: String): EnumerationResults {
@@ -46,13 +46,23 @@ class AzureApi(
             this.path = path
             queryParameters += linkedMapOf("comp" to "list", "restype" to "directory")
         }.toString()
-        val response = azureService.list(path, date, generateAuthHeader(stringToSign)).execute()
 
-        if (response.isSuccessful) {
-            return response.body()!!
-        } else {
-            throw ApiException(response.code(), response.message()).apply { details = response.errorBody()?.string() ?: "" }
-        }
+        val response = azureService.list(path, date, generateAuthHeader(stringToSign)).execute()
+        handleError(response)
+
+        return response.body()!!
+    }
+
+    fun deleteFile(path: String) {
+        val date = generateUtcTimeString()
+        val stringToSign = signatureString.copy().apply {
+            verb = "DELETE"
+            this.path = path
+            headers["x-ms-date"] = date
+        }.toString()
+
+        val response = azureService.deleteFile(path, date, generateAuthHeader(stringToSign)).execute()
+        handleError(response)
     }
 
     private fun generateAuthHeader(stringToSign: String): String {
@@ -77,4 +87,9 @@ class AzureApi(
         return "${dateFormat.format(requestTime)} GMT"
     }
 
+    private fun handleError(response: Response<*>) {
+        if (!response.isSuccessful) {
+            throw ApiException(response.code(), response.message()).apply { details = response.errorBody()?.string() ?: "" }
+        }
+    }
 }

@@ -1,30 +1,34 @@
 package eu.cqse.azure
 
 import eu.cqse.azure.api.AzureApi
+import eu.cqse.azure.api.model.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-import java.io.File
 
 open class AzureDownloadTask : DefaultTask() {
     private lateinit var azureConfig: AzureConfig
     private lateinit var azure: AzureApi
 
+    private var zips: List<File> = ArrayList()
+
     @TaskAction
-    fun download() {
+    fun downloadAndDelete() {
         azureConfig = project.property(AzureFileShareDownload.AZURE_EXTENSION_NAME) as AzureConfig
         azure = AzureApi(azureConfig.account, azureConfig.container, azureConfig.key, azureConfig.scheme, azureConfig.url)
 
-        val zipFiles = azure.list(azureConfig.remoteZipPath).entries.files.filter { it.name.endsWith(".zip") }
-        for (zip in zipFiles) {
-            val path = azureConfig.remoteZipPath +
-                    (if (azureConfig.remoteZipPath == "" || azureConfig.remoteZipPath.endsWith("/")) "" else "/") +
-                    zip.name
-            val bytes = azure.getFile(path)
+        zips = azure.list(azureConfig.remoteZipPath).entries.files.filter { it.name.endsWith(".zip") }
 
-            val downloadPath = azureConfig.downloadDir +
-                    (if (azureConfig.downloadDir == "" || azureConfig.downloadDir.endsWith("/")) "" else "/") +
-                    zip.name
-            File(downloadPath).writeBytes(bytes)
+        for (zip in zips) {
+            val remotePath = getFullFilePath(azureConfig.remoteZipPath, zip.name)
+            val downloadPath = getFullFilePath(azureConfig.downloadDir, zip.name)
+
+            val bytes = azure.getFile(remotePath)
+            java.io.File(downloadPath).writeBytes(bytes)
+            azure.deleteFile(remotePath)
         }
+    }
+
+    private fun getFullFilePath(path: String, fileName: String): String {
+        return "$path${if (path == "" || path.endsWith("/")) "" else "/"}$fileName"
     }
 }

@@ -3,10 +3,7 @@ package eu.cqse.azure.api
 import eu.cqse.azure.api.model.EnumerationResults
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.Headers
-import retrofit2.http.Path
+import retrofit2.http.*
 
 interface AzureFileShareService {
     companion object {
@@ -23,6 +20,13 @@ interface AzureFileShareService {
     @Headers("x-ms-version: $X_MS_VERSION")
     @GET("{path}")
     fun getFile(@Path("path") path: String,
+                @Header("x-ms-date") date: String,
+                @Header("authorization") authString: String
+    ): Call<ResponseBody>
+
+    @Headers("x-ms-version: $X_MS_VERSION")
+    @DELETE("{path}")
+    fun deleteFile(@Path("path") path: String,
                 @Header("x-ms-date") date: String,
                 @Header("authorization") authString: String
     ): Call<ResponseBody>
