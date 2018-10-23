@@ -19,6 +19,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation(group = "com.squareup.retrofit2", name = "retrofit", version = "2.4.0")
     implementation(group = "com.squareup.retrofit2", name = "converter-simplexml", version = "2.4.0")
+    implementation(group = "net.lingala.zip4j", name = "zip4j", version = "1.3.2")
 
     // Use the Kotlin test library
     testImplementation("org.jetbrains.kotlin:kotlin-test")

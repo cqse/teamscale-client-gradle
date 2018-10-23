@@ -1,0 +1,15 @@
+ext {
+	report.inbox.dir = null
+	report.upload.timestamp = { file -> (file.name =~ /.*?(\d+)\..*/)[0][1] }
+	report.upload.partition = { report -> "Manual Coverage" }
+	report.upload.format = { report -> "JaCoCo" }
+
+	azure.scheme = "https"
+	azure.url = "file.core.windows.net"
+	azure.account = "__TODO__"
+	azure.container = "__TODO__"
+	azure.key = "__TODO__"
+	azure.remotePath = ""
+	azure.deleteRemoteFiles = true
+	azure.downloadDir = "$report.store.dir"
+}

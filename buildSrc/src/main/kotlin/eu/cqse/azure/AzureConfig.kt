@@ -6,6 +6,8 @@ open class AzureConfig {
     var account = ""
     var container = ""
     var key = ""
-    var remoteZipPath = ""
+    var remotePath = ""
+    var fileNamePattern = """.*\.zip"""
     var downloadDir = ""
+    var deleteRemoteFiles = true
 }
