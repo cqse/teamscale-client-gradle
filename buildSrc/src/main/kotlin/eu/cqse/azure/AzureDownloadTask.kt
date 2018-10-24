@@ -62,7 +62,8 @@ open class AzureDownloadTask : DefaultTask() {
         val extractedFile = java.io.File("${localFile.parentFile.path}${java.io.File.separator}$COVERAGE_FILE_NAME")
         val renamedFile = java.io.File(localFile.parentFile.path +
                 java.io.File.separator +
-                "${localFile.name.substring(0, localFile.name.length - 3)}xml")
+                localFile.name.substring(0, localFile.name.length - 3) +
+                (Regex(""".*\.(.*)""").find(COVERAGE_FILE_NAME)?.groupValues?.get(1) ?: extractedFile.name)) // Keep file extension
         if (renamedFile.exists()) {
             throw IOException("File ${renamedFile.name} already exists")
         }
