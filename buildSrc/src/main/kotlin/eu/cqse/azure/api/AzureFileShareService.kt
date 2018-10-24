@@ -5,7 +5,7 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
-interface AzureFileShareService {
+internal interface AzureFileShareService {
     companion object {
         const val X_MS_VERSION = "2018-03-28"
     }

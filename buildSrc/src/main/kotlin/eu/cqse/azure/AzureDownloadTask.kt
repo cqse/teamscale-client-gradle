@@ -3,12 +3,22 @@ package eu.cqse.azure
 import eu.cqse.azure.api.AzureApi
 import eu.cqse.azure.api.model.File
 import net.lingala.zip4j.core.ZipFile
-import net.lingala.zip4j.exception.ZipException
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.io.IOException
 
+/**
+ * Gradle task which downloads JaCoCo coverage files from a directory specified by
+ * [AzureConfig.remotePath] to [AzureConfig.downloadDir] which match the pattern [AzureConfig.fileNamePattern].
+ * If [AzureConfig.deleteRemoteFiles] is set, the files will be deleted on the Azure file share.
+ * If the downloaded file is a zip, it will be extracted. The task expects one file in the container called
+ * "coverage.xml" which will be renamed to the name of the zip file (with xml file extension)
+ */
 open class AzureDownloadTask : DefaultTask() {
+    companion object {
+        private const val COVERAGE_FILE_NAME = "coverage.xml"
+    }
+
     private lateinit var azureConfig: AzureConfig
     private lateinit var azure: AzureApi
 
@@ -49,7 +59,7 @@ open class AzureDownloadTask : DefaultTask() {
     private fun extractZip(localFile: java.io.File) {
         val zipFile = ZipFile(localFile.path)
         zipFile.extractAll(localFile.parentFile.path)
-        val extractedFile = java.io.File("${localFile.parentFile.path}${java.io.File.separator}coverage.xml")
+        val extractedFile = java.io.File("${localFile.parentFile.path}${java.io.File.separator}$COVERAGE_FILE_NAME")
         val renamedFile = java.io.File(localFile.parentFile.path +
                 java.io.File.separator +
                 "${localFile.name.substring(0, localFile.name.length - 3)}xml")

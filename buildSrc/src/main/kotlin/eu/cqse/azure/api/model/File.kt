@@ -1,3 +1,3 @@
 package eu.cqse.azure.api.model
 
-class File: FileShareNode()
+internal class File: FileShareNode()

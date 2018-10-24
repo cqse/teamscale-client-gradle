@@ -1,6 +1,10 @@
 package eu.cqse.azure.api
 
-data class AzureSigningString(
+/**
+ * Used to authenticate to the Azure file share
+ * (c.f. [Documentation](https://docs.microsoft.com/en-us/rest/api/storageservices/authorize-with-shared-key)
+ */
+internal data class AzureSigningString(
         val account: String,
         val container: String) {
     var verb: String = "GET"

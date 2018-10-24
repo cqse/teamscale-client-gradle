@@ -9,7 +9,7 @@ import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-class AzureApi(
+ internal class AzureApi(
         private val account: String,
         container: String,
         private val key: String,

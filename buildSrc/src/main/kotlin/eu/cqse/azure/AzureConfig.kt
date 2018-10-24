@@ -1,5 +1,8 @@
 package eu.cqse.azure
 
+/**
+ * Class for configuring the [AzureDownloadTask]
+ */
 open class AzureConfig {
     var scheme = "https"
     var url = "file.core.windows.net"

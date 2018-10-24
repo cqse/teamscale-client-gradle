@@ -5,7 +5,7 @@ import org.simpleframework.xml.Element
 import org.simpleframework.xml.Root
 
 @Root(strict = false)
-data class EnumerationResults(
+internal data class EnumerationResults(
         @field:Attribute(name = "ServiceEndpoint")
         var serviceEndpoint: String = "",
         @field:Attribute(name = "ShareName")

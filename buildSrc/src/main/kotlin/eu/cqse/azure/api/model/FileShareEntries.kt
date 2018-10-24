@@ -2,7 +2,7 @@ package eu.cqse.azure.api.model
 
 import org.simpleframework.xml.ElementList
 
-class FileShareEntries (
+internal class FileShareEntries (
 //    @ElementListUnion(
 //        ElementList(entry = "File", inline = true, type = File::class),
 //        ElementList(entry = "Directory", inline = true, type = Directory::class)
