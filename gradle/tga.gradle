@@ -222,7 +222,6 @@ task collectPdb {
 task uploadPdb(dependsOn: collectPdb) {
 	doLast {
 		assert file(tga.pdb.store.dir).exists()
-		assert teamscale.project != null
 		
 		def published = file("${tga.pdb.store.dir}/published.txt")
 		def publishedVersions = (published.exists() ? published.readLines() : []) as Set
@@ -242,7 +241,7 @@ task uploadPdb(dependsOn: collectPdb) {
 		 	def (version, pdbDir) = dirs[timestamp]
 			def project = tga.pdb.upload.project(pdbDir)
 					
-			println "Uploading PDBs to $teamscale.project"
+			println "Uploading PDBs"
 			println "  ... for timestamp $timestamp"
 			println "  ... for version $version"
 			println "  ... to project $project"
@@ -306,8 +305,6 @@ task uploadTrace(dependsOn: collectTraces) {
 		assert file(tga.trace.store.dir).exists()
 		
 		def http = teamscale.httpClient(teamscale)
-		println "Uploading Traces to project $teamscale.project"
-
 	
 		// grup traces by partition, version, bucket (e.g. time)
 		def groupedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.groupBy({[
@@ -353,6 +350,7 @@ task uploadTrace(dependsOn: collectTraces) {
 					println "     -> Skipped due to missing version"
 				} else {
 					try {
+						assert project != null
 						println "     -> " + http.post(String) {
 							request.uri.path = "/p/$project/dotnet-ephemeral-trace-upload"
 							request.contentType = 'multipart/form-data'
