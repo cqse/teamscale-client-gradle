@@ -93,7 +93,8 @@ ext {
 		trace: [
 			// E.g. file share where traces are copied after test execution (dir may be null to disable inbox and work on store directly, this is however not recommended)
 			inbox: [
-				// The trace inbox location.
+				// The trace inbox directory (or array of directories).
+				// May be null in order to disable inbox and work on manual created store.
 				dir: null,
 				
 				// The trace include pattern, defaults to txt files.
@@ -294,14 +295,18 @@ task collectTraces {
 			return
 		}
 		
-		fileTreeFiltered(tga.trace.inbox.dir, tga.trace.inbox).files.each { traceFile ->
+		wrapAsArray(tga.trace.inbox.dir).each { inboxDir ->
+			assert file(inboxDir).exists()
+			
+			fileTreeFiltered(inboxDir, tga.trace.inbox).files.each { traceFile ->
 			def toDir = tga.trace.store.dir
 			if (!tga.trace.inbox.copyFlat) {
-				toDir += "/" + stripPathPrefix(traceFile.parent, tga.trace.inbox.dir)
+					toDir += "/" + stripPathPrefix(traceFile.parent, inboxDir)
 			}
 			ant.move(file: traceFile, toDir: toDir, preservelastmodified: true, failonerror: false)
 		}
 	}
+}
 }
 
 task uploadTrace(dependsOn: collectTraces) {
