@@ -37,6 +37,9 @@ ext {
 
 				// Whether the files should be copied flat or in an hierarchical structure
 				copyFlat: false,
+				
+				// Copies a single file to the inbox
+				copyFile: { file, toDir -> ant.copy(file: file, toDir: toDir, preservelastmodified: true) }
 			],
 			
 			// The PDB store. Usually the store gets filled from the inbox.
@@ -210,7 +213,8 @@ task collectPdb {
 					if (!tga.pdb.inbox.copyFlat) {
 						toDir += "/" + stripPathPrefix(file.parent, buildDir)
 					}
-					ant.copy(file: file, toDir: toDir, preservelastmodified: true)
+					
+					tga.pdb.inbox.copyFile(file, toDir)
 				}
 				
 				stored.append "$buildDir.name\r\n"
