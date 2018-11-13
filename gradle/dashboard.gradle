@@ -100,20 +100,21 @@ def getProjectInfos(tool, dataPath) {
 	def data = new JsonSlurper().parse(propertiesFile)
 
 	def projectInfos = []
-	data.each { project ->
+	data.each { projectEntry ->
+		def project = projectEntry.value
 		if (!project[tool]) {
 			return
 		}
 
-		def id = project[tool].teamscale.project.split('/').last()
+		def teamscaleId = project[tool].teamscale.project.split('/').last()
 		def qualifiedName = project.name
 		def dashboardName = URLDecoder.decode(project[tool].teamscale.dashboard.split("admin%2F").last(), "utf-8")
 		def qualityGoal = project[tool].qualityGoal
-		def profile = getProjectInfo(id)?.profile?.text()
+		def profile = getProjectInfo(teamscaleId)?.profile?.text()
 
-		assert id &&  qualifiedName && dashboardName && qualityGoal != null: "Insufficient data"
+		assert teamscaleId &&  qualifiedName && dashboardName && qualityGoal != null: "Insufficient data"
 
-		projectInfos.add(new ProjectInfo(id, qualifiedName, dashboardName, qualityGoal, profile))
+		projectInfos.add(new ProjectInfo(teamscaleId, qualifiedName, dashboardName, qualityGoal, profile))
 	}
 
 	return projectInfos
@@ -186,7 +187,6 @@ def uploadDashboard(dashboard, projectId) {
 
 /** Sets the sharing for the given dashboard */
 def setSharing(dashboard, projectInfo) {
-	// TODO: Group sharing for TSA
 	dashboard.payload.projectAccessEntries.children().each { child ->
 		if(child.userOrGroup == DUMMY_PROJECT) {
 			child.userOrGroup = projectInfo.id
