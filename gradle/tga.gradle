@@ -187,6 +187,8 @@ task collectPdb {
 		def stored = file("${tga.pdb.store.dir}/stored.txt")
 		def storedDirs = (stored.exists() ? stored.readLines() : []) as Set
 		
+		def collectedFileNames = []  as Set
+
 		tga.pdb.inbox.dir.each { inboxDir ->
 			file(inboxDir).eachDir { buildDir ->
 				if (storedDirs.contains(buildDir.name)) {
@@ -210,6 +212,11 @@ task collectPdb {
 					if (!tga.pdb.inbox.copyFlat) {
 						toDir += "/" + stripPathPrefix(file.parent, buildDir)
 					}
+					def fileName = file.getName()
+					if (collectedFileNames.contains(fileName)) {
+						println "Warning found duplicated filename $fileName"
+					}
+					collectedFileNames.add(fileName)
 					ant.copy(file: file, toDir: toDir, preservelastmodified: true)
 				}
 				
