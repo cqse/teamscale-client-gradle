@@ -82,7 +82,7 @@ ext {
 					if (branch != null) {
 						ts = "$branch:$ts"
 					}
-					return ts
+					return ts.toString()
 				}
 			]
 		],
@@ -186,6 +186,7 @@ task collectPdb {
 		
 		def stored = file("${tga.pdb.store.dir}/stored.txt")
 		def storedDirs = (stored.exists() ? stored.readLines() : []) as Set
+		
 		
 		tga.pdb.inbox.dir.each { inboxDir ->
 			file(inboxDir).eachDir { buildDir ->
