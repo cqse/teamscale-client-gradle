@@ -1154,7 +1154,10 @@ task deleteExternalUploadsInteractive(dependsOn: collectBuildDefinitions) {
 			response.failure failure
 		}
 
-		def grouped = externalUploads.groupBy { it.partition }
+		def grouped = [:]
+		externalUploads.each {
+			grouped[it.partition] = it.commits.sort { it.timestamp }
+		}
 
 		println "From - To"
 		grouped.each { partition, uploads ->
@@ -1196,6 +1199,7 @@ task deleteExternalUploadsInteractive(dependsOn: collectBuildDefinitions) {
 				request.uri.query = [
 					"t": "$upload.branchName:$upload.timestamp"
 				]
+				response.failure(failure)
 			}
 		}
 	}
