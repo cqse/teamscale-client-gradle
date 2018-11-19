@@ -583,25 +583,15 @@ task getTestResults(dependsOn: collectNewBuilds) {
 	doLast {
 		buildDefinitions.each { definition, definitionData ->
 			definitionData.builds.each { build ->
-				def testRuns = definitionData.http.get {
-					request.uri.path = "/$definition.project/_apis/test/Runs"
+				build.testResult = definitionData.http.get {
+					request.uri.path = "/$definition.project/_apis/test/ResultSummaryByBuild"
 					request.uri.query = [
-						"api-version": "4.1",
-						"builduri"   : "vstfs:///Build/Build/$build.details.id"
+						"api-version": "5.0-preview",
+						"buildId": build.details.id
 					]
 					response.failure(failure)
-				}
-
-				def results = []
-				testRuns.value.each { run ->
-					results.add(definitionData.http.get {
-						request.uri.path = "/$definition.project/_apis/test/runs/$run.id"
-						request.uri.query = [:]
-						response.failure(failure)
-					})
-				}
-
-				build.testResult = results
+				}.aggregatedResultsAnalysis
+				// Going via the test/runs also yields test runs for the release and not only for the build
 			}
 		}
 	}
@@ -919,18 +909,16 @@ task uploadTestResults(dependsOn: getTestResults) {
 		def http = teamscale.httpClient(teamscale)
 		buildDefinitions.each { definition, data ->
 			data.builds.sort { it.queueTime }.each { build ->
+				// Get test results
 				def result = ["passed": 0, "total": 0, "time": 0]
-				build.testResult.each { run ->
-					result.passed += run.passedTests
-					result.total += run.totalTests
-					result.time += getExecutionTime(run.startedDate, run.completedDate)
+				result.total = build.testResult.totalTests
+				def outcome = build.testResult.resultsByOutcome
+				if(outcome.containsKey("Passed")) {
+					result.passed = outcome.Passed.count
 				}
 
-				if (build.details.result == "failed" && result.total == 0) {
-					// Build probably failed before the tests could run
-					log("Skipping failed build", definition, build)
-					return
-				}
+				// Get test execution time
+				result.time = java.time.LocalTime.parse(build.testResult.duration).toSecondOfDay()
 
 				// Upload the result
 				def partition = appendPartitionName("Test", ": ", definition)
@@ -938,6 +926,7 @@ task uploadTestResults(dependsOn: getTestResults) {
 				def message = "External Analysis ($partition): ${result.passed}/${result.total} passed"
 
 				log("Uploading test results: $result", definition, build)
+
 				http.put {
 					request.uri.path = "$teamscale.prefix/p/$teamscale.project/add-non-code-metrics"
 					request.contentType = "application/json"
