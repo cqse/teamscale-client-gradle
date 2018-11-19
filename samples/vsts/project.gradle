@@ -1,4 +1,4 @@
-ext {
+vsts {
     teamscale.project = "project"
     vsts.builds = [
         "https://vsts-site.com": [

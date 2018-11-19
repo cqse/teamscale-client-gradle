@@ -1,0 +1,8 @@
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+dependencies {
+	implementation 'io.github.http-builder-ng:http-builder-ng-okhttp:1.0.3'
+}
