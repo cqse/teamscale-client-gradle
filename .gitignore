@@ -12,3 +12,4 @@
 projects/*
 cache/*
 tmp/*
+buildSrc/build/
