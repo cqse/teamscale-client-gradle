@@ -1,0 +1,95 @@
+package com.teamscale.gradle.azureDevOps.tasks
+
+import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.data.Build
+import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.teamscale.StandardQueryParameter
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
+
+/**
+ * Superclass for tasks which are based on the processing of a single build
+ */
+abstract class UploadTask extends DefaultTask {
+
+	/** Partition type and name for the different types of upload tasks */
+	static enum EPartitionType {
+		TEST("Test"), BUILD("Build"), METRICS("Metrics")
+
+		String content
+
+		EPartitionType(String content) {
+			this.content = content
+		}
+	}
+
+	/** Base message for the upload */
+	final static UPLOAD_MESSAGE = "External Analysis (%s)"
+
+	@TaskAction
+	def action() {
+		project.teamscale.azureDevOps.definitions.each { Definition definition ->
+			if (isConfiguredForTask(definition)) {
+				def builds = definition.builds.findAll { Build build ->
+					hasNotBeenProcessed(definition, build)
+				}
+
+				builds.each { Build build ->
+					run(definition, build)
+				}
+			}
+		}
+	}
+
+	/** Checks that the build hasn't been processed yet with this task */
+	boolean hasNotBeenProcessed(Definition definition, Build build) {
+		return definition.cache.hasNotBeenProcessed(definition, getUploadType(), build)
+	}
+
+	abstract EBuildInformationType getUploadType()
+
+/** Run the task */
+	abstract void run(Definition definition, Build build)
+
+	/** Check if the preconditions for running the task are fulfilled */
+	abstract boolean isConfiguredForTask(Definition definition)
+
+	/**
+	 * Returns the value for the `t` parameter in every teamscale service call.
+	 * The value is determined by the given build. This includes the time when the build finished as well
+	 * as the target branch on the teamscale instance.
+	 */
+	static String createRequestTimeParameter(Build build) {
+		def param = build.queueTime.toEpochMilli()
+		if (build.targetBranch) {
+			param = "$build.targetBranch:$param"
+		}
+		return param
+	}
+
+	/** Create a path for a non-code-metric in the metrics view based on the partition */
+	static String createPath(String basePath, Definition definition) {
+		return appendPartitionName(basePath, "/", definition)
+	}
+
+	/**
+	 * Create and return the standard parameters for the build.
+	 */
+	static StandardQueryParameter getStandardQueryParameters(EPartitionType type, Definition definition, Build build) {
+		def partition = appendPartitionName(type.content, ":", definition)
+		def message = String.format(UPLOAD_MESSAGE, partition)
+		def t = createRequestTimeParameter(build)
+		return new StandardQueryParameter(partition: partition, message: message, t: t)
+	}
+
+	/**
+	 * Modifies the given partition name by adding any optionally suffixes, which are
+	 * defined in the definition object.
+	 */
+	static String appendPartitionName(String partition, String divider, Definition definition) {
+		if (definition.options.partition) {
+			return "$partition$divider $definition.options.partition"
+		}
+		return partition
+	}
+}
