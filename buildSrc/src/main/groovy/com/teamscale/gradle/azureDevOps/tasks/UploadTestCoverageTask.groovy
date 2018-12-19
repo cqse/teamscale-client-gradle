@@ -1,20 +1,19 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
 import com.teamscale.gradle.azureDevOps.config.AzureDevOps
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.CSharpCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static com.teamscale.gradle.azureDevOps.config.EBuildInformationType.TEST_COVERAGE
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
-import static com.teamscale.gradle.azureDevOps.utils.Logging.warn
+import static EBuildInformationType.TEST_COVERAGE
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 import static com.teamscale.gradle.teamscale.TeamscaleClient.UPLOAD_SUCCESS_RETURN
 
 class UploadTestCoverageTask extends UploadTask {
-	final static String NAME = "UploadTestCoverage"
+	final static String NAME = "uploadTestCoverage"
 
 	@Override
 	EBuildInformationType getUploadType() {
@@ -34,13 +33,13 @@ class UploadTestCoverageTask extends UploadTask {
 
 		// transform coverage
 		def type = tests.coverage.type.toString()
-		List<String> contents = transformCoverage(coverageFiles, type)
+		List<String> contents = convertCoverage(coverageFiles, type)
 
 		// upload to teamscale
-		def params = getStandardQueryParameters(EPartitionType.TEST, definition, build)
+		def params = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
 		params.appendToMessage(type)
 
-		TeamscaleClient http = project.teamscale.http
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		def result = http.uploadExternalReports(params, contents, type)
 
 		if(result == UPLOAD_SUCCESS_RETURN) {
@@ -51,16 +50,23 @@ class UploadTestCoverageTask extends UploadTask {
 		}
 	}
 
-	List<String> transformCoverage(List<File> coverageFiles, String type) {
+	/**
+	 * Convert the given files. Some files must be converted to another format in order
+	 * to be uploaded to teamscale.
+	 */
+	private List<String> convertCoverage(List<File> coverageFiles, String type) {
 		if(type == "VS_COVERAGE") {
 			return CSharpCoverageConverter.convert(coverageFiles, getCoverageExePath())
 		}
 		return coverageFiles.collect { it.text }
 	}
 
-	String getCoverageExePath() {
-		TeamscaleExtension teamscale = project.teamscale
-		def path = teamscale.azureDevOps.codeCoverageExePath
+	/**
+	 * Get the path to the executable which can convert a .coverage file to
+	 * an .xml
+	 */
+	private String getCoverageExePath() {
+		def path = TeamscaleExtension.getFrom(project).azureDevOps.codeCoverageExePath
 
 		assert path != null: "No code coverage exe given! In order to use VS_COVERAGE you need " +
 			"to provide a code coverage exe in ${AzureDevOps.NAME}{} with 'codeCoverageExe \"<path>\"'. " +

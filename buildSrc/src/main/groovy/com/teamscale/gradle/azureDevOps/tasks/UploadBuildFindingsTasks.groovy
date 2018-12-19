@@ -1,13 +1,14 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
+
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.teamscale.TeamscaleClient
+import com.teamscale.gradle.teamscale.TeamscaleExtension
 import com.teamscale.gradle.teamscale.TeamscaleFinding
 
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
-import static com.teamscale.gradle.azureDevOps.utils.Logging.warn
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadBuildFindingsTasks extends UploadTask {
 	static final String NAME = "uploadBuildFindings"
@@ -33,9 +34,9 @@ class UploadBuildFindingsTasks extends UploadTask {
 		Set<TeamscaleFinding> findings = parseFindingsFromLogs(logs, definition, build)
 
 		// Upload findings
-		TeamscaleClient http = project.teamscale.http
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
-		def params = getStandardQueryParameters(EPartitionType.METRICS, definition, build)
+		def params = getStandardQueryParameters(EUploadPartitionType.METRICS, definition, build)
 		def result = http.uploadExternalFindings(params, new ArrayList<>(findings))
 
 		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
@@ -74,7 +75,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 	Set<TeamscaleFinding> parseLog(String content) {
 		Set<TeamscaleFinding> findings = []
 		content.eachLine { String line ->
-			TeamscaleFinding finding = project.teamscale.azureDevOps.logAnalyzer.analyze(line)
+			TeamscaleFinding finding = TeamscaleExtension.getFrom(project).azureDevOps.logAnalyzer.analyze(line)
 			if (finding) {
 				findings.add(finding)
 			}
@@ -111,7 +112,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
 		def noPattern = definition.options.logNamePattern == null
-		def noLogAnalyzer = project.teamscale.azureDevOps.logAnalyzer == null
+		def noLogAnalyzer = TeamscaleExtension.getFrom(project).azureDevOps.logAnalyzer == null
 
 		if (noLogAnalyzer) {
 			log("No log analyzer defined", definition)

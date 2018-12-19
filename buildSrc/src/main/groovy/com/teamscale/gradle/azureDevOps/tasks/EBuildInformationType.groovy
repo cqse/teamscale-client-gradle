@@ -1,4 +1,4 @@
-package com.teamscale.gradle.azureDevOps.config
+package com.teamscale.gradle.azureDevOps.tasks
 
 enum EBuildInformationType {
 	BUILD_STATUS,

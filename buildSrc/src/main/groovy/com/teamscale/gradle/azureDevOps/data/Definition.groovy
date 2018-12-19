@@ -2,12 +2,12 @@ package com.teamscale.gradle.azureDevOps.data
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.config.BuildOptions
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.Cache
 
 import java.time.Instant
 
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class Definition {
 	/** Options for this definition */
@@ -53,7 +53,7 @@ class Definition {
 		cache.set(this, option, build)
 	}
 
-	Instant getMinLastProcessedTime() {
-		return cache.getMinTime(this)
+	Instant getMinLastProcessedTimeFor(List<EBuildInformationType> types) {
+		return cache.getMinTime(this, types)
 	}
 }

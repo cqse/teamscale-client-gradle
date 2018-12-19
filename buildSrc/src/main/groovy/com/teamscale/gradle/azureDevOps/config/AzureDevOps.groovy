@@ -2,9 +2,10 @@ package com.teamscale.gradle.azureDevOps.config
 
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.Cache
-import com.teamscale.gradle.azureDevOps.utils.ELogAnalyzerType
-import com.teamscale.gradle.azureDevOps.utils.ILogAnalyzer
-import com.teamscale.gradle.azureDevOps.utils.LogAnalyzerFactory
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ELogAnalyzerType
+import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ILogAnalyzer
+import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
@@ -24,6 +25,8 @@ class AzureDevOps {
 
 	String codeCoverageExePath
 
+	List<EBuildInformationType> configuredUploadTasks = new ArrayList<>()
+
 	AzureDevOps(project) {
 		builds = project.container(OrganizationConfig)
 		credentials = project.container(Credentials)
@@ -38,11 +41,18 @@ class AzureDevOps {
 		credentials.configure(closure)
 	}
 
+	/**
+	 * Define the log analyzer for this project
+	 */
 	def logAnalyzer(String type) {
 		def logAnalyzerType = ELogAnalyzerType.valueOf(type)
 		logAnalyzer = LogAnalyzerFactory.getLogAnalyzer(logAnalyzerType)
 	}
 
+	/**
+	 * Set the cache for this project using the given cache directory.
+	 * Checks if the directory does exist.
+	 */
 	def cacheDir(String path) {
 		def cacheDir = new File(path)
 		assert cacheDir.exists() && cacheDir.isDirectory():
@@ -51,6 +61,10 @@ class AzureDevOps {
 		cache = Cache.getCacheFor(cacheDir, project.name)
 	}
 
+	/**
+	 * Configure the location of the code coverage exe which converts `.coverage` files to `.xml`, which
+	 * can be processed by TS
+	 */
 	def codeCoverageExe(String path) {
 		def codeCoverage = new File(path)
 		assert codeCoverage.exists() && codeCoverage.isFile():

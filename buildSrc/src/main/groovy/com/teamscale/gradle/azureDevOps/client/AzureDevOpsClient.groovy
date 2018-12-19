@@ -6,8 +6,6 @@ import groovyx.net.http.OkHttpBuilder
 
 import java.time.Instant
 
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
-
 class AzureDevOpsClient extends HttpClient {
 	final static URL = "https://dev.azure.com/test"
 

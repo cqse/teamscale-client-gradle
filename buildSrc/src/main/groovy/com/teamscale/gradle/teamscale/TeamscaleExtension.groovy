@@ -3,6 +3,7 @@ package com.teamscale.gradle.teamscale
 
 import com.teamscale.gradle.azureDevOps.config.AzureDevOps
 import org.gradle.api.Action
+import org.gradle.api.Project
 
 class TeamscaleExtension {
 	public static String NAME = "teamscale"
@@ -20,5 +21,9 @@ class TeamscaleExtension {
 
 	void azureDevOps(Action<? super AzureDevOps> action) {
 		action.execute(azureDevOps)
+	}
+
+	static TeamscaleExtension getFrom(Project project) {
+		return project.extensions.getByName(NAME)
 	}
 }

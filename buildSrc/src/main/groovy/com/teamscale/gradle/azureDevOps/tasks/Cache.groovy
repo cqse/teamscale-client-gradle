@@ -1,6 +1,5 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import groovy.json.JsonOutput
@@ -62,7 +61,7 @@ class Cache {
 	}
 
 	private Instant get(Definition definition, EBuildInformationType type) {
-		return cache.get(getKey(definition), new HashMap<>()).get(type, Instant.EPOCH)
+		return cache.get(getKey(definition), new HashMap<>()).getOrDefault(type, Instant.EPOCH)
 	}
 
 	void set(Definition definition, EBuildInformationType type, Build build) {
@@ -70,10 +69,10 @@ class Cache {
 		save()
 	}
 
-	Instant getMinTime(Definition definition) {
-		Instant min = null
+	Instant getMinTime(Definition definition, List<EBuildInformationType> types) {
+		Instant min = Instant.EPOCH
 
-		EBuildInformationType.values().each { EBuildInformationType type ->
+		types.each { EBuildInformationType type ->
 			Instant time = get(definition, type)
 			if (!min) {
 				min = time

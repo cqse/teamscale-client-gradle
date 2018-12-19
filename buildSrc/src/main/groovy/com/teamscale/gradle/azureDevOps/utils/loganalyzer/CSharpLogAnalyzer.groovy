@@ -1,21 +1,20 @@
-package com.teamscale.gradle.azureDevOps.utils
+package com.teamscale.gradle.azureDevOps.utils.loganalyzer
 
 import com.teamscale.gradle.teamscale.TeamscaleFinding
 
-import java.nio.file.Paths
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
+/**
+ * Can analyze C# logs and extract possible findings which can be then uploaded to
+ * teamscale.
+ */
 class CSharpLogAnalyzer implements ILogAnalyzer {
 	final static String DATE_TIME = "[0-9-\\.:T]{18,}[A-Z]{1}"
-
-	final static String LOCATION = "((?:\\w:)?(?:[^:#\\s]+)\\\\?\\w+\\.\\w+)\\(([0-9]+),[0-9,]+\\):"
-
+	final static String PATH = "((?:\\w:)?(?:[^:#\\s]+)\\\\?\\w+\\.\\w+)\\(([0-9]+),[0-9,]+\\):"
 	final static String FINDING_ID = "(?:[\\w\\s]+)?warning\\s((?:[A-Z]{2,3})[0-9]+):"
-
 	final static String MESSAGE = "(.*?)\\s+\\[[^\\]]*\\]"
-
-	final static Pattern COMBINED = ~"$DATE_TIME\\s+$LOCATION\\s$FINDING_ID\\s+$MESSAGE"
+	final static Pattern COMBINED = ~"$DATE_TIME\\s+$PATH\\s$FINDING_ID\\s+$MESSAGE"
 
 	@Override
 	TeamscaleFinding analyze(String logLine) {

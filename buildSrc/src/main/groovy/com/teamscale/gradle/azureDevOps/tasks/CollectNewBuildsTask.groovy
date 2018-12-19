@@ -1,42 +1,54 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
+import com.teamscale.gradle.azureDevOps.config.AzureDevOps
 import com.teamscale.gradle.azureDevOps.config.BuildOptions
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
+import java.time.Duration
 import java.time.Instant
 
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class CollectNewBuildsTask extends DefaultTask {
+	static String NAME = "collectNewBuilds"
+
+	/**
+	 * If a build hasn't been processed in this amount of days, a warning
+	 * will be logged.
+	 */
+	static int DAYS_THRESHOLD = 30
+
 	@TaskAction
 	def collect() {
-		project.teamscale.azureDevOps.definitions.each { Definition definition ->
+		AzureDevOps ados = TeamscaleExtension.getFrom(project).azureDevOps
+
+		ados.definitions.each { Definition definition ->
 			def http = definition.getHttp()
 
-			Instant minTime = definition.getMinLastProcessedTime().plusMillis(1)
+			Instant minTime = definition.getMinLastProcessedTimeFor(ados.configuredUploadTasks).plusMillis(1)
 
-			def builds = http.getBuildsForDefinition(definition.id, minTime).value.findResults {
-				def build = new Build(it)
-				if (isValidBuild(build, definition.getOptions())) {
+			List builds = http.getBuildsForDefinition(definition.id, minTime).value.findResults {
+				def build = new Build(it, definition.getOptions().getBranchMapping())
+				if (build.targetBranch != null) {
 					return build
 				}
 			}
 
 			if (builds.size() == 0) {
-				log("No new builds since $minTime", definition)
+				log("No unprocessed builds since $minTime", definition)
+
+				if(Duration.between(minTime, Instant.now()).toDays() > DAYS_THRESHOLD) {
+					warn("Last build was processed over $DAYS_THRESHOLD days ago!")
+				}
 			} else {
-				definition.getBuilds().addAll(builds)
 				log("Found ${builds.size()} unprocessed build(s)", definition)
+				definition.getBuilds().addAll(builds)
 			}
 		}
-	}
-
-	boolean isValidBuild(Build build, BuildOptions options) {
-		// TODO: branchMapping
-		// TODO: Constants for default-branch and `null` in, don't process the build
-		return true
 	}
 }

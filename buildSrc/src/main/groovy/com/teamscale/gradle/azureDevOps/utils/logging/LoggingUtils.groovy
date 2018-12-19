@@ -1,10 +1,10 @@
-package com.teamscale.gradle.azureDevOps.utils
+package com.teamscale.gradle.azureDevOps.utils.logging
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import groovy.json.JsonBuilder
 
-class Logging {
+class LoggingUtils {
 	static void log(String message, Definition definition = null, Build build = null) {
 		println createMessage(message, definition, build)
 	}

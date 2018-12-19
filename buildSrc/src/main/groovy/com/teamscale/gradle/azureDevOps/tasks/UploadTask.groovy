@@ -1,9 +1,9 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.teamscale.StandardQueryParameter
+import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
@@ -12,23 +12,12 @@ import org.gradle.api.tasks.TaskAction
  */
 abstract class UploadTask extends DefaultTask {
 
-	/** Partition type and name for the different types of upload tasks */
-	static enum EPartitionType {
-		TEST("Test"), BUILD("Build"), METRICS("Metrics")
-
-		String content
-
-		EPartitionType(String content) {
-			this.content = content
-		}
-	}
-
 	/** Base message for the upload */
 	final static UPLOAD_MESSAGE = "External Analysis (%s)"
 
 	@TaskAction
 	def action() {
-		project.teamscale.azureDevOps.definitions.each { Definition definition ->
+		TeamscaleExtension.getFrom(project).azureDevOps.definitions.each { Definition definition ->
 			if (isConfiguredForTask(definition)) {
 				def builds = definition.builds.findAll { Build build ->
 					hasNotBeenProcessed(definition, build)
@@ -75,7 +64,7 @@ abstract class UploadTask extends DefaultTask {
 	/**
 	 * Create and return the standard parameters for the build.
 	 */
-	static StandardQueryParameter getStandardQueryParameters(EPartitionType type, Definition definition, Build build) {
+	static StandardQueryParameter getStandardQueryParameters(EUploadPartitionType type, Definition definition, Build build) {
 		def partition = appendPartitionName(type.content, ":", definition)
 		def message = String.format(UPLOAD_MESSAGE, partition)
 		def t = createRequestTimeParameter(build)

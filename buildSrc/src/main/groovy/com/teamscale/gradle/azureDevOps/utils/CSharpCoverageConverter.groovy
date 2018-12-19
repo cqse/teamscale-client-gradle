@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.utils
 
-import static com.teamscale.gradle.azureDevOps.utils.Logging.warn
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class CSharpCoverageConverter {
 	static List<String> convert(List<File> files, String execPath) {
@@ -17,6 +17,7 @@ class CSharpCoverageConverter {
 				warn("Converting the coverage file failed: $errorStream")
 			}
 
+			// TODO: assert or cancel in any way?
 			if(!xml.exists()) {
 				warn("Convertion of the coverage file did not work. No output to $xml.absolute")
 			}

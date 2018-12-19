@@ -1,16 +1,17 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
+
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.teamscale.TeamscaleClient
+import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static com.teamscale.gradle.azureDevOps.config.EBuildInformationType.TEST_RESULT
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
-import static com.teamscale.gradle.azureDevOps.utils.Logging.warn
+import static EBuildInformationType.TEST_RESULT
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadTestResultsTask extends UploadTask {
-	final static String NAME = "UploadTestResults"
+	final static String NAME = "uploadTestResults"
 
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
@@ -44,9 +45,9 @@ class UploadTestResultsTask extends UploadTask {
 		List<File> attachments = definition.http.downloadFiles(attachmentUrls)
 
 		// upload to teamscale
-		TeamscaleClient http = project.teamscale.http
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
-		def params = getStandardQueryParameters(EPartitionType.TEST, definition, build)
+		def params = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
 		def type = tests.result.type.toString()
 		def contents = attachments.collect { it.text }
 

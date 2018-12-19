@@ -1,16 +1,17 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.EBuildInformationType
+
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.teamscale.EAssessment
 import com.teamscale.gradle.teamscale.NonCodeMetric
 import com.teamscale.gradle.teamscale.TeamscaleClient
+import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static com.teamscale.gradle.azureDevOps.config.EBuildInformationType.BUILD_STATUS
-import static com.teamscale.gradle.azureDevOps.tasks.UploadTask.EPartitionType.BUILD
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
-import static com.teamscale.gradle.azureDevOps.utils.Logging.warn
+import static EBuildInformationType.BUILD_STATUS
+import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 import static com.teamscale.gradle.teamscale.EAssessment.GREEN
 import static com.teamscale.gradle.teamscale.EAssessment.RED
 
@@ -39,7 +40,7 @@ class UploadBuildStatusTask extends UploadTask {
 		queryParams.appendToMessage("build $build.result")
 		def nonCodeMetric = getNonCodeMetric(definition, build)
 
-		TeamscaleClient http = project.teamscale.http
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		String result = http.uploadBuildStatus(queryParams, [nonCodeMetric])
 
 		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {

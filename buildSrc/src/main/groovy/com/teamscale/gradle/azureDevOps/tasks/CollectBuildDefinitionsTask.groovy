@@ -5,19 +5,18 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOps
 import com.teamscale.gradle.azureDevOps.config.OrganizationConfig
 import com.teamscale.gradle.azureDevOps.config.ProjectConfig
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
-import static com.teamscale.gradle.azureDevOps.utils.Logging.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class CollectBuildDefinitionsTask extends DefaultTask {
+	static String NAME = "collectBuildDefinitionTask"
+
 	@TaskAction
 	void collect() {
-		// TODO: get cache before and read lastprocessed time
-
-		AzureDevOps azureDevOps = project.teamscale.azureDevOps
-
-		// TODO: log warning if no builds are found
+		AzureDevOps azureDevOps = TeamscaleExtension.getFrom(project).azureDevOps
 
 		azureDevOps.builds.each { OrganizationConfig organization ->
 			def credentials = azureDevOps.credentials[organization.name]
