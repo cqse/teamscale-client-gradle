@@ -1,8 +1,5 @@
 package com.teamscale.gradle.teamscale
 
-
-import com.teamscale.gradle.azureDevOps.data.Build
-import com.teamscale.gradle.azureDevOps.data.Definition
 import groovyx.net.http.MultipartContent
 import groovyx.net.http.OkHttpBuilder
 import groovyx.net.http.OkHttpEncoders
@@ -21,7 +18,7 @@ class TeamscaleClient extends HttpClient {
 	TeamscaleClient(TeamscaleConfig server) {
 		super(createHttpClient(server))
 		this.server = server
-		this.prefix = new URL(server.url).getPath().replaceAll("^/", "") ?: ""
+		this.prefix = new URL(server.url).getPath().replaceAll("^/", "") ?: null
 	}
 
 	/**
@@ -46,8 +43,10 @@ class TeamscaleClient extends HttpClient {
 	/**
 	 * Makes an HTTP call to the teamscale server. Prepends any necessary prefix or subpath.
 	 */
-	def doCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		List<String> path = [prefix, "p", server.project] + service
+	protected Object doCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
+		List<String> path = ([prefix, "p", server.project] + service).findAll {
+			it != null
+		}
 		super.doCall(method, path, query, setRequest)
 	}
 
@@ -70,6 +69,7 @@ class TeamscaleClient extends HttpClient {
 	String uploadExternalReports(StandardQueryParameter params, List<String> reports, String type) {
 		if (reports.size() == 0) {
 			// TODO: check if this makes sense
+			// What should happen if no reports are given for the upload
 			return "success"
 		}
 
@@ -104,11 +104,5 @@ class TeamscaleClient extends HttpClient {
 		}
 
 		return doCall("put", path, query, setRequest)
-	}
-
-	boolean isValidFilePath(List<String> filePath) {
-		def path = ["repository-log-last-change"] + filePath
-		String result = doCall("get", path, [:]).toString()
-		return !result.isEmpty()
 	}
 }

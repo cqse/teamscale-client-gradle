@@ -7,6 +7,8 @@ import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+
 /**
  * Superclass for tasks which are based on the processing of a single build
  */
@@ -26,11 +28,17 @@ abstract class UploadTask extends DefaultTask {
 				builds.each { Build build ->
 					run(definition, build)
 				}
+			} else {
+				log(getRejectReason(), definition)
 			}
 		}
 	}
 
-	/** Checks that the build hasn't been processed yet with this task */
+	/** The reason a definition has been rejected for this upload task */
+	abstract String getRejectReason();
+
+
+/** Checks that the build hasn't been processed yet with this task */
 	protected boolean hasNotBeenProcessed(Definition definition, Build build) {
 		return definition.cache.hasNotBeenProcessed(definition, getUploadType(), build)
 	}

@@ -126,4 +126,9 @@ class UploadBuildFindingsTasks extends UploadTask {
 
 		return true
 	}
+
+	@Override
+	String getRejectReason() {
+		return "No log analyzer or log name pattern defined"
+	}
 }

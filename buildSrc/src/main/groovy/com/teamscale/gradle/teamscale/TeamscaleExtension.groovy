@@ -1,7 +1,7 @@
 package com.teamscale.gradle.teamscale
 
 
-import com.teamscale.gradle.azureDevOps.config.AzureDevOps
+import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import org.gradle.api.Action
 import org.gradle.api.Project
 
@@ -12,14 +12,14 @@ class TeamscaleExtension {
 
 	TeamscaleConfig config = new TeamscaleConfig()
 
-	AzureDevOps azureDevOps
+	AzureDevOpsExtension azureDevOps
 
 	void server(Action<? super TeamscaleConfig> action) {
 		action.execute(config)
 		http = new TeamscaleClient(config)
 	}
 
-	void azureDevOps(Action<? super AzureDevOps> action) {
+	void azureDevOps(Action<? super AzureDevOpsExtension> action) {
 		action.execute(azureDevOps)
 	}
 

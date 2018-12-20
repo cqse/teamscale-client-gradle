@@ -1,52 +1,43 @@
 package com.teamscale.gradle.azureDevOps.config
 
 class TestsConfig {
-	TypeAndPattern result
-	TypeAndPattern coverage
+	TypeAndPattern resultOptions
+	TypeAndPattern coverageOptions
 
-	def result(String type, String extension = null) {
-		result = getTypeAndExtension(type, extension)
+	def result(String type, String filePattern = null, String artifactPattern = null) {
+		assert resultOptions == null: "test result can only be set once"
+		resultOptions = new TypeAndPattern<>(type, filePattern, artifactPattern)
 	}
 
-	def coverage(String type, String extension = null) {
-		assert coverage == null: "coverage can only be set once"
-		coverage = getTypeAndExtension(type, extension)
-	}
-
-	static getTypeAndExtension(String type, String pattern) {
-		try {
-			def enumType = EDefaultPattern.valueOf(type)
-			if (!pattern) {
-				pattern = enumType.getPattern()
-			}
-
-			return new TypeAndPattern<>(type: enumType, pattern: pattern)
-		} catch (IllegalArgumentException e) {
-			// TODO: create exception for this
-			throw e
-		}
-	}
-
-	def isTestResultFile(String fileName) {
-		if(result) {
-			return fileName ==~ result.pattern
-		}
-		return false
-	}
-}
-
-enum EDefaultPattern {
-	JUNIT(/.*\.xml$/), MS_TEST(/.*\.trx$/), VS_COVERAGE(/.*\.coverage$/)
-
-	String pattern
-
-	EDefaultPattern(String pattern) {
-		this.pattern = pattern
+	def coverage(String type, String filePattern = null, String artifactPattern = null) {
+		assert coverageOptions == null: "test coverage can only be set once"
+		coverageOptions = new TypeAndPattern<>(type, filePattern, artifactPattern)
 	}
 }
 
 class TypeAndPattern {
-	String type
-	// TODO: make pattern (Regex AND [MP!!] ant)
-	String pattern
+	final String type
+
+	// TODO: make pattern (regex and ant style globbing)
+	final String filePattern
+
+	String artifactPattern
+
+	TypeAndPattern(String type, String filePattern, String artifactPattern = null) {
+		this.type = type
+		this.filePattern = filePattern
+		this.artifactPattern = artifactPattern
+	}
+
+	boolean matches(String fileName) {
+		return fileName ==~ filePattern
+	}
+
+	boolean artifactMatches(String artifactName) {
+		return artifactName ==~ artifactPattern
+	}
+
+	boolean mustSearchInArtifact() {
+		return artifactPattern != null
+	}
 }

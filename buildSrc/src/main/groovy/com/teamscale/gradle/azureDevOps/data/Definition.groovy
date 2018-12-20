@@ -19,7 +19,7 @@ class Definition {
 
 	final Instant lastCompletedTime
 
-	/** The cache specific for this definition */
+	/** Reference to the project cache */
 	final Cache cache
 
 	final AzureDevOpsClient http

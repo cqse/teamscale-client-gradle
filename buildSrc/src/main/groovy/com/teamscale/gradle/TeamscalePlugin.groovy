@@ -1,6 +1,6 @@
 package com.teamscale.gradle
 
-import com.teamscale.gradle.azureDevOps.config.AzureDevOps
+import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.tasks.CollectBuildDefinitionsTask
 import com.teamscale.gradle.azureDevOps.tasks.CollectNewBuildsTask
 import com.teamscale.gradle.azureDevOps.tasks.UploadTask
@@ -19,7 +19,7 @@ class TeamscalePlugin implements Plugin<Project> {
 		project.getGradle().useLogger(new CustomTaskLogger())
 
 		TeamscaleExtension teamscale = project.extensions.create(TeamscaleExtension.NAME, TeamscaleExtension)
-		teamscale[AzureDevOps.NAME] = new AzureDevOps(project)
+		teamscale[AzureDevOpsExtension.NAME] = new AzureDevOpsExtension(project)
 
 		createAzureDevOpsTasks(project)
 	}
@@ -38,7 +38,7 @@ class TeamscalePlugin implements Plugin<Project> {
 			TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
 
 			assert teamscale.azureDevOps.cache != null: "No cache set. Please use the 'cacheDir <path>` " +
-				"inside of $AzureDevOps.NAME {}"
+				"inside of $AzureDevOpsExtension.NAME {}"
 
 			// Configure the upload tasks
 			project.gradle.taskGraph.whenReady {

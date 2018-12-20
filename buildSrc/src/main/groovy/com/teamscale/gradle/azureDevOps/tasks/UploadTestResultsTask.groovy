@@ -1,8 +1,9 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-
+import com.teamscale.gradle.azureDevOps.config.TypeAndPattern
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
@@ -15,7 +16,12 @@ class UploadTestResultsTask extends UploadTask {
 
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
-		return (definition.options.tests != null)
+		return (definition.options.tests != null && definition.options.tests.resultOptions)
+	}
+
+	@Override
+	String getRejectReason() {
+		return "No test results configured"
 	}
 
 	@Override
@@ -25,39 +31,59 @@ class UploadTestResultsTask extends UploadTask {
 
 	@Override
 	void run(Definition definition, Build build) {
-		def tests = definition.options.tests
+		def options = definition.options.tests.resultOptions
 
+		// get test result files
+		List<File> testResults
+		if (options.mustSearchInArtifact()) {
+			testResults = BuildUtils.getFilesFromBuildArtifact(definition, build, options)
+		} else {
+			testResults = getTestResultsFromTestRuns(definition, build, options)
+		}
+
+		if (testResults.isEmpty()) {
+			log("No test results found. Pattern didn't match anything. Nothing uploaded", definition, build)
+			definition.setLastProcessedTime(getUploadType(), build)
+			return
+		}
+
+		// upload to teamscale
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
+
+		def params = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
+		def type = options.type.toString()
+		def contents = testResults.collect { it.text }
+
+		String result = http.uploadExternalReports(params, contents, type)
+
+		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
+			log("$type (${contents.size()}): $result", definition, build)
+			definition.setLastProcessedTime(getUploadType(), build)
+		} else {
+			warn("Upload was not successful: $result", definition, build)
+		}
+	}
+
+	/**
+	 * Downloads the test result files from the individual test runs
+	 */
+	private static List<File> getTestResultsFromTestRuns(Definition definition, Build build, TypeAndPattern options) {
 		// get test runs
 		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).value.findAll {
 			it.release == null // Ignore release test runs
 		}.id
 
 		// check if the test runs have attachments
-		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it).value }.flatten().findAll {
-			tests.isTestResultFile(it.fileName)
+		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it).value }
+			.flatten().findAll {
+			options.matches(it.fileName)
 		}.url
 
-		if(attachmentUrls.isEmpty()) {
+		if (attachmentUrls.isEmpty()) {
 			log("No result found", definition, build)
 			return
 		}
 
-		List<File> attachments = definition.http.downloadFiles(attachmentUrls)
-
-		// upload to teamscale
-		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
-
-		def params = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
-		def type = tests.result.type.toString()
-		def contents = attachments.collect { it.text }
-
-		String result = http.uploadExternalReports(params, contents, type)
-
-		if(result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
-			log("$result", definition, build)
-			definition.setLastProcessedTime(getUploadType(), build)
-		} else {
-			warn("Upload was not successful: $result", definition, build)
-		}
+		return definition.http.downloadFiles(attachmentUrls)
 	}
 }

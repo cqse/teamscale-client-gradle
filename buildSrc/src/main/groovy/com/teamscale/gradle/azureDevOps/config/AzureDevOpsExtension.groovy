@@ -9,25 +9,48 @@ import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
-class AzureDevOps {
+/**
+ * Gradle extension for the config related to the Azure dev ops services (ADOS) build processing.
+ */
+class AzureDevOpsExtension {
 	public final static NAME = "azureDevOps"
 
 	NamedDomainObjectContainer<OrganizationConfig> builds
 	NamedDomainObjectContainer<Credentials> credentials
 
+	/**
+	 * Instance of log analyzer for this project.
+	 * The log analyzer parses build task logs for any possible finding which can be uploaded to teamscale.
+	 */
 	ILogAnalyzer logAnalyzer
 
 	List<Definition> definitions = new ArrayList<>()
 
+	/**
+	 * Cache object for the project. This handles the saving of the times a build has last been processed
+	 * for each upload task.
+	 */
 	Cache cache
 
+	/**
+	 * Reference to the gradle project.
+	 */
 	Project project
 
+	/**
+	 * The path to the .exe file which can convert .coverage files into .xml, which then can
+	 * be uploaded to teamscale.
+	 */
 	String codeCoverageExePath
 
+	/**
+	 * When running ne or multiple tasks this array will be filled with the types of the different
+	 * upload tasks. This is important for the cache in order to determine which builds have been processed
+	 * for which upload task.
+	 */
 	List<EBuildInformationType> configuredUploadTasks = new ArrayList<>()
 
-	AzureDevOps(project) {
+	AzureDevOpsExtension(project) {
 		builds = project.container(OrganizationConfig)
 		credentials = project.container(Credentials)
 		this.project = project
@@ -37,6 +60,9 @@ class AzureDevOps {
 		builds.configure(closure)
 	}
 
+	/**
+	 * Define credentials to the different ADOS organizations.
+	 */
 	def credentials(Closure closure) {
 		credentials.configure(closure)
 	}

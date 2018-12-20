@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.config.AzureDevOps
+import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.config.OrganizationConfig
 import com.teamscale.gradle.azureDevOps.config.ProjectConfig
 import com.teamscale.gradle.azureDevOps.data.Definition
@@ -16,7 +16,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 
 	@TaskAction
 	void collect() {
-		AzureDevOps azureDevOps = TeamscaleExtension.getFrom(project).azureDevOps
+		AzureDevOpsExtension azureDevOps = TeamscaleExtension.getFrom(project).azureDevOps
 
 		azureDevOps.builds.each { OrganizationConfig organization ->
 			def credentials = azureDevOps.credentials[organization.name]

@@ -71,4 +71,10 @@ class UploadBuildStatusTask extends UploadTask {
 		// Build Status is always uploaded
 		return true
 	}
+
+	@Override
+	String getRejectReason() {
+		// never happens
+		return null
+	}
 }

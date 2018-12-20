@@ -1,8 +1,9 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.AzureDevOps
+import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 import com.teamscale.gradle.azureDevOps.utils.CSharpCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
@@ -22,17 +23,23 @@ class UploadTestCoverageTask extends UploadTask {
 
 	@Override
 	void run(Definition definition, Build build) {
-		def tests = definition.options.tests
+		def coverageOptions = definition.options.tests.coverageOptions
 
-		// get from VSTS
-		List<File> coverageFiles = definition.http.downloadTestCoverage(build.id)
-		if (coverageFiles.isEmpty() && tests.coverage.type != null) {
-			log("No coverage found", definition, build)
+		List<File> coverageFiles
+		if(coverageOptions.mustSearchInArtifact()) {
+			coverageFiles = BuildUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
+		} else {
+			coverageFiles = definition.http.downloadTestCoverage(build.id)
+		}
+
+		if (coverageFiles.isEmpty()) {
+			log("No coverage found. Pattern didn't match anything. Nothing uploaded", definition, build)
+			definition.setLastProcessedTime(getUploadType(), build)
 			return
 		}
 
 		// transform coverage
-		def type = tests.coverage.type.toString()
+		def type = coverageOptions.type.toString()
 		List<String> contents = convertCoverage(coverageFiles, type)
 
 		// upload to teamscale
@@ -43,7 +50,7 @@ class UploadTestCoverageTask extends UploadTask {
 		def result = http.uploadExternalReports(params, contents, type)
 
 		if(result == UPLOAD_SUCCESS_RETURN) {
-			log("$type : $result", definition, build)
+			log("$type (${coverageFiles.size()}): $result", definition, build)
 			definition.setLastProcessedTime(getUploadType(), build)
 		} else {
 			warn("Upload was not successful: $result", definition, build)
@@ -69,7 +76,7 @@ class UploadTestCoverageTask extends UploadTask {
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.codeCoverageExePath
 
 		assert path != null: "No code coverage exe given! In order to use VS_COVERAGE you need " +
-			"to provide a code coverage exe in ${AzureDevOps.NAME}{} with 'codeCoverageExe \"<path>\"'. " +
+			"to provide a code coverage exe in ${AzureDevOpsExtension.NAME}{} with 'codeCoverageExe \"<path>\"'. " +
 			"VS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
 
 		return path
@@ -77,6 +84,11 @@ class UploadTestCoverageTask extends UploadTask {
 
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
-		return definition.options.tests && definition.options.tests.coverage
+		return definition.options.tests && definition.options.tests.coverageOptions
+	}
+
+	@Override
+	String getRejectReason() {
+		return "No test coverage configured"
 	}
 }

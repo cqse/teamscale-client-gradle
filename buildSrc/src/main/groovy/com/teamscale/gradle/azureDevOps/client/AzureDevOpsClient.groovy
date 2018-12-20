@@ -33,8 +33,7 @@ class AzureDevOpsClient extends HttpClient {
 	 * Take a look at the online API for all possible REST calls:
 	 * https://docs.microsoft.com/en-us/rest/api/azure/devops/?view=azure-devops-rest-5.0
 	 */
-	@Override
-	private Object doCall(String method, List<String> path, Map<String, String> query, closure = {}) {
+	protected Object doCall(String method, List<String> path, Map<String, String> query, closure = {}) {
 		path = [organization, project, "_apis"] + path
 		query = defaultQueryParameters + query
 		return super.doCall(method, path, query, closure)
@@ -44,7 +43,7 @@ class AzureDevOpsClient extends HttpClient {
 	 * Returns all definitions for the project this client is configured for.
 	 */
 	Map<String, String> getAllDefinitions() {
-		return doCall("get", ["build", "definitions"], ["includeLatestBuilds": "true"])
+		return doCall("get", ["build", "definitions"], ["includeLatestBuilds": "true"]) as Map<String, String>
 	}
 
 	/**
@@ -62,7 +61,7 @@ class AzureDevOpsClient extends HttpClient {
 			parameters.put("minTime", minTime.toString())
 		}
 
-		return doCall("get", ["build", "builds"], parameters)
+		return doCall("get", ["build", "builds"], parameters) as Map<String, String>
 	}
 
 	/**
@@ -131,5 +130,39 @@ class AzureDevOpsClient extends HttpClient {
 		def path = ["build", "builds", buildId, "logs", "$logId"]
 		def query = ["startLine": "$startLine","endLine": "$endLine"]
 		return doCall("get", path, query)
+	}
+
+	Object getArtifacts(String buildId) {
+		def path = ["build", "builds", buildId, "artifacts"]
+		return doCall("get", path, [:])
+	}
+
+	/**
+	 * Returns a description for the contents of an artifacts. This enables the downloading of specific files from
+	 * a published artifact without having to download the whole archive.
+	 *
+	 * The given Object must be a json of the BuildArtifact format:
+	 * https://docs.microsoft.com/en-us/rest/api/azure/devops/build/artifacts/list?view=azure-devops-rest-5.0#buildartifact
+	 */
+	Object getArtifactContents(Object artifactDescription) {
+		List<String> artifactDataTokens = artifactDescription.resource.data.tokenize("/")
+
+		if(artifactDataTokens.size() <= 1) {
+			// TODO: Problem
+		}
+
+		String containerId = artifactDataTokens.get(1)
+
+		String artifactFolderName = null
+		if(artifactDataTokens.size() > 2) {
+			artifactFolderName = artifactDataTokens.subList(2, artifactDataTokens.size()).join("/")
+		}
+
+		// project mustn't be in the URL
+		def path = [organization, "_apis", "resources", "Containers", containerId]
+		def query = defaultQueryParameters + [
+		        "itemPath": artifactFolderName
+		]
+		super.doCall("get", path, query, {})
 	}
 }
