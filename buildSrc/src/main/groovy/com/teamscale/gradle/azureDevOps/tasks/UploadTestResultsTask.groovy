@@ -50,11 +50,16 @@ class UploadTestResultsTask extends UploadTask {
 		// upload to teamscale
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
-		def params = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
+		def standard = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
 		def type = options.type.toString()
 		def contents = testResults.collect { it.text }
 
-		String result = http.uploadExternalReports(params, contents, type)
+		def optional = [:]
+		if(definition.options.partition) {
+			optional = ["path-prefix": definition.options.partition]
+		}
+
+		String result = http.uploadExternalReports(standard, contents, type, optional)
 
 		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
 			log("$type (${contents.size()}): $result", definition, build)

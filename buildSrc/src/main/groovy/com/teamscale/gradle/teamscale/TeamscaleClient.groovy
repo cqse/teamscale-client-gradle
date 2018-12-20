@@ -51,8 +51,8 @@ class TeamscaleClient extends HttpClient {
 	}
 
 	/** Uploads the given build's result */
-	String uploadBuildStatus(StandardQueryParameter params, List<NonCodeMetric> metrics) {
-		def query = params.asMap() + ["skip-session": "true"]
+	String uploadBuildStatus(StandardQueryParameter standard, List<NonCodeMetric> metrics) {
+		def query = standard.asMap() + ["skip-session": "true"]
 
 		def setBody = { request ->
 			request.contentType = "application/json"
@@ -66,14 +66,15 @@ class TeamscaleClient extends HttpClient {
 	 * Uploads the content of one or more external reports given in a list. The given type must be a valid for
 	 * Teamscale.
 	 */
-	String uploadExternalReports(StandardQueryParameter params, List<String> reports, String type) {
+	String uploadExternalReports(StandardQueryParameter standard, List<String> reports, String type,
+								 Map<String, String> optionalParameter = [:]) {
 		if (reports.size() == 0) {
 			// TODO: check if this makes sense
 			// What should happen if no reports are given for the upload
 			return "success"
 		}
 
-		def query = params.asMap() + ["format"   : type]
+		def query = standard.asMap() + ["format": type] + optionalParameter
 
 		def setRequest = { request ->
 			request.contentType = "multipart/form-data"
@@ -92,9 +93,9 @@ class TeamscaleClient extends HttpClient {
 	/**
 	 * Uploads the given findings to teamscale.
 	 */
-	String uploadExternalFindings(StandardQueryParameter params, List<TeamscaleFinding> findings) {
+	String uploadExternalFindings(StandardQueryParameter standard, List<TeamscaleFinding> findings) {
 		def path = ["add-external-findings"]
-		def query = params.asMap() + ["skip-session": "true"]
+		def query = standard.asMap() + ["skip-session": "true"]
 
 		def setRequest = { request ->
 			request.contentType = "application/json"
