@@ -21,7 +21,7 @@ class TeamscaleClient extends HttpClient {
 	TeamscaleClient(TeamscaleConfig server) {
 		super(createHttpClient(server))
 		this.server = server
-		this.prefix = new URL(server.url).getPath() ?: ""
+		this.prefix = new URL(server.url).getPath().replaceAll("^/", "") ?: ""
 	}
 
 	/**
