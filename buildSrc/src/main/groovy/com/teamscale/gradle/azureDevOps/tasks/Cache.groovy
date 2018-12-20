@@ -70,7 +70,7 @@ class Cache {
 	}
 
 	Instant getMinTime(Definition definition, List<EBuildInformationType> types) {
-		Instant min = Instant.EPOCH
+		Instant min = null
 
 		types.each { EBuildInformationType type ->
 			Instant time = get(definition, type)
@@ -81,6 +81,10 @@ class Cache {
 			if (min > time) {
 				min = time
 			}
+		}
+
+		if(!min) {
+			return Instant.EPOCH
 		}
 
 		return min

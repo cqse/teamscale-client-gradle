@@ -31,17 +31,17 @@ abstract class UploadTask extends DefaultTask {
 	}
 
 	/** Checks that the build hasn't been processed yet with this task */
-	boolean hasNotBeenProcessed(Definition definition, Build build) {
+	protected boolean hasNotBeenProcessed(Definition definition, Build build) {
 		return definition.cache.hasNotBeenProcessed(definition, getUploadType(), build)
 	}
 
 	abstract EBuildInformationType getUploadType()
 
-/** Run the task */
+	/** Run the task */
 	abstract void run(Definition definition, Build build)
 
 	/** Check if the preconditions for running the task are fulfilled */
-	abstract boolean isConfiguredForTask(Definition definition)
+	protected abstract boolean isConfiguredForTask(Definition definition)
 
 	/**
 	 * Returns the value for the `t` parameter in every teamscale service call.

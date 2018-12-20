@@ -19,6 +19,7 @@ class Definition {
 
 	final Instant lastCompletedTime
 
+	/** The cache specific for this definition */
 	final Cache cache
 
 	final AzureDevOpsClient http
@@ -41,10 +42,17 @@ class Definition {
 		lastCompletedTime = time
 	}
 
+	/**
+	 * Return the ADOS organization where the definition is located.
+	 * E.g. 'apps-munichre'
+	 */
 	String getOrganization() {
 		return http.organization
 	}
 
+	/**
+	 * Return the project which contains the definition.
+	 */
 	String getProject() {
 		return http.project
 	}
@@ -53,6 +61,10 @@ class Definition {
 		cache.set(this, option, build)
 	}
 
+	/**
+	 * Returns the smallest time a build was processed for all of the given types it can be processed for.
+	 * If no type is given or if no build has been processed yet for the given types Instant.EPOCH is returned
+	 */
 	Instant getMinLastProcessedTimeFor(List<EBuildInformationType> types) {
 		return cache.getMinTime(this, types)
 	}

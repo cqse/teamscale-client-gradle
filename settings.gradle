@@ -23,7 +23,7 @@ def projectDiscovery
 projectDiscovery = { projectName, dir ->
 	dir.eachFile { file ->
 		if (file.name.startsWith("_") || file.isFile() && (!file.name.endsWith(".gradle") || file.name == projectFileName)) {
-			return;
+			return
 		}
 		
 		def name = "$projectName:$file.name"

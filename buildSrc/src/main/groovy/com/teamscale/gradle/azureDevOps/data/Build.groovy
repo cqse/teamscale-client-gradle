@@ -40,7 +40,7 @@ class Build {
 		sourceBranch = formatBranchName(sourceBranch)
 		targetBranch = branchMapping(sourceBranch)
 
-		if(targetBranch.startsWith("\$")) {
+		if(targetBranch && targetBranch.startsWith("\$")) {
 			// A branch name starting with $ is a TFS path and not a branch and
 			// should always be mapped to main if not stated otherwise.
 			targetBranch = ""
