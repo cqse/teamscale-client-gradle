@@ -38,7 +38,7 @@ abstract class UploadTask extends DefaultTask {
 	abstract String getRejectReason();
 
 
-/** Checks that the build hasn't been processed yet with this task */
+	/** Checks that the build hasn't been processed yet with this task */
 	protected boolean hasNotBeenProcessed(Definition definition, Build build) {
 		return definition.cache.hasNotBeenProcessed(definition, getUploadType(), build)
 	}

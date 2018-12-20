@@ -21,8 +21,7 @@ class BuildUtils {
 
 		artifacts.each { artifact ->
 			definition.http.getArtifactContents(artifact).value.each { item ->
-				// TODO: don't match the path but the file name
-				if(item.itemType == "file" && options.matches(item.path)) {
+				if(item.itemType == "file" && options.pathMatches(item.path)) {
 					coverageFiles.addAll(definition.http.downloadFiles([item.contentLocation]))
 				}
 			}

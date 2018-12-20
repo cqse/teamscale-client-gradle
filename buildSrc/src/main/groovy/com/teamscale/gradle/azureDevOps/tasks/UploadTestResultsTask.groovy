@@ -81,7 +81,7 @@ class UploadTestResultsTask extends UploadTask {
 		// check if the test runs have attachments
 		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it).value }
 			.flatten().findAll {
-			options.matches(it.fileName)
+			options.pathMatches(it.fileName)
 		}.url
 
 		if (attachmentUrls.isEmpty()) {

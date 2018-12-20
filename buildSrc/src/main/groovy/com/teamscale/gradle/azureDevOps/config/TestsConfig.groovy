@@ -4,14 +4,14 @@ class TestsConfig {
 	TypeAndPattern resultOptions
 	TypeAndPattern coverageOptions
 
-	def result(String type, String filePattern = null, String artifactPattern = null) {
+	def result(String type, String pathPattern = null, String artifactPattern = null) {
 		assert resultOptions == null: "test result can only be set once"
-		resultOptions = new TypeAndPattern<>(type, filePattern, artifactPattern)
+		resultOptions = new TypeAndPattern<>(type, pathPattern, artifactPattern)
 	}
 
-	def coverage(String type, String filePattern = null, String artifactPattern = null) {
+	def coverage(String type, String pathPattern = null, String artifactPattern = null) {
 		assert coverageOptions == null: "test coverage can only be set once"
-		coverageOptions = new TypeAndPattern<>(type, filePattern, artifactPattern)
+		coverageOptions = new TypeAndPattern<>(type, pathPattern, artifactPattern)
 	}
 }
 
@@ -19,18 +19,18 @@ class TypeAndPattern {
 	final String type
 
 	// TODO: make pattern (regex and ant style globbing)
-	final String filePattern
+	final String pathPattern
 
 	String artifactPattern
 
-	TypeAndPattern(String type, String filePattern, String artifactPattern = null) {
+	TypeAndPattern(String type, String pathPattern, String artifactPattern = null) {
 		this.type = type
-		this.filePattern = filePattern
+		this.pathPattern = pathPattern
 		this.artifactPattern = artifactPattern
 	}
 
-	boolean matches(String fileName) {
-		return fileName ==~ filePattern
+	boolean pathMatches(String path) {
+		return path ==~ pathPattern
 	}
 
 	boolean artifactMatches(String artifactName) {
