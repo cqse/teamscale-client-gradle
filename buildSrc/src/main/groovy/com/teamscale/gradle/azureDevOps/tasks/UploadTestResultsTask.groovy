@@ -50,11 +50,9 @@ class UploadTestResultsTask extends UploadTask {
 		// upload to teamscale
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
-		def standard = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
+		def standard = getStandardQueryParameters(EUploadPartitionType.TEST_RESULTS, definition, build)
 		def type = options.type.toString()
 		def contents = testResults.collect { it.text }
-
-		standard.appendToMessage("Test Results")
 
 		def optional = [:]
 		if(definition.options.partition) {

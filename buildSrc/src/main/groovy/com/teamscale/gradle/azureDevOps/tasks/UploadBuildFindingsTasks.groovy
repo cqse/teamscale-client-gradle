@@ -36,7 +36,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 		// Upload findings
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
-		def params = getStandardQueryParameters(EUploadPartitionType.METRICS, definition, build)
+		def params = getStandardQueryParameters(EUploadPartitionType.BUILD_FINDINGS, definition, build)
 		def result = http.uploadExternalFindings(params, new ArrayList<>(findings))
 
 		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {

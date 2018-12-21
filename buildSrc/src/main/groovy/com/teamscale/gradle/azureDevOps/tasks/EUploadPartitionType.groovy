@@ -1,7 +1,10 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
 enum EUploadPartitionType {
-	TEST("Test"), BUILD("Build"), METRICS("Metrics")
+	BUILD("Build"),
+	BUILD_FINDINGS("Build Findings"),
+	TEST_RESULTS("Test Results"),
+	TEST_COVERAGE("Test Coverage")
 
 	String content
 

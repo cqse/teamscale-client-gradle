@@ -43,7 +43,7 @@ class UploadTestCoverageTask extends UploadTask {
 		List<String> contents = convertCoverage(coverageFiles, type)
 
 		// upload to teamscale
-		def standard = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
+		def standard = getStandardQueryParameters(EUploadPartitionType.TEST_COVERAGE, definition, build)
 		standard.appendToMessage(type)
 
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
