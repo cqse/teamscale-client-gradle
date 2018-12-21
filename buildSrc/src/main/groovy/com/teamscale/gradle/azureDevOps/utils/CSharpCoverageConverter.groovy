@@ -13,7 +13,7 @@ class CSharpCoverageConverter {
 			def errorStream = new StringBuffer()
 			command.waitForProcessOutput(null, errorStream)
 
-			if(errorStream) {
+			if(errorStream.size() > 0) {
 				warn("Converting the coverage file failed: $errorStream")
 			}
 
