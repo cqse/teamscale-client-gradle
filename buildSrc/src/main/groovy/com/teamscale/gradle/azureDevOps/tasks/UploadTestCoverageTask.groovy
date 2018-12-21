@@ -46,13 +46,8 @@ class UploadTestCoverageTask extends UploadTask {
 		def standard = getStandardQueryParameters(EUploadPartitionType.TEST, definition, build)
 		standard.appendToMessage(type)
 
-		def optional = [:]
-		if(definition.options.partition) {
-			optional = ["path-prefix": definition.options.partition]
-		}
-
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
-		def result = http.uploadExternalReports(standard, contents, type, optional)
+		def result = http.uploadExternalReports(standard, contents, type)
 
 		if(result == UPLOAD_SUCCESS_RETURN) {
 			log("$type (${coverageFiles.size()}): $result", definition, build)
