@@ -4,28 +4,46 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class CSharpCoverageConverter {
 	static List<String> convert(List<File> files, String execPath) {
-		File xml = File.createTempFile("coverage", ".xml")
-
 		List<String> contents = new ArrayList<>()
 		files.each { coverage ->
-			def command = ["cmd", "/C", "\"\"$execPath\"", "analyze", "/output:\"$xml.absolutePath\"",
-						   "\"$coverage.absolutePath\"\""].execute()
-			def errorStream = new StringBuffer()
-			command.waitForProcessOutput(null, errorStream)
+			File xml = new File(String.format("%s.xml", coverage.absolutePath))
 
-			if(errorStream.size() > 0) {
-				warn("Converting the coverage file failed: $errorStream")
+			// tmp file must not exist before writing to it! Otherwise the command will not write an output
+			if(xml.exists()) {
+				xml.delete()
 			}
 
-			// TODO: assert or cancel in any way?
-			if(!xml.exists()) {
-				warn("Convertion of the coverage file did not work. No output to $xml.absolute")
-			}
+			try {
+				def command = ["cmd", "/C", "\"\"$execPath\"", "analyze", "/output:\"$xml.absolutePath\"",
+							   "\"$coverage.absolutePath\"\""].execute()
+				def errorStream = new StringBuffer()
+				command.waitForProcessOutput(null, errorStream)
 
-			contents.add(xml.text)
-			xml.delete()
+				if(errorStream.size() > 0) {
+					warn("Converting the coverage file failed: $errorStream")
+				}
+
+				// TODO: assert or cancel in any way?
+				if(!xml.exists() || xml.text.size() == 0) {
+					warn("Convertion of the coverage file did not work. The converted file does not exist or" +
+						"is empty.")
+				}
+
+				contents.add(xml.text)
+			} finally {
+				// Delete the downloaded files and prevent the clogging of the tmp dir
+				if(xml.exists()) {
+					xml.delete()
+				}
+
+				if(coverage.exists()) {
+					coverage.delete()
+				}
+			}
 		}
 
 		return contents
 	}
+
+
 }
