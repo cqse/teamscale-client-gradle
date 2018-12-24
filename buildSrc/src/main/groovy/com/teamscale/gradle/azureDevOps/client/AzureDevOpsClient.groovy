@@ -6,6 +6,11 @@ import groovyx.net.http.OkHttpBuilder
 
 import java.time.Instant
 
+/**
+ * Client dealing with service calls to the azure dev ops services.
+ * The client is configured to a project in a so-called organization (for example 'apps-munichre') for
+ * convenience.
+ */
 class AzureDevOpsClient extends HttpClient {
 	final static URL = "https://dev.azure.com/test"
 
@@ -74,7 +79,6 @@ class AzureDevOpsClient extends HttpClient {
 		def query = ["buildId": buildId, "flags": "2"]
 		List<String> coverageFileUrls = doCall("get", path, query).value.codeCoverageFileUrl
 
-		// Download the files
 		List<File> coverageFiles = downloadFiles(coverageFileUrls)
 
 		return coverageFiles
@@ -105,25 +109,25 @@ class AzureDevOpsClient extends HttpClient {
 	Object getTestRunsForBuild(String buildUri) {
 		def path = ["test", "runs"]
 		def query = ["buildUri": buildUri, "includeRunDetails": "true"]
-		return doCall("get", path, query)
+		return doCall("get", path, query).value
 	}
 
 	/** Returns a list of the attachments for the given test run */
 	Object getAttachmentsOfTestRun(Integer runId) {
 		def path = ["test", "runs", "$runId", "attachments"]
-		return doCall("get", path, [:])
+		return doCall("get", path, [:]).value
 	}
 
 	/** Returns the timeline for the build defined by the given id */
 	Object getTimelineOfBuild(String buildId) {
 		def path = ["build", "builds", buildId, "timeline"]
-		return doCall("get", path, [:])
+		return doCall("get", path, [:]).records
 	}
 
 	/** Returns the logs for the build defined by the given id */
 	Object getLogsOfBuild(String buildId) {
 		def path = ["build", "builds", buildId, "logs"]
-		return doCall("get", path, [:])
+		return doCall("get", path, [:]).value
 	}
 
 	Object downloadLog(String buildId, String logId, int startLine, int endLine) {
@@ -134,7 +138,7 @@ class AzureDevOpsClient extends HttpClient {
 
 	Object getArtifacts(String buildId) {
 		def path = ["build", "builds", buildId, "artifacts"]
-		return doCall("get", path, [:])
+		return doCall("get", path, [:]).value
 	}
 
 	/**
@@ -151,6 +155,7 @@ class AzureDevOpsClient extends HttpClient {
 			// TODO: Problem
 		}
 
+		// The data 'normally' looks similar to this '#/<container-id>/<folder-name>'
 		String containerId = artifactDataTokens.get(1)
 
 		String artifactFolderName = null

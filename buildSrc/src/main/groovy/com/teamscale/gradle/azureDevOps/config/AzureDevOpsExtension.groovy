@@ -15,7 +15,14 @@ import org.gradle.api.Project
 class AzureDevOpsExtension {
 	public final static NAME = "azureDevOps"
 
+	/**
+	 * The configured definitions and its builds (named builds because it is more clear for the config)
+	 */
 	NamedDomainObjectContainer<OrganizationConfig> builds
+
+	/**
+	 * Credentials for the different organization
+	 */
 	NamedDomainObjectContainer<Credentials> credentials
 
 	/**
@@ -24,6 +31,9 @@ class AzureDevOpsExtension {
 	 */
 	ILogAnalyzer logAnalyzer
 
+	/**
+	 * The downloaded information about the configured definitions from ADOS.
+	 */
 	List<Definition> definitions = new ArrayList<>()
 
 	/**
@@ -56,6 +66,9 @@ class AzureDevOpsExtension {
 		this.project = project
 	}
 
+	/**
+	 * Define definitions and its builds
+	 */
 	def builds(Closure closure) {
 		builds.configure(closure)
 	}

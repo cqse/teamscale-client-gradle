@@ -2,7 +2,24 @@ package com.teamscale.gradle.azureDevOps.utils
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
-class CSharpCoverageConverter {
+/**
+ * Converts any VS_COVERAGE -- normally with the file extension .coverage -- to an XML which can
+ * be processed by teamscale.
+ *
+ * In order for it to work, a code coverage exe must be provided.
+ * See https://github.com/danielpalme/ReportGenerator/wiki/Visual-Studio-Coverage-Tools for more information
+ *
+ * """
+ * CodeCoverage.exe is another coverage tool that comes with Visual Studio 2012/2013 (Premium and Ultimate).
+ * By default CodeCoverage.exe creates a *.coverage file. To generate a coverage report with ReportGenerator
+ * the file has to be converted to *.xml format.
+ * """
+ */
+class CSharpTestCoverageConverter {
+
+	/**
+	 *  Convert the given files using the provided executable.
+	 */
 	static List<String> convert(List<File> files, String execPath) {
 		List<String> contents = new ArrayList<>()
 		files.each { coverage ->

@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.TypeAndPattern
+import com.teamscale.gradle.azureDevOps.config.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.BuildUtils
@@ -72,14 +72,14 @@ class UploadTestResultsTask extends UploadTask {
 	/**
 	 * Downloads the test result files from the individual test runs
 	 */
-	private static List<File> getTestResultsFromTestRuns(Definition definition, Build build, TypeAndPattern options) {
+	private static List<File> getTestResultsFromTestRuns(Definition definition, Build build, ReportLocationMatcher options) {
 		// get test runs
-		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).value.findAll {
+		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).findAll {
 			it.release == null // Ignore release test runs
 		}.id
 
 		// check if the test runs have attachments
-		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it).value }
+		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it) }
 			.flatten().findAll {
 			options.pathMatches(it.fileName)
 		}.url

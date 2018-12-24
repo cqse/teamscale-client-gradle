@@ -87,7 +87,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 	 * Returns a list of all logs of the build which matched the "logNamePattern"
 	 */
 	static List getMatchingLogs(Definition definition, Build build) {
-		def logs = definition.http.getTimelineOfBuild(build.id).records
+		def logs = definition.http.getTimelineOfBuild(build.id)
 
 		def matchingLogs = logs.findAll {
 			def nameMatches = it.name ==~ definition.options.logNamePattern
@@ -97,7 +97,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 		}
 
 		// get the logs with the linecount
-		def allLogDescriptions = definition.http.getLogsOfBuild(build.id).value.groupBy {
+		def allLogDescriptions = definition.http.getLogsOfBuild(build.id).groupBy {
 			it.id
 		}
 

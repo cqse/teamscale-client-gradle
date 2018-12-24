@@ -4,7 +4,7 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.BuildUtils
-import com.teamscale.gradle.azureDevOps.utils.CSharpCoverageConverter
+import com.teamscale.gradle.azureDevOps.utils.CSharpTestCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
@@ -13,6 +13,9 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 import static com.teamscale.gradle.teamscale.TeamscaleClient.UPLOAD_SUCCESS_RETURN
 
+/**
+ * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
+ */
 class UploadTestCoverageTask extends UploadTask {
 	final static String NAME = "uploadTestCoverage"
 
@@ -26,6 +29,8 @@ class UploadTestCoverageTask extends UploadTask {
 		def coverageOptions = definition.options.tests.coverageOptions
 
 		List<File> coverageFiles
+		// The test coverage can be downloaded from the coverage REST service call or from a
+		// published artifact
 		if(coverageOptions.mustSearchInArtifact()) {
 			coverageFiles = BuildUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
 		} else {
@@ -33,7 +38,7 @@ class UploadTestCoverageTask extends UploadTask {
 		}
 
 		if (coverageFiles.isEmpty()) {
-			log("No coverage found. Pattern didn't match anything. Nothing uploaded", definition, build)
+			log("No coverage found. Pattern didn't match anything and nothing was uploaded", definition, build)
 			definition.setLastProcessedTime(getUploadType(), build)
 			return
 		}
@@ -63,7 +68,7 @@ class UploadTestCoverageTask extends UploadTask {
 	 */
 	private List<String> convertCoverage(List<File> coverageFiles, String type) {
 		if(type == "VS_COVERAGE") {
-			return CSharpCoverageConverter.convert(coverageFiles, getCoverageExePath())
+			return CSharpTestCoverageConverter.convert(coverageFiles, getCoverageExePath())
 		}
 		return coverageFiles.collect { it.text }
 	}
@@ -76,8 +81,10 @@ class UploadTestCoverageTask extends UploadTask {
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.codeCoverageExePath
 
 		assert path != null: "No code coverage exe given! In order to use VS_COVERAGE you need " +
-			"to provide a code coverage exe in ${AzureDevOpsExtension.NAME}{} with 'codeCoverageExe \"<path>\"'. " +
+			"to provide a code coverage exe in ${AzureDevOpsExtension.NAME} with 'codeCoverageExe \"<path>\"'. " +
 			"VS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
+
+		assert (new File(path)).exists(): "Code coverage exe at path $path does not exists"
 
 		return path
 	}

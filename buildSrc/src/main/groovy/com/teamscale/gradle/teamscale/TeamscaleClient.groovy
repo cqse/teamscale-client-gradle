@@ -25,7 +25,7 @@ class TeamscaleClient extends HttpClient {
 	 * Configures and creates the client which manages the connection to the teamscale server.
 	 */
 	static createHttpClient(TeamscaleConfig server) {
-		assert server.accesskey != null: "No accesskey given"
+		assert server.accesskey != null: "No access key given"
 		server.url = server.url.replaceAll("/\$", "")
 
 		return OkHttpBuilder.configure {
@@ -69,8 +69,7 @@ class TeamscaleClient extends HttpClient {
 	String uploadExternalReports(StandardQueryParameter standard, List<String> reports, String type,
 								 Map<String, String> optionalParameter = [:]) {
 		if (reports.size() == 0) {
-			// TODO: check if this makes sense
-			// What should happen if no reports are given for the upload
+			// TODO: What should happen if no reports are given for the upload?
 			return "success"
 		}
 

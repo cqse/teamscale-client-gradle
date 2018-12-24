@@ -17,6 +17,8 @@ abstract class UploadTask extends DefaultTask {
 	/** Base message for the upload */
 	final static UPLOAD_MESSAGE = "External Analysis (%s)"
 
+	public final static TASK_GROUP = "Azure Build Information Upload"
+
 	@TaskAction
 	def action() {
 		TeamscaleExtension.getFrom(project).azureDevOps.definitions.each { Definition definition ->
