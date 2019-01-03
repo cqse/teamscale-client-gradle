@@ -1,7 +1,5 @@
 package com.teamscale.gradle.azureDevOps.data
 
-import groovy.json.internal.LazyMap
-
 import java.time.Instant
 
 class Build {
@@ -15,14 +13,14 @@ class Build {
 	String targetBranch
 	String uri
 
-	Build(LazyMap data, Closure branchMapping) {
+	Build(Map data, Closure branchMapping) {
 		// Maps the json properties to the actual object fields
 		metaClass.properties.findAll { it.name != "class" && data.containsKey(it.name) }.each {
 			Object value
 			if(it.type.equals(String)) {
 				value = data[it.name]
 			} else if(it.type.equals(Instant)) {
-				value = Instant.parse(data[it.name])
+				value = Instant.parse((String) data[it.name])
 			}
 
 			it.setProperty(this, value)

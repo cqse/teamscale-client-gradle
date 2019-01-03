@@ -47,15 +47,15 @@ class AzureDevOpsClient extends HttpClient {
 	/**
 	 * Returns all definitions for the project this client is configured for.
 	 */
-	Map<String, String> getAllDefinitions() {
-		return doCall("get", ["build", "definitions"], ["includeLatestBuilds": "true"]) as Map<String, String>
+	List getAllDefinitions() {
+		return doCall("get", ["build", "definitions"], ["includeLatestBuilds": "true"]).value as List
 	}
 
 	/**
 	 * Returns all current and retained builds for the given definition id. If a minTime is provided it will
 	 * only return the builds which finished AFTER the given Instant.
 	 */
-	Map<String, String> getBuildsForDefinition(String definitionId, Instant minTime = null) {
+	List getBuildsForDefinition(String definitionId, Instant minTime = null) {
 		def parameters = [
 			"definitions": definitionId,
 			"status"     : "completed",
@@ -66,7 +66,7 @@ class AzureDevOpsClient extends HttpClient {
 			parameters.put("minTime", minTime.toString())
 		}
 
-		return doCall("get", ["build", "builds"], parameters) as Map<String, String>
+		return doCall("get", ["build", "builds"], parameters).value as List
 	}
 
 	/**

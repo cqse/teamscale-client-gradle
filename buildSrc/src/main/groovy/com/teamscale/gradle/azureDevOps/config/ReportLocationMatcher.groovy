@@ -28,6 +28,11 @@ class ReportLocationMatcher {
 	 */
 	Pattern artifactPattern = null
 
+	@Override
+	String toString() {
+		return "type: $type, path-pattern: $pathPattern, artifact-pattern: $artifactPattern"
+	}
+
 	ReportLocationMatcher(String type, String pathPattern, String artifactPattern = null) {
 		this.type = type
 		this.pathPattern = BuildUtils.getPatternFromRegexOrAntGlobbing(pathPattern)

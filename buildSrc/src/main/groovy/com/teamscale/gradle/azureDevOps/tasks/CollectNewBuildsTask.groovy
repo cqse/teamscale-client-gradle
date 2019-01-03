@@ -31,8 +31,8 @@ class CollectNewBuildsTask extends DefaultTask {
 
 			Instant minTime = definition.getMinLastProcessedTimeFor(ados.configuredUploadTasks).plusMillis(1)
 
-			List builds = http.getBuildsForDefinition(definition.id, minTime).value.findResults {
-				def build = new Build(it, definition.getOptions().getBranchMapping())
+			List builds = http.getBuildsForDefinition(definition.id, minTime).findResults { Map data ->
+				def build = new Build(data, definition.getOptions().getBranchMapping())
 				if (build.targetBranch != null) {
 					return build
 				}

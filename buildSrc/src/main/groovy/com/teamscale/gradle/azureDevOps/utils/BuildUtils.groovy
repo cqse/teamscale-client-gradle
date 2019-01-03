@@ -26,7 +26,7 @@ class BuildUtils {
 		artifacts.each { artifact ->
 			def contents = definition.http.getArtifactContents(artifact)
 
-			if(contents) {
+			if(!contents) {
 				LoggingUtils.warn("The contents for the artifact '$artifact.name' could not be found.\n" +
 					"Probably a different `data` field. It should be in the form of `#/<number>/<artifact>`\n" +
 					"$artifact", definition, build)

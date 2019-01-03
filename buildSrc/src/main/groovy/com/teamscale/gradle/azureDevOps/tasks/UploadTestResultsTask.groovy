@@ -42,7 +42,7 @@ class UploadTestResultsTask extends UploadTask {
 		}
 
 		if (testResults.isEmpty()) {
-			log("No test results found. Pattern didn't match anything. Nothing uploaded", definition, build)
+			log("No test results found. The options '$options)' didn't match anything. Nothing uploaded", definition, build)
 			definition.setLastProcessedTime(getUploadType(), build)
 			return
 		}

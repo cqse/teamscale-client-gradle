@@ -38,7 +38,7 @@ class UploadTestCoverageTask extends UploadTask {
 		}
 
 		if (coverageFiles.isEmpty()) {
-			log("No coverage found. Pattern didn't match anything and nothing was uploaded", definition, build)
+			log("No coverage found. The options '$coverageOptions' didn't match anything and nothing was uploaded", definition, build)
 			definition.setLastProcessedTime(getUploadType(), build)
 			return
 		}

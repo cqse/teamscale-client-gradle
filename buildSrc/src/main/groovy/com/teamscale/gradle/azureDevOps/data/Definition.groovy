@@ -26,7 +26,7 @@ class Definition {
 
 	final List<Build> builds = new ArrayList<>()
 
-	Definition(DefinitionOptions options, AzureDevOpsClient http, Map data, Cache cache) {
+	Definition(DefinitionOptions options, AzureDevOpsClient http, Object data, Cache cache) {
 		this.options = options
 		this.name = data.name
 		this.id = data.id
