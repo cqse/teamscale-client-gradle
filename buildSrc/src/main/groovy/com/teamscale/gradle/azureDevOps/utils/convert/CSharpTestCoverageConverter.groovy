@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.utils.convert
 
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
+import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 
 /**
  * Converts any VS_COVERAGE -- normally with the file extension .coverage -- to an XML which can
@@ -33,17 +33,17 @@ class CSharpTestCoverageConverter {
 			try {
 				def command = ["cmd", "/C", "\"\"$execPath\"", "analyze", "/output:\"$xml.absolutePath\"",
 							   "\"$coverage.absolutePath\"\""].execute()
+
 				def errorStream = new StringBuffer()
 				command.waitForProcessOutput(null, errorStream)
 
 				if(errorStream.size() > 0) {
-					warn("Converting the coverage file failed: $errorStream")
+					throw new AzureBuildException("Converting the coverage file failed: $errorStream")
 				}
 
-				// TODO: assert or cancel in any way?
 				if(!xml.exists() || xml.text.size() == 0) {
-					warn("Convertion of the coverage file did not work. The converted file does not exist or" +
-						"is empty.")
+					throw new AzureBuildException("Conversion of the coverage file did not work. " +
+						"The converted file does not exist or is empty.")
 				}
 
 				contents.add(xml.text)

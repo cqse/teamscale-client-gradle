@@ -67,10 +67,12 @@ class UploadTestCoverageTask extends UploadTask {
 	 * to be uploaded to teamscale.
 	 */
 	private List<String> convertCoverage(List<File> coverageFiles, String type) {
-		if(type == "VS_COVERAGE") {
-			return CSharpTestCoverageConverter.convert(coverageFiles, getCoverageExePath())
+		switch (type) {
+			case "VS_COVERAGE":
+				return CSharpTestCoverageConverter.convert(coverageFiles, getCoverageExePath())
+			default:
+				return coverageFiles.collect { it.text }
 		}
-		return coverageFiles.collect { it.text }
 	}
 
 	/**

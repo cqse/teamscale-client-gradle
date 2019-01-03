@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.config
 
-import com.teamscale.gradle.azureDevOps.utils.AzureConfigException
+import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ELogAnalyzerType
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ILogAnalyzer
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
@@ -49,7 +49,7 @@ class DefinitionOptions {
 		try {
 			this.logNamePattern = ~logNamePattern
 		} catch(PatternSyntaxException e) {
-			new AzureConfigException("'$logNamePattern' is no a valid regex", e)
+			new AzureBuildException("'$logNamePattern' is no a valid regex", e)
 		}
 
 		def logAnalyzerType = ELogAnalyzerType.valueOf(type)

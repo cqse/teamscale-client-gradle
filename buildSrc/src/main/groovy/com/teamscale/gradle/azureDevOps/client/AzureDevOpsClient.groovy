@@ -152,7 +152,7 @@ class AzureDevOpsClient extends HttpClient {
 		List<String> artifactDataTokens = artifactDescription.resource.data.tokenize("/")
 
 		if(artifactDataTokens.size() <= 1) {
-			// TODO: Problem
+			return null
 		}
 
 		// The data 'normally' looks similar to this '#/<container-id>/<folder-name>'
@@ -168,6 +168,7 @@ class AzureDevOpsClient extends HttpClient {
 		def query = defaultQueryParameters + [
 		        "itemPath": artifactFolderName
 		]
-		super.doCall("get", path, query, {})
+
+		return super.doCall("get", path, query, {}).value
 	}
 }

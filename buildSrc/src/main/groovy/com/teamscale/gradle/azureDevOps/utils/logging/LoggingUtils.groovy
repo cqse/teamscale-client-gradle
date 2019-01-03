@@ -28,7 +28,12 @@ class LoggingUtils {
 	}
 
 	static void warn(String message, Definition definition = null, Build build = null) {
-		println "[WARN] " + createMessage(message, definition, build)
+		String prefix = "[WARN]"
+		if(!definition && !build) {
+			prefix += " "
+		}
+
+		println prefix + createMessage(message, definition, build)
 	}
 
 	static pprint(input) {

@@ -3,6 +3,7 @@ package com.teamscale.gradle.azureDevOps.utils
 import com.teamscale.gradle.azureDevOps.config.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
@@ -23,7 +24,16 @@ class BuildUtils {
 		}
 
 		artifacts.each { artifact ->
-			definition.http.getArtifactContents(artifact).value.each { item ->
+			def contents = definition.http.getArtifactContents(artifact)
+
+			if(contents) {
+				LoggingUtils.warn("The contents for the artifact '$artifact.name' could not be found.\n" +
+					"Probably a different `data` field. It should be in the form of `#/<number>/<artifact>`\n" +
+					"$artifact", definition, build)
+				return
+			}
+
+			contents.each { item ->
 				if(item.itemType == "file" && options.pathMatches(item.path)) {
 					coverageFiles.addAll(definition.http.downloadFiles([item.contentLocation]))
 				}
