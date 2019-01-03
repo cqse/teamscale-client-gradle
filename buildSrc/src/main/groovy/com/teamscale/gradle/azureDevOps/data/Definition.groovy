@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps.data
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.config.BuildOptions
+import com.teamscale.gradle.azureDevOps.config.DefinitionOptions
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.Cache
 
@@ -11,7 +11,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class Definition {
 	/** Options for this definition */
-	final BuildOptions options
+	final DefinitionOptions options
 
 	final String name
 
@@ -26,7 +26,7 @@ class Definition {
 
 	final List<Build> builds = new ArrayList<>()
 
-	Definition(BuildOptions options, AzureDevOpsClient http, Map data, Cache cache) {
+	Definition(DefinitionOptions options, AzureDevOpsClient http, Map data, Cache cache) {
 		this.options = options
 		this.name = data.name
 		this.id = data.id
@@ -37,7 +37,7 @@ class Definition {
 		if (!data.latestCompletedBuild) {
 			log("No build run/completed for $name")
 		} else {
-			time = Instant.parse(data.latestCompletedBuild.finishTime)
+			time = Instant.parse((String) data.latestCompletedBuild.finishTime)
 		}
 		lastCompletedTime = time
 	}

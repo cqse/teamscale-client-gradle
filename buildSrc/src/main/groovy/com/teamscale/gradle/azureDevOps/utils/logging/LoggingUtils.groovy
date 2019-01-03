@@ -17,11 +17,6 @@ class LoggingUtils {
 		}
 
 		if (build) {
-//			def targetBranch = build.targetBranch
-//			if(targetBranch == "") {
-//				targetBranch = "main"
-//			}
-//			info += "[$build.buildNumber]['$build.sourceBranch'->'$targetBranch']"
 			info += "[$build.buildNumber]"
 		}
 
@@ -33,7 +28,7 @@ class LoggingUtils {
 	}
 
 	static void warn(String message, Definition definition = null, Build build = null) {
-		println "[WARN]" + createMessage(message, definition, build)
+		println "[WARN] " + createMessage(message, definition, build)
 	}
 
 	static pprint(input) {

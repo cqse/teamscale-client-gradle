@@ -28,10 +28,12 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 			organization.projects.values().each { ProjectConfig projectConfig ->
 				def http = new AzureDevOpsClient(credentials, organization.name, projectConfig.name)
 
+				// TODO: make id and name matching better
 				// minimize the api calls and get all definitions at once and sort then
+				// TODO: remove value and put into the client
 				def definitions = http.getAllDefinitions().value.findResults { data ->
 					def nameMatches = projectConfig.definitions.containsKey(data.name)
-					def idMatches = projectConfig.definitions.containsKey("" + data.id)
+					def idMatches = projectConfig.definitions.containsKey(data.id.toString())
 
 					if(idMatches) {
 						return new Definition(projectConfig.get("" + data.id), http, data, azureDevOps.cache)
@@ -44,8 +46,8 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 
 				// Check that every definition is found
 				def diff = new HashSet(projectConfig.definitions.keySet())
-				diff.removeAll(definitions.name)
-				diff.removeAll(definitions.id)
+				diff.removeAll((List<String>) definitions.name)
+				diff.removeAll((List<String>) definitions.id)
 				assert diff.size() == 0: "No definition(s) found on \"$organization.name/$projectConfig.name\" with " +
 					"the following name(s): " + diff
 

@@ -50,7 +50,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 	/**
 	 * Downloads the content of the given logs and extracts possible findings from them
 	 */
-	Set<TeamscaleFinding> parseFindingsFromLogs(List<Object> logs, Definition definition, Build build) {
+	static Set<TeamscaleFinding> parseFindingsFromLogs(List<Object> logs, Definition definition, Build build) {
 		Set<TeamscaleFinding> findings = new HashSet<>()
 
 		logs.each { log ->
@@ -59,7 +59,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 				def endLine = currentLine + MAX_LOG_LINES
 				String logsContent = definition.http.downloadLog(build.id, "$log.id", currentLine, endLine)
 
-				findings.addAll(parseLog(logsContent))
+				findings.addAll(parseLog(definition, logsContent))
 
 				// endLine is inclusive. Add one in order to prevent parsing a line twice
 				currentLine += MAX_LOG_LINES + 1
@@ -72,10 +72,10 @@ class UploadBuildFindingsTasks extends UploadTask {
 	/**
 	 * Parses any findings from the given string
 	 */
-	Set<TeamscaleFinding> parseLog(String content) {
+	static Set<TeamscaleFinding> parseLog(Definition definition, String content) {
 		Set<TeamscaleFinding> findings = []
 		content.eachLine { String line ->
-			TeamscaleFinding finding = TeamscaleExtension.getFrom(project).azureDevOps.logAnalyzer.analyze(line)
+			TeamscaleFinding finding = definition.options.logAnalyzer.analyze(line)
 			if (finding) {
 				findings.add(finding)
 			}
@@ -96,7 +96,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 			return hasLog && nameMatches && noErrors
 		}
 
-		// get the logs with the linecount
+		// get the logs with the line count
 		def allLogDescriptions = definition.http.getLogsOfBuild(build.id).groupBy {
 			it.id
 		}
@@ -111,20 +111,10 @@ class UploadBuildFindingsTasks extends UploadTask {
 
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
-		def noPattern = definition.options.logNamePattern == null
-		def noLogAnalyzer = TeamscaleExtension.getFrom(project).azureDevOps.logAnalyzer == null
+		def patternDefined = definition.options.logNamePattern != null
+		def logAnalyzerDefined = definition.options.logAnalyzer != null
 
-		if (noLogAnalyzer) {
-			log("No log analyzer defined", definition)
-			return false
-		}
-
-		if (noPattern) {
-			log("No name pattern for choosing a log found", definition)
-			return false
-		}
-
-		return true
+		return patternDefined && logAnalyzerDefined
 	}
 
 	@Override

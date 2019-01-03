@@ -48,6 +48,10 @@ class TeamscalePlugin implements Plugin<Project> {
 		}
 	}
 
+	/**
+	 * Create a task for the project.
+	 * Optional parameters can set a group and dependencies to other tasks
+	 */
 	static createTask(Project project, Class cls, String group = null, Object... dependsOn) {
 		Task task = project.tasks.create((String) cls.NAME, cls)
 		if (dependsOn) {

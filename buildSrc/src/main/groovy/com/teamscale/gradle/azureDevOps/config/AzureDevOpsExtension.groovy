@@ -3,9 +3,6 @@ package com.teamscale.gradle.azureDevOps.config
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.Cache
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ELogAnalyzerType
-import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ILogAnalyzer
-import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
@@ -24,12 +21,6 @@ class AzureDevOpsExtension {
 	 * Credentials for the different organization
 	 */
 	NamedDomainObjectContainer<Credentials> credentials
-
-	/**
-	 * Instance of log analyzer for this project.
-	 * The log analyzer parses build task logs for any possible finding which can be uploaded to teamscale.
-	 */
-	ILogAnalyzer logAnalyzer
 
 	/**
 	 * The downloaded information about the configured definitions from ADOS.
@@ -78,14 +69,6 @@ class AzureDevOpsExtension {
 	 */
 	def credentials(Closure closure) {
 		credentials.configure(closure)
-	}
-
-	/**
-	 * Define the log analyzer for this project
-	 */
-	def logAnalyzer(String type) {
-		def logAnalyzerType = ELogAnalyzerType.valueOf(type)
-		logAnalyzer = LogAnalyzerFactory.getLogAnalyzer(logAnalyzerType)
 	}
 
 	/**

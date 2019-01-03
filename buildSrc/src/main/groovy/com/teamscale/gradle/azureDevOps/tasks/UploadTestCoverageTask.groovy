@@ -4,7 +4,7 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.BuildUtils
-import com.teamscale.gradle.azureDevOps.utils.CSharpTestCoverageConverter
+import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 

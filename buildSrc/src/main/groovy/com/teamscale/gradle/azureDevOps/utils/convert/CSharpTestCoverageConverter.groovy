@@ -1,4 +1,4 @@
-package com.teamscale.gradle.azureDevOps.utils
+package com.teamscale.gradle.azureDevOps.utils.convert
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
