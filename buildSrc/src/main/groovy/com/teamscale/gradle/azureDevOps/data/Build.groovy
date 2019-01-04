@@ -2,6 +2,9 @@ package com.teamscale.gradle.azureDevOps.data
 
 import java.time.Instant
 
+/**
+ * Information of a specific build from ADOS.
+ */
 class Build {
 	String id
 	String buildNumber
@@ -17,9 +20,9 @@ class Build {
 		// Maps the json properties to the actual object fields
 		metaClass.properties.findAll { it.name != "class" && data.containsKey(it.name) }.each {
 			Object value
-			if(it.type.equals(String)) {
+			if (it.type.equals(String)) {
 				value = data[it.name]
-			} else if(it.type.equals(Instant)) {
+			} else if (it.type.equals(Instant)) {
 				value = Instant.parse((String) data[it.name])
 			}
 
@@ -29,8 +32,12 @@ class Build {
 		setTargetBranch(branchMapping)
 	}
 
+	/**
+	 * Sets the target branch of the build, meaning the branch it will be uploaded to in teamscale.
+	 * If no branchMapping is set it will be uploaded to the default branch (main).
+	 */
 	private void setTargetBranch(Closure branchMapping) {
-		if(shouldBeExcluded(sourceBranch)) {
+		if (shouldBeExcluded(sourceBranch)) {
 			targetBranch = null
 			return
 		}
@@ -38,7 +45,7 @@ class Build {
 		sourceBranch = formatBranchName(sourceBranch)
 		targetBranch = branchMapping(sourceBranch)
 
-		if(targetBranch && targetBranch.startsWith("\$")) {
+		if (targetBranch && targetBranch.startsWith("\$")) {
 			// A branch name starting with $ is a TFS path and not a branch and
 			// should always be mapped to main if not stated otherwise.
 			targetBranch = ""

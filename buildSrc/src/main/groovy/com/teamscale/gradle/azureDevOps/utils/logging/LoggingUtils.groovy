@@ -5,10 +5,6 @@ import com.teamscale.gradle.azureDevOps.data.Definition
 import groovy.json.JsonBuilder
 
 class LoggingUtils {
-	static void log(String message, Definition definition = null, Build build = null) {
-		println createMessage(message, definition, build)
-	}
-
 	static String createMessage(String message, Definition definition = null, Build build = null) {
 		def info = ""
 
@@ -20,7 +16,7 @@ class LoggingUtils {
 			info += "[$build.buildNumber]"
 		}
 
-		if(info.length() > 0) {
+		if (info.length() > 0) {
 			info += " "
 		}
 
@@ -29,11 +25,20 @@ class LoggingUtils {
 
 	static void warn(String message, Definition definition = null, Build build = null) {
 		String prefix = "[WARN]"
-		if(!definition && !build) {
+		if (!definition && !build) {
 			prefix += " "
 		}
 
 		println prefix + createMessage(message, definition, build)
+	}
+
+	static void log(String message, Definition definition = null, Build build = null) {
+		println createMessage(message, definition, build)
+	}
+
+	static void debug(String message) {
+		String prefix = "[DEBUG] "
+		log(prefix + message)
 	}
 
 	static pprint(input) {

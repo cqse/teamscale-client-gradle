@@ -1,6 +1,5 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.teamscale.TeamscaleClient

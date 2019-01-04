@@ -12,8 +12,11 @@ class TeamscaleClient extends HttpClient {
 
 	final TeamscaleConfig server
 
+	/** If this flag is true the uploads to the teamscale server are mocked and always 'succeed' */
+	boolean disableUpload = false
+
 	/** The value which is returned when an upload to teamscale was successful */
-	static final UPLOAD_SUCCESS_RETURN = "success"
+	static final String UPLOAD_SUCCESS_RETURN = "success"
 
 	TeamscaleClient(TeamscaleConfig server) {
 		super(createHttpClient(server))
@@ -40,6 +43,10 @@ class TeamscaleClient extends HttpClient {
 		}
 	}
 
+	def disableUploads() {
+		disableUpload = true
+	}
+
 	/**
 	 * Makes an HTTP call to the teamscale server. Prepends any necessary prefix or subpath.
 	 */
@@ -47,7 +54,12 @@ class TeamscaleClient extends HttpClient {
 		List<String> path = ([prefix, "p", server.project] + service).findAll {
 			it != null
 		}
-		super.doCall(method, path, query, setRequest)
+
+		if (disableUpload) {
+			return UPLOAD_SUCCESS_RETURN
+		}
+
+		return super.doCall(method, path, query, setRequest)
 	}
 
 	/** Uploads the given build's result */
