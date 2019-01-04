@@ -3,6 +3,7 @@ package com.teamscale.gradle.azureDevOps.client
 import com.teamscale.gradle.azureDevOps.config.Credentials
 import com.teamscale.gradle.teamscale.HttpClient
 import groovyx.net.http.OkHttpBuilder
+import groovyx.net.http.optional.Download
 
 import java.time.Instant
 
@@ -12,7 +13,7 @@ import java.time.Instant
  * convenience.
  */
 class AzureDevOpsClient extends HttpClient {
-	final static URL = "https://dev.azure.com/test"
+	final static URL = "https://dev.azure.com/"
 
 	final String project
 
@@ -93,7 +94,7 @@ class AzureDevOpsClient extends HttpClient {
 		urls.each { url ->
 			files.add((File) http.get {
 				request.uri = url
-				groovyx.net.http.optional.Download.toTempFile(delegate)
+				Download.toTempFile(delegate)
 				response.failure(failure)
 			})
 		}

@@ -38,7 +38,7 @@ class UploadTestResultsTask extends UploadTask {
 		if (options.mustSearchInArtifact()) {
 			testResults = BuildUtils.getFilesFromBuildArtifact(definition, build, options)
 		} else {
-			testResults = getTestResultsFromTestRuns(definition, build, options)
+			testResults = BuildUtils.getFilesFromTestRuns(definition, build, options)
 		}
 
 		if (testResults.isEmpty()) {
@@ -67,28 +67,5 @@ class UploadTestResultsTask extends UploadTask {
 		} else {
 			warn("Upload was not successful: $result", definition, build)
 		}
-	}
-
-	/**
-	 * Downloads the test result files from the individual test runs
-	 */
-	private static List<File> getTestResultsFromTestRuns(Definition definition, Build build, ReportLocationMatcher options) {
-		// get test runs
-		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).findAll {
-			it.release == null // Ignore release test runs
-		}.id
-
-		// check if the test runs have attachments
-		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it) }
-			.flatten().findAll {
-			options.pathMatches(it.fileName)
-		}.url
-
-		if (attachmentUrls.isEmpty()) {
-			log("No result found", definition, build)
-			return
-		}
-
-		return definition.http.downloadFiles(attachmentUrls)
 	}
 }

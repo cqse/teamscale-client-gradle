@@ -35,6 +35,9 @@ class UploadTestCoverageTask extends UploadTask {
 			coverageFiles = BuildUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
 		} else {
 			coverageFiles = definition.http.downloadTestCoverage(build.id)
+			if(coverageFiles.isEmpty()) {
+				coverageFiles = BuildUtils.getFilesFromTestRuns(definition, build, coverageOptions)
+			}
 		}
 
 		if (coverageFiles.isEmpty()) {

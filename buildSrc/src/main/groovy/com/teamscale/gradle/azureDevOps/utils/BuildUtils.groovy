@@ -8,6 +8,8 @@ import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+
 class BuildUtils {
 	/**
 	 * Downloads the all files matching the artifact- and file-pattern in the given options.
@@ -41,6 +43,30 @@ class BuildUtils {
 		}
 
 		return coverageFiles
+	}
+
+
+	/**
+	 * Downloads the files defined by the given options from the attachments of the test runs of the build.
+	 */
+	static List<File> getFilesFromTestRuns(Definition definition, Build build, ReportLocationMatcher options) {
+		// get test runs
+		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).findAll {
+			it.release == null // Ignore release test runs
+		}.id
+
+		// check if the test runs have attachments
+		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it) }
+			.flatten().findAll { attachment ->
+			options.pathMatches( (String) attachment.fileName)
+		}.url
+
+		if (attachmentUrls.isEmpty()) {
+			log("No result found", definition, build)
+			return
+		}
+
+		return definition.http.downloadFiles(attachmentUrls)
 	}
 
 	/**
