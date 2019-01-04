@@ -1,57 +1,79 @@
-vsts {
-    teamscale.project = "project"
-    vsts.builds = [
-        "https://vsts-site.com": [
-            "vsts-project": [
-                "definition": [
-                    // ### options ###
-                    // Used when build logs are being downloaded (for parsing warning etc.)
-                    // You can select specific tasks by name for which the logs should be downloaded. If this options is
-                    // omitted all logs will be downloaded, which can take a lot longer.
-                    "taskNamePattern": "regex",
+apply plugin: "com.teamscale.gradle"
 
-                    // If you want to upload reports, like a findbugs XML, you need to provide this option.
-                    // "reports" is a Map where the key is a report format from EReportFormat and the value is
-                    // a Map where "artifact" is a regex to filter the artifacts and "file" to filter the files in the
-                    // chosen artifacts.
-					// NOTE: The upload works even if the report is malformed. So if it doesn't show in the activity,
-					// take a look at the worker log.
-                    "reports": [
-                        "findbugs": [
-                            "artifact": "regex",
-                            "file": "regex",
-							// Defines a transformation which should be done on the report. You can find all available
-							// transformations in the method `transformReport` in vsts.gradle
-							"transformation": "" // (optional)
-                        ]
-                    ],
+teamscale {
+	server {
+		url = "url"
+		username = "user"
+		accesskey = "token"
+		project = "project"
+	}
 
-                    // With this option you can manage from which branches the builds should be included and to which
-					// branch they should be uploaded.
-                    // If the option is ommited every build is taken and uploaded to the default main branch.
-                    // If you want to exclude a branch, you can return null, otherwise you can return a string, which
-                    // is the name of the branch on the teamscale server you want to upload this build to.
-                    // "source" is the branch on the VSTS and the return value is the branch on teamscale
-                    // If you just want to upload it to the default branch return  the empty string "".
-                    "branchMapping": { source ->
-                        if(source ==~ /regex/) {
-                            return "" // default branch
-                        }
-                        return null // exclude build
-						//return "test" // upload "$source" to "test"
-                    },
+	azureDevOps {
+		cacheDir "path-to-cache-dir" // directory must exist
+		codeCoverageExe "path-to-code-coverage-exe" // necessary for any test coverage with the type VS_COVERAGE
 
-					// If a project has more than one definition, all definitions must have this property in order to
-					// distinguish the uploads from the different definitions
-					"partition": "partition"
-                ],
-                // If you aren't providing any options you can just write it like this
-                "second-def": [:]
-            ]
-        ]
-    ]
+		credentials {
+			"apps-munichre" {
+				username = "token"
+				password = "tokentoken"
+			}
 
-	// If you are converting coverage reports from the vsts, provide the path to the coverage exe here,
-	// such that the reports can be transformed. Be sure to escape the backslash path in windows
-	CODE_COVERAGE_EXE = "...\\CodeCoverage.exe"
+			"additional" {
+				username = "token"
+				password = "tokentoken"
+			}
+		}
+
+		builds {
+			"apps-munichre" {
+				"TQE" {
+					"SampleApp" {
+						// Base name for the partition where the results are being uploaded to.
+						// Every definition should have its own partition. Especially because in the future more
+						// definition might come.
+						partition = "SampleApp"
+
+						tests {
+							// ### Configuration of test results and coverage ###
+							// both `result` and `coverage` function similar
+							// result/coverage type, file-regex, artifact-regex
+							//
+							// type		 		A teamscale EReportFormat.java type. If the type is wrong the upload will fail
+							//
+							// file-regex		A regex matching the file name. Can also be an ant-pattern, e.g. **.trx. If
+							//					an artifact-regex is given this must match a complete path not just the name
+							// 					of the file.
+							//					If the artifact-regex is not given then the coverage must be published in the
+							//					"Coverage" tab in a build or in the test runs attachments
+							//					The results files must be found in the attachments of the test runs
+							//					(Filters must be cleared in order to see test runs which have not failed)
+							//
+							// artifact-regex	(Optional) Regex matching a published artifact. If the regex matches the name of
+							//					the artifact the coverage/results are files inside of the artifact matched by the
+							//					file-regex
+							result "MS_TEST", /.*trx/
+							coverage "VS_COVERAGE", /.*coverage/
+						}
+					}
+
+					"WebGoat.NET" {
+						partition = "Webgoat"
+
+						// ### Configuration for the upload of build findings ###
+						// parselogs (parser-type, log-name-pattern)
+						//
+						// parser-type	 		See ELogAnalyzerType.groovy for implemented types
+						//
+						// log-name-pattern		Every build consists of different tasks which are executed one after
+						// 						the	other. Insert a regex here which matches all task names whose logs should be parsed.
+						parseLogs "CSHARP", /Build.*/
+
+						tests {
+							result "MS_TEST", /.*trx/, /drop/
+						}
+					}
+				}
+			}
+		}
+	}
 }
