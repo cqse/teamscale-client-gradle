@@ -38,7 +38,7 @@ class ReportLocationMatcher {
 		this.pathPattern = BuildUtils.getPatternFromRegexOrAntGlobbing(pathPattern)
 		checkPattern(this.pathPattern)
 
-		if(artifactPattern) {
+		if (artifactPattern) {
 			this.artifactPattern = BuildUtils.getPatternFromRegexOrAntGlobbing(artifactPattern)
 			checkPattern(this.artifactPattern)
 		}

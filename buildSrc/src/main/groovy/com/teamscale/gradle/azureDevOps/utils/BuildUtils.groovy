@@ -28,7 +28,7 @@ class BuildUtils {
 		artifacts.each { artifact ->
 			def contents = definition.http.getArtifactContents(artifact)
 
-			if(!contents) {
+			if (!contents) {
 				LoggingUtils.warn("The contents for the artifact '$artifact.name' could not be found.\n" +
 					"Probably a different `data` field. It should be in the form of `#/<number>/<artifact>`\n" +
 					"$artifact", definition, build)
@@ -36,7 +36,7 @@ class BuildUtils {
 			}
 
 			contents.each { item ->
-				if(item.itemType == "file" && options.pathMatches(item.path)) {
+				if (item.itemType == "file" && options.pathMatches(item.path)) {
 					coverageFiles.addAll(definition.http.downloadFiles([item.contentLocation]))
 				}
 			}
@@ -58,7 +58,7 @@ class BuildUtils {
 		// check if the test runs have attachments
 		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it) }
 			.flatten().findAll { attachment ->
-			options.pathMatches( (String) attachment.fileName)
+			options.pathMatches((String) attachment.fileName)
 		}.url
 
 		if (attachmentUrls.isEmpty()) {
@@ -77,7 +77,7 @@ class BuildUtils {
 	 */
 	static Pattern getPatternFromRegexOrAntGlobbing(String regexOrGlob) {
 		Pattern pattern = getPattern(regexOrGlob)
-		if(!pattern) {
+		if (!pattern) {
 			pattern = getPattern(convertGlobToRegex(regexOrGlob))
 		}
 		return pattern
@@ -146,7 +146,7 @@ class BuildUtils {
 					break
 				case '[':
 					inClass++
-					firstIndexInClass = i+1
+					firstIndexInClass = i + 1
 					sb.append('[')
 					break
 				case ']':

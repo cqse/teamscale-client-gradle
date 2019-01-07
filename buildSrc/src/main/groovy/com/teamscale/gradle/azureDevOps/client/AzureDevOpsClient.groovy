@@ -133,7 +133,7 @@ class AzureDevOpsClient extends HttpClient {
 
 	Object downloadLog(String buildId, String logId, int startLine, int endLine) {
 		def path = ["build", "builds", buildId, "logs", "$logId"]
-		def query = ["startLine": "$startLine","endLine": "$endLine"]
+		def query = ["startLine": "$startLine", "endLine": "$endLine"]
 		return doCall("get", path, query)
 	}
 
@@ -152,7 +152,7 @@ class AzureDevOpsClient extends HttpClient {
 	Object getArtifactContents(Object artifactDescription) {
 		List<String> artifactDataTokens = artifactDescription.resource.data.tokenize("/")
 
-		if(artifactDataTokens.size() <= 1) {
+		if (artifactDataTokens.size() <= 1) {
 			return null
 		}
 
@@ -160,14 +160,14 @@ class AzureDevOpsClient extends HttpClient {
 		String containerId = artifactDataTokens.get(1)
 
 		String artifactFolderName = null
-		if(artifactDataTokens.size() > 2) {
+		if (artifactDataTokens.size() > 2) {
 			artifactFolderName = artifactDataTokens.subList(2, artifactDataTokens.size()).join("/")
 		}
 
 		// project mustn't be in the URL
 		def path = [organization, "_apis", "resources", "Containers", containerId]
 		def query = defaultQueryParameters + [
-		        "itemPath": artifactFolderName
+			"itemPath": artifactFolderName
 		]
 
 		return super.doCall("get", path, query, {}).value

@@ -2,8 +2,8 @@ package com.teamscale.gradle.azureDevOps.data
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.config.DefinitionOptions
-import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.Cache
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 
 import java.time.Instant
 

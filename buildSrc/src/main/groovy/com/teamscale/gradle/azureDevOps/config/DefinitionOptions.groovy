@@ -48,7 +48,7 @@ class DefinitionOptions {
 	def parseLogs(String type, String logNamePattern) {
 		try {
 			this.logNamePattern = ~logNamePattern
-		} catch(PatternSyntaxException e) {
+		} catch (PatternSyntaxException e) {
 			new AzureBuildException("'$logNamePattern' is no a valid regex", e)
 		}
 

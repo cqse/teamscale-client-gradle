@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.ReportLocationMatcher
+
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.BuildUtils
@@ -55,7 +55,7 @@ class UploadTestResultsTask extends UploadTask {
 		def contents = testResults.collect { it.text }
 
 		def optional = [:]
-		if(definition.options.partition) {
+		if (definition.options.partition) {
 			optional = ["path-prefix": definition.options.partition]
 		}
 

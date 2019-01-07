@@ -22,7 +22,7 @@ abstract class NamedClosureContainer {
 	protected abstract Object getNewInstance(String name)
 
 	def methodMissing(String name, args) {
-		if(args.size() > 0 && args[0] instanceof Closure) {
+		if (args.size() > 0 && args[0] instanceof Closure) {
 			args[0].delegate = getNewInstance(name)
 			args[0].resolveStrategy = Closure.DELEGATE_ONLY
 			args[0].run()

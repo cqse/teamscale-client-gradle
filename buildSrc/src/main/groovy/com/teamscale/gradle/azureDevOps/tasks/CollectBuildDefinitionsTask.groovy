@@ -29,11 +29,11 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 					def nameMatches = projectConfig.definitions.containsKey(data.name)
 					def idMatches = projectConfig.definitions.containsKey(data.id.toString())
 
-					if(idMatches) {
+					if (idMatches) {
 						return new Definition(projectConfig.get(data.id.toString()), http, data, azureDevOps.cache)
 					}
 
-					if(nameMatches) {
+					if (nameMatches) {
 						return new Definition(projectConfig.get(data.name.toString()), http, data, azureDevOps.cache)
 					}
 				}

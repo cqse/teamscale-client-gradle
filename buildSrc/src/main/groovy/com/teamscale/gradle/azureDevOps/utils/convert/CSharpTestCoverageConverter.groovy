@@ -26,7 +26,7 @@ class CSharpTestCoverageConverter {
 			File xml = new File(String.format("%s.xml", coverage.absolutePath))
 
 			// tmp file must not exist before writing to it! Otherwise the command will not write an output
-			if(xml.exists()) {
+			if (xml.exists()) {
 				xml.delete()
 			}
 
@@ -37,11 +37,11 @@ class CSharpTestCoverageConverter {
 				def errorStream = new StringBuffer()
 				command.waitForProcessOutput(null, errorStream)
 
-				if(errorStream.size() > 0) {
+				if (errorStream.size() > 0) {
 					throw new AzureBuildException("Converting the coverage file failed: $errorStream")
 				}
 
-				if(!xml.exists() || xml.text.size() == 0) {
+				if (!xml.exists() || xml.text.size() == 0) {
 					throw new AzureBuildException("Conversion of the coverage file did not work. " +
 						"The converted file does not exist or is empty.")
 				}
@@ -49,11 +49,11 @@ class CSharpTestCoverageConverter {
 				contents.add(xml.text)
 			} finally {
 				// Delete the downloaded files and prevent the clogging of the tmp dir
-				if(xml.exists()) {
+				if (xml.exists()) {
 					xml.delete()
 				}
 
-				if(coverage.exists()) {
+				if (coverage.exists()) {
 					coverage.delete()
 				}
 			}

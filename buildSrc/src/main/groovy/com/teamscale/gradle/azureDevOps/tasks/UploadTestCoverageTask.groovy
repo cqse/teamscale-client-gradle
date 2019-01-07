@@ -31,11 +31,11 @@ class UploadTestCoverageTask extends UploadTask {
 		List<File> coverageFiles
 		// The test coverage can be downloaded from the coverage REST service call or from a
 		// published artifact
-		if(coverageOptions.mustSearchInArtifact()) {
+		if (coverageOptions.mustSearchInArtifact()) {
 			coverageFiles = BuildUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
 		} else {
 			coverageFiles = definition.http.downloadTestCoverage(build.id)
-			if(coverageFiles.isEmpty()) {
+			if (coverageFiles.isEmpty()) {
 				coverageFiles = BuildUtils.getFilesFromTestRuns(definition, build, coverageOptions)
 			}
 		}
@@ -57,7 +57,7 @@ class UploadTestCoverageTask extends UploadTask {
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		def result = http.uploadExternalReports(standard, contents, type)
 
-		if(result == UPLOAD_SUCCESS_RETURN) {
+		if (result == UPLOAD_SUCCESS_RETURN) {
 			log("$type (${coverageFiles.size()}): $result", definition, build)
 			definition.setLastProcessedTime(getUploadType(), build)
 		} else {
