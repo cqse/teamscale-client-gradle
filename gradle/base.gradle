@@ -1,5 +1,5 @@
-import groovyx.net.http.HttpException
 import groovy.json.JsonBuilder
+import groovyx.net.http.HttpException
 
 buildscript {
 	dependencies {
@@ -49,7 +49,7 @@ ext {
 			os.toString().readLines()
 		}
 
-		return !lines.any{it.startsWith('0x')}
+		return !lines.any { it.startsWith('0x') }
 	}
 
 	stripPathPrefix = { path, prefix ->
@@ -82,7 +82,7 @@ ext {
 	failure = { resp, reader ->
 		println "############################ Response ##################################"
 		println resp.getUri()
-		println reader
+		println new String(reader)
 		println "########################################################################"
 		throw new HttpException(resp, reader)
 	}
