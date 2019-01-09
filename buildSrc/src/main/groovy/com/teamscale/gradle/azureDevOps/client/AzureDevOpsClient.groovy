@@ -20,7 +20,7 @@ class AzureDevOpsClient extends HttpClient {
 	final String organization
 
 	final Map<String, String> defaultQueryParameters = [
-		"api-version": "5.0-preview"
+		"api-version": "5.0"
 	]
 
 	AzureDevOpsClient(Credentials credentials, String organization, String project) {
@@ -58,9 +58,10 @@ class AzureDevOpsClient extends HttpClient {
 	 */
 	List getBuildsForDefinition(String definitionId, Instant minTime = null) {
 		def parameters = [
-			"definitions": definitionId,
-			"status"     : "completed",
-			"queryOrder" : "finishTimeAscending"
+			"definitions" : definitionId,
+			"statusFilter": "completed",
+			"resultFilter": "failed, succeeded, partiallySucceeded",
+			"queryOrder"  : "finishTimeAscending"
 		]
 
 		if (minTime) {

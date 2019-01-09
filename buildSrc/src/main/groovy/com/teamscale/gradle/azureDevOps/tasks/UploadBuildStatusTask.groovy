@@ -2,6 +2,8 @@ package com.teamscale.gradle.azureDevOps.tasks
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
+import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.EAssessment
 import com.teamscale.gradle.teamscale.NonCodeMetric
 import com.teamscale.gradle.teamscale.TeamscaleClient
@@ -13,20 +15,10 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 import static com.teamscale.gradle.teamscale.EAssessment.GREEN
 import static com.teamscale.gradle.teamscale.EAssessment.RED
+import static com.teamscale.gradle.teamscale.EAssessment.YELLOW
 
 class UploadBuildStatusTask extends UploadTask {
 	final static String NAME = "uploadBuildStatus"
-
-	final static BUILD_RESULT_MAP = [
-		"failed"   : [
-			"assessment": RED,
-			"content"   : "Build is unstable"
-		],
-		"succeeded": [
-			"assessment": GREEN,
-			"content"   : "Build is stable"
-		]
-	]
 
 	@Override
 	EBuildInformationType getUploadType() {
@@ -54,15 +46,31 @@ class UploadBuildStatusTask extends UploadTask {
 	 * Get the non code metric which is uploaded as the current build status.
 	 */
 	static NonCodeMetric getNonCodeMetric(Definition definition, Build build) {
-		def buildResult = BUILD_RESULT_MAP[build.result]
+		def buildResult = getBuildResultInfo(definition, build)
 		String path = createPath("Build Stability", definition)
-		String content = buildResult.content
+		String content = buildResult.message
 		long time = build.getExecutionTime()
 
 		def nonCodeMetric = new NonCodeMetric(path, content, time)
-		nonCodeMetric.addAssessment((EAssessment) buildResult.assessment, 1)
+		nonCodeMetric.addAssessment(buildResult.assessment, 1)
 
 		return nonCodeMetric
+	}
+
+	/** Returns information on the result of the given build */
+	static BuildResultInfo getBuildResultInfo(Definition definition, Build build) {
+		switch (build.result) {
+			case "succeeded":
+				return new BuildResultInfo(assessment: GREEN, message: "Build succeeded")
+			case "partiallySucceeded":
+				return new BuildResultInfo(assessment: YELLOW, message: "Build partially succeeded")
+			case "failed":
+				return new BuildResultInfo(assessment: RED, message: "Build failed")
+			default:
+				// should not happen. Check the "resultFilter" in CollectNewBuildsTasks
+				def message = "Invalid build result: $build.result"
+				throw new AzureBuildException(LoggingUtils.createMessage(message, definition, build))
+		}
 	}
 
 	@Override
@@ -75,5 +83,10 @@ class UploadBuildStatusTask extends UploadTask {
 	String getRejectReason() {
 		// never happens
 		return null
+	}
+
+	private static class BuildResultInfo {
+		EAssessment assessment
+		String message
 	}
 }
