@@ -28,10 +28,13 @@ class TeamscalePlugin implements Plugin<Project> {
 		def collectNewBuilds = createTask(project, CollectNewBuildsTask, null, collectDefinitions)
 
 		// Upload Tasks
-		createTask(project, UploadBuildStatusTask, TASK_GROUP, collectNewBuilds)
-		createTask(project, UploadBuildFindingsTasks, TASK_GROUP, collectNewBuilds)
-		createTask(project, UploadTestCoverageTask, TASK_GROUP, collectNewBuilds)
-		createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds)
+		def uploadTasks = []
+		uploadTasks.add(createTask(project, UploadBuildStatusTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(createTask(project, UploadBuildFindingsTasks, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(createTask(project, UploadTestCoverageTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds))
+
+		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).group(TASK_GROUP)
 
 		project.afterEvaluate {
 			TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
