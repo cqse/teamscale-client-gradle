@@ -20,7 +20,7 @@ class AzureDevOpsClient extends HttpClient {
 	final String organization
 
 	final Map<String, String> defaultQueryParameters = [
-		"api-version": "5.0"
+		"api-version": "5.0-preview"
 	]
 
 	AzureDevOpsClient(Credentials credentials, String organization, String project) {
