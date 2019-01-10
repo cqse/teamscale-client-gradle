@@ -63,7 +63,7 @@ class BuildUtils {
 
 		if (attachmentUrls.isEmpty()) {
 			log("No result found", definition, build)
-			return
+			return []
 		}
 
 		return definition.http.downloadFiles(attachmentUrls)
