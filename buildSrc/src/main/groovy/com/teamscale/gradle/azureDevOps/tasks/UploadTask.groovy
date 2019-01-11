@@ -44,22 +44,29 @@ abstract class UploadTask extends DefaultTask {
 		return definition.cache.hasNotBeenProcessed(definition, getUploadType(), build)
 	}
 
+	/** Check if the build is viable for the task. If it is not, then it will be marked as processed */
+	protected boolean isViableBuild(Definition definition, Build build) {
+		if (build.hasFailed()) {
+			log("Build failed. No processing for this task", definition, build)
+			setBuildAsProcessed(definition, build)
+			return false
+		}
+		return true
+	}
+
+
 	abstract EBuildInformationType getUploadType()
+
+	/** Sets the given build as processed for the definition */
+	protected void setBuildAsProcessed(Definition definition, Build build) {
+		definition.setLastProcessedTime(getUploadType(), build)
+	}
 
 	/** Run the task */
 	abstract void run(Definition definition, Build build)
 
 	/** Check if the preconditions for running the task are fulfilled */
 	protected abstract boolean isConfiguredForTask(Definition definition)
-
-	/** Check if the build is viable for the task */
-	protected boolean isViableBuild(Definition definition, Build build) {
-		if(build.hasFailed()) {
-			log("Build failed. No processing for this task", definition, build)
-			return false
-		}
-		return true
-	}
 
 	/**
 	 * Returns the value for the `t` parameter in every teamscale service call.

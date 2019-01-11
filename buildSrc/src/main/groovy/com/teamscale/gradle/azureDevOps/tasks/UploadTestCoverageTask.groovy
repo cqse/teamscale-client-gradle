@@ -42,7 +42,7 @@ class UploadTestCoverageTask extends UploadTask {
 
 		if (coverageFiles.isEmpty()) {
 			log("No coverage found. The options '$coverageOptions' didn't match anything and nothing was uploaded", definition, build)
-			definition.setLastProcessedTime(getUploadType(), build)
+			setBuildAsProcessed(definition, build)
 			return
 		}
 
@@ -59,7 +59,7 @@ class UploadTestCoverageTask extends UploadTask {
 
 		if (result == UPLOAD_SUCCESS_RETURN) {
 			log("$type (${coverageFiles.size()}): $result", definition, build)
-			definition.setLastProcessedTime(getUploadType(), build)
+			setBuildAsProcessed(definition, build)
 		} else {
 			warn("Upload was not successful: $result", definition, build)
 		}

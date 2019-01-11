@@ -42,7 +42,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 
 		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
 			log("Uploading ${findings.size()} finding(s): $result", definition, build)
-			definition.setLastProcessedTime(getUploadType(), build)
+			setBuildAsProcessed(definition, build)
 		} else {
 			warn("Upload was not successful: $result", definition, build)
 		}

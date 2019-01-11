@@ -43,7 +43,7 @@ class UploadTestResultsTask extends UploadTask {
 
 		if (testResults.isEmpty()) {
 			log("No test results found. The options '$options)' didn't match anything. Nothing uploaded", definition, build)
-			definition.setLastProcessedTime(getUploadType(), build)
+			setBuildAsProcessed(definition, build)
 			return
 		}
 
@@ -63,7 +63,7 @@ class UploadTestResultsTask extends UploadTask {
 
 		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
 			log("$type (${contents.size()}): $result", definition, build)
-			definition.setLastProcessedTime(getUploadType(), build)
+			setBuildAsProcessed(definition, build)
 		} else {
 			warn("Upload was not successful: $result", definition, build)
 		}
