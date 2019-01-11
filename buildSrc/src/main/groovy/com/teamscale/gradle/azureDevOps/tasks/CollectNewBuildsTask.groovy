@@ -61,7 +61,6 @@ class CollectNewBuildsTask extends DefaultTask {
 			}
 		}
 
-		println(taskTypes)
 		return taskTypes
 	}
 }
