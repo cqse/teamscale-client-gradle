@@ -47,7 +47,7 @@ abstract class UploadTask extends DefaultTask {
 	/** Check if the build can be processed by the task. If it is not, then it will be marked as processed */
 	protected boolean canBeProcessed(Definition definition, Build build) {
 		if (build.hasFailed()) {
-			log("Build failed. No processing for this task", definition, build)
+			log("Build failed. Skipping.", definition, build)
 			setBuildAsProcessed(definition, build)
 			return false
 		}

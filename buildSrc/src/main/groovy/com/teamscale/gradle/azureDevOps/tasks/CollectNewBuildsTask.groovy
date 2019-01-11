@@ -29,7 +29,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		ados.definitions.each { Definition definition ->
 			def http = definition.getHttp()
 
-			Instant minTime = definition.getMinLastProcessedTimeFor(ados.configuredUploadTasks).plusMillis(1)
+			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(1)
 
 			List builds = http.getBuildsForDefinition(definition.id, minTime).findResults { Map data ->
 				def build = new Build(data, definition.getOptions().getBranchMapping())
@@ -49,5 +49,19 @@ class CollectNewBuildsTask extends DefaultTask {
 				definition.getBuilds().addAll(builds)
 			}
 		}
+	}
+
+	/** */
+	List<EBuildInformationType> getConfiguredTaskTypes(Definition definition) {
+		def taskTypes = []
+
+		project.gradle.taskGraph.allTasks.each { task ->
+			if (task instanceof UploadTask && task.isConfiguredForTask(definition)) {
+				taskTypes.add(task.getUploadType())
+			}
+		}
+
+		println(taskTypes)
+		return taskTypes
 	}
 }

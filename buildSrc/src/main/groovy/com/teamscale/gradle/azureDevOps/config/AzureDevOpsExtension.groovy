@@ -44,13 +44,6 @@ class AzureDevOpsExtension {
 	 */
 	String codeCoverageExePath
 
-	/**
-	 * When running ne or multiple tasks this array will be filled with the types of the different
-	 * upload tasks. This is important for the cache in order to determine which builds have been processed
-	 * for which upload task.
-	 */
-	List<EBuildInformationType> configuredUploadTasks = new ArrayList<>()
-
 	AzureDevOpsExtension(project) {
 		builds = project.container(OrganizationConfig)
 		credentials = project.container(Credentials)

@@ -27,30 +27,24 @@ class TeamscalePlugin implements Plugin<Project> {
 		def collectDefinitions = createTask(project, CollectBuildDefinitionsTask)
 		def collectNewBuilds = createTask(project, CollectNewBuildsTask, null, collectDefinitions)
 
-		// Upload Tasks
 		def uploadTasks = []
 		uploadTasks.add(createTask(project, UploadBuildStatusTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadBuildFindingsTasks, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadTestCoverageTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds))
-
 		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).group(TASK_GROUP)
 
 		project.afterEvaluate {
-			TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
-
-			assert teamscale.azureDevOps.cache != null: "No cache set. Please use the 'cacheDir <path>` method" +
-				"inside of $AzureDevOpsExtension.NAME {}"
-
-			// Configure the upload tasks
-			project.gradle.taskGraph.whenReady {
-				project.gradle.taskGraph.allTasks.each { task ->
-					if (task instanceof UploadTask) {
-						teamscale.azureDevOps.configuredUploadTasks.add(task.getUploadType())
-					}
-				}
-			}
+			checkConfig(project)
 		}
+	}
+
+	/** Assert that obligatory settings have been set */
+	static void checkConfig(Project project) {
+		TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
+
+		assert teamscale.azureDevOps.cache != null: "No cache set. Please use the 'cacheDir <path>` method" +
+			"inside of $AzureDevOpsExtension.NAME {}"
 	}
 
 	/**
