@@ -22,15 +22,17 @@ class UploadBuildFindingsTasks extends UploadTask {
 
 	@Override
 	void run(Definition definition, Build build) {
-		List logs = getMatchingLogs(definition, build)
+		List logs = definition.http.getTimelineOfBuild(build.id)
+		List matchedLogs = getMatchingLogs(definition, build, logs)
 
-		if (logs.size() == 0) {
-			log("No log(s) matched '$definition.options.logNamePattern'. " +
-				"The names of the logs are ${logs.name}", definition, build)
+		if (matchedLogs.size() == 0) {
+			log("No log(s) matched '$definition.options.logNamePattern'. Rembember that the regex" +
+				"must match the complete name, not just a part! The name of all available logs are: ${logs.name}",
+				definition, build)
 			return
 		}
 
-		Set<TeamscaleFinding> findings = parseFindingsFromLogs(logs, definition, build)
+		Set<TeamscaleFinding> findings = parseFindingsFromLogs(matchedLogs, definition, build)
 
 		// Upload findings
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
@@ -85,9 +87,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 	/**
 	 * Returns a list of all logs of the build which matched the "logNamePattern"
 	 */
-	static List getMatchingLogs(Definition definition, Build build) {
-		def logs = definition.http.getTimelineOfBuild(build.id)
-
+	static List getMatchingLogs(Definition definition, Build build, List logs) {
 		def matchingLogs = logs.findAll {
 			def nameMatches = it.name ==~ definition.options.logNamePattern
 			def noErrors = it.state == "completed" && it.result == "succeeded"

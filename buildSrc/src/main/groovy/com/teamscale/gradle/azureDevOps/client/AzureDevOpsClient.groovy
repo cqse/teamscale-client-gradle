@@ -121,7 +121,7 @@ class AzureDevOpsClient extends HttpClient {
 	}
 
 	/** Returns the timeline for the build defined by the given id */
-	Object getTimelineOfBuild(String buildId) {
+	List getTimelineOfBuild(String buildId) {
 		def path = ["build", "builds", buildId, "timeline"]
 		return doCall("get", path, [:]).records
 	}
