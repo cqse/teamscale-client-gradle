@@ -51,7 +51,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		}
 	}
 
-	/** */
+	/** Fetches the EBuildInformationType for all tasks which are called and are configured for the builds */
 	List<EBuildInformationType> getConfiguredTaskTypes(Definition definition) {
 		def taskTypes = []
 
