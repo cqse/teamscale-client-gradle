@@ -80,6 +80,11 @@ class UploadBuildStatusTask extends UploadTask {
 	}
 
 	@Override
+	protected boolean isViableBuild(Definition definition, Build build) {
+		return true
+	}
+
+	@Override
 	String getRejectReason() {
 		// never happens
 		return null

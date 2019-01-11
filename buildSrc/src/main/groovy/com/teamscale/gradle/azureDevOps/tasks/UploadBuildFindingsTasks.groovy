@@ -89,10 +89,9 @@ class UploadBuildFindingsTasks extends UploadTask {
 	 */
 	static List getMatchingLogs(Definition definition, Build build, List logs) {
 		def matchingLogs = logs.findAll {
-			def nameMatches = it.name ==~ definition.options.logNamePattern
-			def noErrors = it.state == "completed" && it.result == "succeeded"
+			def nameMatches = definition.options.logNamePattern.matcher((String) it.name).matches()
 			def hasLog = (it.log != null)
-			return hasLog && nameMatches && noErrors
+			return hasLog && nameMatches
 		}
 
 		// get the logs with the line count

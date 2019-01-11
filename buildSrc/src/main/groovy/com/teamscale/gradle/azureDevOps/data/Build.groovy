@@ -52,6 +52,11 @@ class Build {
 		}
 	}
 
+	/** Whether the build failed or not. (It is complete though!) */
+	boolean hasFailed() {
+		return this.result == "failed"
+	}
+
 	/**
 	 * Checks if the branch name suggest that this might be, for example, a pull
 	 * request, which should than automatically be excluded from the processing.
