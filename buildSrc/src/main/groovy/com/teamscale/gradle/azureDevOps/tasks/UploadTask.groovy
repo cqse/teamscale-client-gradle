@@ -24,7 +24,7 @@ abstract class UploadTask extends DefaultTask {
 		TeamscaleExtension.getFrom(project).azureDevOps.definitions.each { Definition definition ->
 			if (isConfiguredForTask(definition)) {
 				def builds = definition.builds.findAll { Build build ->
-					hasNotBeenProcessed(definition, build) && isViableBuild(definition, build)
+					hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)
 				}
 
 				builds.each { Build build ->
@@ -44,8 +44,8 @@ abstract class UploadTask extends DefaultTask {
 		return definition.cache.hasNotBeenProcessed(definition, getUploadType(), build)
 	}
 
-	/** Check if the build is viable for the task. If it is not, then it will be marked as processed */
-	protected boolean isViableBuild(Definition definition, Build build) {
+	/** Check if the build can be processed by the task. If it is not, then it will be marked as processed */
+	protected boolean canBeProcessed(Definition definition, Build build) {
 		if (build.hasFailed()) {
 			log("Build failed. No processing for this task", definition, build)
 			setBuildAsProcessed(definition, build)

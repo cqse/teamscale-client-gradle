@@ -76,7 +76,7 @@ class UploadBuildStatusTask extends UploadTask {
 	}
 
 	@Override
-	protected boolean isViableBuild(Definition definition, Build build) {
+	protected boolean canBeProcessed(Definition definition, Build build) {
 		return true
 	}
 
