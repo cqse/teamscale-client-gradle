@@ -42,7 +42,7 @@ class CollectNewBuildsTask extends DefaultTask {
 				log("No unprocessed builds since $minTime", definition)
 
 				if (Duration.between(minTime, Instant.now()).toDays() > DAYS_THRESHOLD) {
-					warn("Last build was processed over $DAYS_THRESHOLD days ago!")
+					warn("Last build was executed over $DAYS_THRESHOLD days ago!")
 				}
 			} else {
 				log("Found ${builds.size()} unprocessed build(s)", definition)

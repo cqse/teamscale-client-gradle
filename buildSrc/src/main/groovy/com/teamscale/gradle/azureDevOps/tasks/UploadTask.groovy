@@ -22,16 +22,22 @@ abstract class UploadTask extends DefaultTask {
 	@TaskAction
 	def action() {
 		TeamscaleExtension.getFrom(project).azureDevOps.definitions.each { Definition definition ->
-			if (isConfiguredForTask(definition)) {
-				def builds = definition.builds.findAll { Build build ->
-					hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)
-				}
-
-				builds.each { Build build ->
-					run(definition, build)
-				}
-			} else {
+			if (!isConfiguredForTask(definition)) {
 				log(getRejectReason(), definition)
+				return
+			}
+
+			if (definition.builds.isEmpty()) {
+				log("No builds to process", definition)
+				return
+			}
+
+			def builds = definition.builds.findAll { Build build ->
+				hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)
+			}
+
+			builds.each { Build build ->
+				run(definition, build)
 			}
 		}
 	}
@@ -53,7 +59,6 @@ abstract class UploadTask extends DefaultTask {
 		}
 		return true
 	}
-
 
 	abstract EBuildInformationType getUploadType()
 

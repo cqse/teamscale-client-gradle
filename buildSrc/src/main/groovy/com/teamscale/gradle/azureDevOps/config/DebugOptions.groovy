@@ -19,7 +19,7 @@ class DebugOptions {
 
 			if (teamscale.http) {
 				teamscale.http.disableUploads()
-				LoggingUtils.debug("Uploads for teamscale are disabled")
+				LoggingUtils.debug("Uploads to teamscale are disabled")
 			}
 		}
 	}

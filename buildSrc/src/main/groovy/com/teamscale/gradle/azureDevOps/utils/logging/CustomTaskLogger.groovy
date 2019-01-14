@@ -1,7 +1,11 @@
 package com.teamscale.gradle.azureDevOps.utils.logging
 
 import org.gradle.BuildAdapter
+import org.gradle.BuildListener
 import org.gradle.BuildResult
+import org.gradle.api.Project
+import org.gradle.api.ProjectEvaluationListener
+import org.gradle.api.ProjectState
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.tasks.TaskState
@@ -16,7 +20,7 @@ class CustomTaskLogger extends BuildAdapter implements TaskExecutionListener {
 	@Override
 	void beforeExecute(Task task) {
 		println ""
-		println task
+		println "> Task $task.name"
 	}
 
 	@Override
