@@ -15,6 +15,8 @@ import java.time.Instant
 class AzureDevOpsClient extends HttpClient {
 	final static URL = "https://dev.azure.com/"
 
+	final static VSRM_URL = "https://vsrm.dev.azure.com/"
+
 	final String project
 
 	final String organization
@@ -39,10 +41,24 @@ class AzureDevOpsClient extends HttpClient {
 	 * Take a look at the online API for all possible REST calls:
 	 * https://docs.microsoft.com/en-us/rest/api/azure/devops/?view=azure-devops-rest-5.0
 	 */
-	protected Object doCall(String method, List<String> path, Map<String, String> query, closure = {}) {
+	protected Object doCall(String method, List<String> path, Map<String, String> query, setRequest = {}) {
 		path = [organization, project, "_apis"] + path
 		query = defaultQueryParameters + query
-		return super.doCall(method, path, query, closure)
+		return super.doCall(method, path, query, setRequest)
+	}
+
+	/**
+	 * Makes the request to the VSRM (Visual Studio Release Managment) azure dev ops service server.
+	 * The return type depends on the request.
+	 * Take a look at the online API for all possible REST calls:
+	 * https://docs.microsoft.com/en-us/rest/api/azure/devops/?view=azure-devops-rest-5.0
+	 */
+	protected Object doVsrmCall(String method, List<String> path, Map<String, String> query, setRequest = {}) {
+		Closure setUrlAndRequest = { request ->
+			request.uri = VSRM_URL
+			setRequest(request)
+		}
+		doCall(method, path, query, setUrlAndRequest)
 	}
 
 	/**
@@ -157,7 +173,7 @@ class AzureDevOpsClient extends HttpClient {
 			return null
 		}
 
-		// The data 'normally' looks similar to this '#/<container-id>/<folder-name>'
+		// The data should look like this: '#/<container-id>/<folder-name>'
 		String containerId = artifactDataTokens.get(1)
 
 		String artifactFolderName = null
@@ -172,5 +188,11 @@ class AzureDevOpsClient extends HttpClient {
 		]
 
 		return super.doCall("get", path, query, {}).value
+	}
+
+	/** Get the release for the given release id */
+	Object getRelease(String releaseId) {
+		def path = ["release", "releases", releaseId]
+		return doVsrmCall("get", path, [:])
 	}
 }

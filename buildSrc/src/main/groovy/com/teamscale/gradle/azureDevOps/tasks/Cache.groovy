@@ -76,13 +76,18 @@ class Cache {
 	}
 
 	/** Returns the last processed timestamp for the given definition and build information type */
-	private Instant get(Definition definition, EBuildInformationType type) {
+	Instant get(Definition definition, EBuildInformationType type) {
 		return cache.get(getKey(definition), new HashMap<>()).getOrDefault(type, Instant.EPOCH)
 	}
 
 	/** Sets the last processed timestamp for the given definition and build information type */
 	void set(Definition definition, EBuildInformationType type, Build build) {
-		cache.get(getKey(definition), new HashMap<>()).put(type, getTime(build))
+		set(definition, type, getTime(build))
+	}
+
+	/** Sets the last processed timestamp for the given definition and build information type */
+	void set(Definition definition, EBuildInformationType type, Instant instant) {
+		cache.get(getKey(definition), new HashMap<>()).put(type, instant)
 		save()
 	}
 

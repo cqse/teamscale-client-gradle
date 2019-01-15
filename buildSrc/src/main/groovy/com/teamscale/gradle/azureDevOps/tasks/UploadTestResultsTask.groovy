@@ -3,6 +3,7 @@ package com.teamscale.gradle.azureDevOps.tasks
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
@@ -36,9 +37,9 @@ class UploadTestResultsTask extends UploadTask {
 		// get test result files
 		List<File> testResults
 		if (options.mustSearchInArtifact()) {
-			testResults = BuildUtils.getFilesFromBuildArtifact(definition, build, options)
+			testResults = AdosUtils.getFilesFromBuildArtifact(definition, build, options)
 		} else {
-			testResults = BuildUtils.getFilesFromTestRuns(definition, build, options)
+			testResults = AdosUtils.getFilesFromTestRuns(definition, build, options)
 		}
 
 		if (testResults.isEmpty()) {

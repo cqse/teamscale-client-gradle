@@ -12,9 +12,10 @@ class HttpClient {
 
 	protected Object doCall(String method, List<String> pathParameters, Map<String, String> queryParameters, setRequest = {}) {
 		def result = http."$method" {
+			setRequest(request)
+
 			request.uri.path = "/" + pathParameters.join("/")
 			request.uri.query = queryParameters
-			setRequest(request)
 
 			response.failure(failure)
 		}

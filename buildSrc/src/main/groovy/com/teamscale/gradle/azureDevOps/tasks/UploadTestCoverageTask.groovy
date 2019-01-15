@@ -3,6 +3,7 @@ package com.teamscale.gradle.azureDevOps.tasks
 import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
@@ -32,11 +33,11 @@ class UploadTestCoverageTask extends UploadTask {
 		// The test coverage can be downloaded from the coverage REST service call or from a
 		// published artifact
 		if (coverageOptions.mustSearchInArtifact()) {
-			coverageFiles = BuildUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
+			coverageFiles = AdosUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
 		} else {
 			coverageFiles = definition.http.downloadTestCoverage(build.id)
 			if (coverageFiles.isEmpty()) {
-				coverageFiles = BuildUtils.getFilesFromTestRuns(definition, build, coverageOptions)
+				coverageFiles = AdosUtils.getFilesFromTestRuns(definition, build, coverageOptions)
 			}
 		}
 
