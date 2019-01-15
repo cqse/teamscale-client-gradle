@@ -20,7 +20,7 @@ class CustomTaskLogger extends BuildAdapter implements TaskExecutionListener {
 	@Override
 	void beforeExecute(Task task) {
 		println ""
-		println "> Task $task.name"
+		println "Task $task.name"
 	}
 
 	@Override
