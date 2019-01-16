@@ -16,14 +16,17 @@ class Build {
 	String targetBranch
 	String uri
 
+	Instant latestProcessedReleaseTest
+
 	Build(Map data, Closure branchMapping) {
 		// Maps the json properties to the actual object fields
 		metaClass.properties.findAll { it.name != "class" && data.containsKey(it.name) }.each {
 			Object value
-			if (it.type.equals(String)) {
-				value = data[it.name]
-			} else if (it.type.equals(Instant)) {
+			if (it.type.equals(Instant)) {
 				value = Instant.parse((String) data[it.name])
+			} else {
+				// default is string
+				value = data[it.name]
 			}
 
 			it.setProperty(this, value)
@@ -52,7 +55,7 @@ class Build {
 		}
 	}
 
-	/** Whether the build failed or not. (It is complete though!) */
+	/** Whether the build failed */
 	boolean hasFailed() {
 		return this.result == "failed"
 	}
@@ -83,5 +86,18 @@ class Build {
 	/** Returns the time the build took in seconds */
 	long getExecutionTime() {
 		return (finishTime.toEpochMilli() - startTime.toEpochMilli()) / 1000
+	}
+
+	/** Return the time the build finished */
+	Instant getFinishTime() {
+		return finishTime
+	}
+
+	void setLatestProcessedReleaseTest(Instant latestProcessedReleaseTest) {
+		this.latestProcessedReleaseTest = latestProcessedReleaseTest
+	}
+
+	Instant getLatestProcessedReleaseTest() {
+		return latestProcessedReleaseTest
 	}
 }

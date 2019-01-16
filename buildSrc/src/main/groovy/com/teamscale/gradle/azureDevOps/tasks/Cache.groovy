@@ -72,17 +72,12 @@ class Cache {
 			return true
 		}
 
-		return getTime(build).compareTo(last) > 0
+		return build.getFinishTime().compareTo(last) > 0
 	}
 
 	/** Returns the last processed timestamp for the given definition and build information type */
 	Instant get(Definition definition, EBuildInformationType type) {
 		return cache.get(getKey(definition), new HashMap<>()).getOrDefault(type, Instant.EPOCH)
-	}
-
-	/** Sets the last processed timestamp for the given definition and build information type */
-	void set(Definition definition, EBuildInformationType type, Build build) {
-		set(definition, type, getTime(build))
 	}
 
 	/** Sets the last processed timestamp for the given definition and build information type */
@@ -114,10 +109,6 @@ class Cache {
 		}
 
 		return min
-	}
-
-	private static Instant getTime(Build build) {
-		return build.finishTime
 	}
 
 	private static String getKey(Definition definition) {

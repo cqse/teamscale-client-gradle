@@ -1,16 +1,13 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
-import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
 import static EBuildInformationType.TEST_RESULT
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadTestResultsTask extends UploadTask {
 	final static String NAME = "uploadTestResults"
@@ -43,14 +40,12 @@ class UploadTestResultsTask extends UploadTask {
 		}
 
 		if (testResults.isEmpty()) {
-			log("No test results found. The options '$options)' didn't match anything. Nothing uploaded", definition, build)
+			log("No test results found with '$options)'", definition, build)
 			setBuildAsProcessed(definition, build)
 			return
 		}
 
 		// upload to teamscale
-		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
-
 		def standard = getStandardQueryParameters(EUploadPartitionType.TEST_RESULTS, definition, build)
 		def type = options.type.toString()
 		def contents = testResults.collect { it.text }
@@ -60,13 +55,9 @@ class UploadTestResultsTask extends UploadTask {
 			optional = ["path-prefix": definition.options.partition]
 		}
 
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		String result = http.uploadExternalReports(standard, contents, type, optional)
 
-		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
-			log("$type (${contents.size()}): $result", definition, build)
-			setBuildAsProcessed(definition, build)
-		} else {
-			warn("Upload was not successful: $result", definition, build)
-		}
+		processUploadResult(definition, build, result, "$type (${contents.size()}): $result")
 	}
 }

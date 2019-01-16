@@ -1,11 +1,10 @@
 package com.teamscale.gradle.azureDevOps.utils
 
+import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.config.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
-
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class AdosUtils {
 	/**
@@ -15,11 +14,11 @@ class AdosUtils {
 	static List<File> getFilesFromBuildArtifact(Definition definition, Build build, ReportLocationMatcher options) {
 		List<File> coverageFiles = new ArrayList<>()
 
-		assert options.mustSearchInArtifact(): "options must have an artifact pattern here! Is probably a missing" +
-			"check in the code."
-
+		if(!options.mustSearchInArtifact()) {
+			return coverageFiles
+		}
 		List<Object> artifacts = definition.http.getArtifacts(build.id).findAll { artifact ->
-			options.artifactMatches(artifact.name)
+			options.artifactMatches((String) artifact.name)
 		}
 
 		artifacts.each { artifact ->
@@ -33,7 +32,7 @@ class AdosUtils {
 			}
 
 			contents.each { item ->
-				if (item.itemType == "file" && options.pathMatches(item.path)) {
+				if (item.itemType == "file" && options.pathMatches((String) item.path)) {
 					coverageFiles.addAll(definition.http.downloadFiles([item.contentLocation]))
 				}
 			}
@@ -52,24 +51,19 @@ class AdosUtils {
 			it.release == null // Ignore release test runs
 		}.id
 
-		return getFilesFromTestRuns(definition, build, options, testRunsIds)
+		return getFilesFromTestRuns(definition.http, options, testRunsIds)
 	}
 
 	/**
 	 * Downloads the files defined by the given options from the attachments of the given test runs ids
 	 */
-	static List<File> getFilesFromTestRuns(Definition definition, Build build, ReportLocationMatcher options, List<Integer> testRunsIds) {
+	static List<File> getFilesFromTestRuns(AzureDevOpsClient http, ReportLocationMatcher options, List<Integer> testRunsIds) {
 		// check if the test runs have attachments
-		List<String> attachmentUrls = testRunsIds.collect { definition.http.getAttachmentsOfTestRun(it) }
+		List<String> attachmentUrls = testRunsIds.collect { http.getAttachmentsOfTestRun(it) }
 			.flatten().findAll { attachment ->
 			options.pathMatches((String) attachment.fileName)
 		}.url
 
-		if (attachmentUrls.isEmpty()) {
-			log("No files found in the test runs for [$options]", definition, build)
-			return []
-		}
-
-		return definition.http.downloadFiles(attachmentUrls)
+		return http.downloadFiles(attachmentUrls)
 	}
 }

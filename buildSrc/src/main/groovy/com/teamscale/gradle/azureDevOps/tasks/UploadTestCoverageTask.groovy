@@ -4,15 +4,12 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
-import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
 import static EBuildInformationType.TEST_COVERAGE
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
-import static com.teamscale.gradle.teamscale.TeamscaleClient.UPLOAD_SUCCESS_RETURN
 
 /**
  * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
@@ -42,7 +39,7 @@ class UploadTestCoverageTask extends UploadTask {
 		}
 
 		if (coverageFiles.isEmpty()) {
-			log("No coverage found. The options '$coverageOptions' didn't match anything and nothing was uploaded", definition, build)
+			log("No test coverage found with '$coverageOptions'", definition, build)
 			setBuildAsProcessed(definition, build)
 			return
 		}
@@ -58,12 +55,7 @@ class UploadTestCoverageTask extends UploadTask {
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		def result = http.uploadExternalReports(standard, contents, type)
 
-		if (result == UPLOAD_SUCCESS_RETURN) {
-			log("$type (${coverageFiles.size()}): $result", definition, build)
-			setBuildAsProcessed(definition, build)
-		} else {
-			warn("Upload was not successful: $result", definition, build)
-		}
+		processUploadResult(definition, build, result, "$type (${coverageFiles.size()}): $result")
 	}
 
 	/**

@@ -16,12 +16,6 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 class CollectNewBuildsTask extends DefaultTask {
 	static String NAME = "collectNewBuilds"
 
-	/**
-	 * If a build hasn't been processed in this amount of days, a warning
-	 * will be logged.
-	 */
-	static int DAYS_THRESHOLD = 30
-
 	@TaskAction
 	def collect() {
 		AzureDevOpsExtension ados = TeamscaleExtension.getFrom(project).azureDevOps
@@ -41,8 +35,9 @@ class CollectNewBuildsTask extends DefaultTask {
 			if (builds.size() == 0) {
 				log("No unprocessed builds since $minTime", definition)
 
-				if (Duration.between(minTime, Instant.now()).toDays() > DAYS_THRESHOLD) {
-					warn("Last build was executed over $DAYS_THRESHOLD days ago!")
+				int daysBeforeWarning = definition.options.maxDaysBetweenBuilds
+				if (Duration.between(minTime, Instant.now()).toDays() > daysBeforeWarning) {
+					warn("Last build for $definition.name was executed over $daysBeforeWarning days ago!")
 				}
 			} else {
 				log("Found ${builds.size()} unprocessed build(s)", definition)

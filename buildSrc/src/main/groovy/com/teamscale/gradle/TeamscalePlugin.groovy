@@ -32,7 +32,7 @@ class TeamscalePlugin implements Plugin<Project> {
 		uploadTasks.add(createTask(project, UploadBuildFindingsTasks, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadTestCoverageTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds))
-		createTask(project, UploadReleaseTestResults, "BETA", collectNewBuilds)
+		uploadTasks.add(createTask(project, UploadReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
 		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).group(TASK_GROUP)
 
 		project.afterEvaluate {

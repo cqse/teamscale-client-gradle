@@ -57,8 +57,9 @@ class Definition {
 		return http.project
 	}
 
-	void setLastProcessedTime(EBuildInformationType option, Build build) {
-		cache.set(this, option, build)
+	/** Sets the last processed time for the given build info */
+	void setLastProcessedTime(EBuildInformationType option, Instant instant) {
+		cache.set(this, option, instant)
 	}
 
 	/**

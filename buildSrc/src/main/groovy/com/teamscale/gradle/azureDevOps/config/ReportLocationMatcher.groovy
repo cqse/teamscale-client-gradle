@@ -30,7 +30,11 @@ class ReportLocationMatcher {
 
 	@Override
 	String toString() {
-		return "type: $type, path-pattern: $pathPattern, artifact-pattern: $artifactPattern"
+		String string = "type: $type, path-pattern: $pathPattern"
+		if(artifactPattern) {
+			string += ", artifact-pattern: $artifactPattern"
+		}
+		return string
 	}
 
 	ReportLocationMatcher(String type, String pathPattern, String artifactPattern = null) {
@@ -45,7 +49,7 @@ class ReportLocationMatcher {
 	}
 
 	private static void checkPattern(Pattern pattern) {
-		assert pattern != null: "The given pattern $pattern is not a valid regex or 	ant-style " +
+		assert pattern != null: "The given pattern $pattern is not a valid regex or ant-style " +
 			"globbing pattern"
 	}
 

@@ -7,7 +7,6 @@ import com.teamscale.gradle.teamscale.TeamscaleExtension
 import com.teamscale.gradle.teamscale.TeamscaleFinding
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadBuildFindingsTasks extends UploadTask {
 	static final String NAME = "uploadBuildFindings"
@@ -25,8 +24,8 @@ class UploadBuildFindingsTasks extends UploadTask {
 		List logs = definition.http.getTimelineOfBuild(build.id)
 		List matchedLogs = getMatchingLogs(definition, build, logs)
 
-		if (matchedLogs.size() == 0) {
-			log("No log(s) matched '$definition.options.logNamePattern'. Rembember that the regex" +
+		if (matchedLogs.isEmpty()) {
+			log("No log(s) matched '$definition.options.logNamePattern'. Remember that the regex" +
 				"must match the complete name, not just a part! The name of all available logs are: ${logs.name}",
 				definition, build)
 			return
@@ -35,17 +34,12 @@ class UploadBuildFindingsTasks extends UploadTask {
 		Set<TeamscaleFinding> findings = parseFindingsFromLogs(matchedLogs, definition, build)
 
 		// Upload findings
-		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
-
 		def params = getStandardQueryParameters(EUploadPartitionType.BUILD_FINDINGS, definition, build)
+
+		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		def result = http.uploadExternalFindings(params, new ArrayList<>(findings))
 
-		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
-			log("Uploading ${findings.size()} finding(s): $result", definition, build)
-			setBuildAsProcessed(definition, build)
-		} else {
-			warn("Upload was not successful: $result", definition, build)
-		}
+		processUploadResult(definition, build, result, "Uploading ${findings.size()} finding(s): $result")
 	}
 
 	/**

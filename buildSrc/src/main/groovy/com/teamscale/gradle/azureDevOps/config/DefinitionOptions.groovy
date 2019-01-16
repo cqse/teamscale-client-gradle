@@ -18,8 +18,10 @@ class DefinitionOptions {
 
 	TestsConfig tests
 
-	// TODO: make this mandatory?
 	String partition
+
+	/** Maximum number of days  */
+	int maxDaysBetweenBuilds = 30
 
 	/**
 	 * Instance of log analyzer for this project.

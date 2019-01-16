@@ -12,14 +12,15 @@ class BuildUtils {
 	 * If it is neither a valid regex or globbing pattern <code>null</code> will be returned.
 	 */
 	static Pattern getPatternFromRegexOrAntGlobbing(String regexOrGlob) {
-		Pattern pattern = getPattern(regexOrGlob)
+		Pattern pattern = getPatternOrNull(regexOrGlob)
 		if (!pattern) {
-			pattern = getPattern(convertGlobToRegex(regexOrGlob))
+			pattern = getPatternOrNull(convertGlobToRegex(regexOrGlob))
 		}
 		return pattern
 	}
 
-	private static Pattern getPattern(String regex) {
+	/** Return a pattern from the given string or null if the pattern is invalid */
+	private static Pattern getPatternOrNull(String regex) {
 		try {
 			return ~regex
 		} catch (PatternSyntaxException e) {
@@ -62,6 +63,7 @@ class BuildUtils {
 							case 'E':
 								// extra escape needed
 								sb.append('\\')
+						// fallthrough
 							default:
 								sb.append('\\')
 						}
@@ -69,16 +71,18 @@ class BuildUtils {
 					}
 					break
 				case '*':
-					if (inClass == 0)
+					if (inClass == 0) {
 						sb.append(".*")
-					else
+					} else {
 						sb.append('*')
+					}
 					break
 				case '?':
-					if (inClass == 0)
+					if (inClass == 0) {
 						sb.append('.')
-					else
+					} else {
 						sb.append('?')
+					}
 					break
 				case '[':
 					inClass++
@@ -98,15 +102,17 @@ class BuildUtils {
 				case '$':
 				case '@':
 				case '%':
-					if (inClass == 0 || (firstIndexInClass == i && ch == '^'))
+					if (inClass == 0 || (firstIndexInClass == i && ch == '^')) {
 						sb.append('\\')
+					}
 					sb.append(ch)
 					break
 				case '!':
-					if (firstIndexInClass == i)
+					if (firstIndexInClass == i) {
 						sb.append('^')
-					else
+					} else {
 						sb.append('!')
+					}
 					break
 				case '{':
 					inGroup++
@@ -117,10 +123,11 @@ class BuildUtils {
 					sb.append(')')
 					break
 				case ',':
-					if (inGroup > 0)
+					if (inGroup > 0) {
 						sb.append('|')
-					else
+					} else {
 						sb.append(',')
+					}
 					break
 				default:
 					sb.append(ch)

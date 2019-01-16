@@ -8,6 +8,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
+import static com.teamscale.gradle.teamscale.TeamscaleClient.UPLOAD_SUCCESS_RETURN
 
 /**
  * Superclass for tasks which are based on the processing of a single build
@@ -17,7 +19,7 @@ abstract class UploadTask extends DefaultTask {
 	/** Base message for the upload */
 	final static UPLOAD_MESSAGE = "External Analysis (%s)"
 
-	public final static TASK_GROUP = "Azure Build Information Upload"
+	public final static String TASK_GROUP = "Azure Build Information Upload"
 
 	@TaskAction
 	def action() {
@@ -62,9 +64,9 @@ abstract class UploadTask extends DefaultTask {
 
 	abstract EBuildInformationType getUploadType()
 
-	/** Sets the given build as processed for the definition */
+	/** Sets the given build and additional information as processed for the definition */
 	protected void setBuildAsProcessed(Definition definition, Build build) {
-		definition.setLastProcessedTime(getUploadType(), build)
+		definition.setLastProcessedTime(getUploadType(), build.getFinishTime())
 	}
 
 	/** Run the task */
@@ -110,5 +112,18 @@ abstract class UploadTask extends DefaultTask {
 			return "$partition$divider $definition.options.partition"
 		}
 		return partition
+	}
+
+	/**
+	 * Checks the result of the teamscale upload. If it successful than the build will be set as processed and
+	 * the given message will be logged.
+	 */
+	protected void processUploadResult(Definition definition, Build build, String result, String successMessage) {
+		if (result == UPLOAD_SUCCESS_RETURN) {
+			log(successMessage, definition, build)
+			setBuildAsProcessed(definition, build)
+		} else {
+			warn("Upload was not successful: $result", definition, build)
+		}
 	}
 }

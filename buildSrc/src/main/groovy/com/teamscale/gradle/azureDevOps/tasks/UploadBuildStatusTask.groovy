@@ -11,8 +11,6 @@ import com.teamscale.gradle.teamscale.TeamscaleExtension
 
 import static EBuildInformationType.BUILD_STATUS
 import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 import static com.teamscale.gradle.teamscale.EAssessment.*
 
 class UploadBuildStatusTask extends UploadTask {
@@ -26,18 +24,13 @@ class UploadBuildStatusTask extends UploadTask {
 	@Override
 	void run(Definition definition, Build build) {
 		def queryParams = getStandardQueryParameters(BUILD, definition, build)
-		queryParams.appendToMessage("build $build.result")
 		def nonCodeMetric = getNonCodeMetric(definition, build)
+		queryParams.appendToMessage(nonCodeMetric.content)
 
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		String result = http.uploadBuildStatus(queryParams, [nonCodeMetric])
 
-		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
-			log(result, definition, build)
-			setBuildAsProcessed(definition, build)
-		} else {
-			warn("Build could not be processed. Upload was not successful: $result", definition, build)
-		}
+		processUploadResult(definition, build, result, result)
 	}
 
 	/** Get the non code metric which is uploaded as the current build status. */
