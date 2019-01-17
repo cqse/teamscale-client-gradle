@@ -48,7 +48,12 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 				definitions.each { Definition definition ->
 					azureDevOps.definitions.add(definition)
 
-					log("$definition.name [$definition.lastCompletedTime]")
+					def lastCompleted = "No builds yet"
+					if(definition.lastCompletedTime) {
+						lastCompleted = "$definition.lastCompletedTime"
+					}
+
+					log("$definition.name [$lastCompleted]")
 
 					if (definitions.size() > 1) {
 						assert definition.options.partition: "The project '$projectConfig.name' " +

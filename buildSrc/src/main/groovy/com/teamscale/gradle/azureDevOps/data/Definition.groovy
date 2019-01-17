@@ -33,7 +33,7 @@ class Definition {
 		this.http = http
 		this.cache = cache
 
-		def time = Instant.EPOCH
+		def time = null
 		if (!data.latestCompletedBuild) {
 			log("No build run/completed for $name")
 		} else {
