@@ -4,7 +4,12 @@ import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import groovy.json.JsonBuilder
 
+/** Some functions to make the logging across the plugin uniform */
 class LoggingUtils {
+
+	/**
+	 * Creates a logging message with a give message and a build, as well as its definition
+	 */
 	static String createMessage(String message, Definition definition = null, Build build = null) {
 		def info = ""
 
@@ -23,22 +28,26 @@ class LoggingUtils {
 		return "$info$message"
 	}
 
+	/** Logs a warning */
 	static void warn(String message) {
 		String prefix = "[WARN] "
 
-		println prefix + createMessage(message, null, null)
+		println prefix + createMessage(message)
 	}
 
+	/** Simple output */
 	static void log(String message, Definition definition = null, Build build = null) {
 		println createMessage(message, definition, build)
 	}
 
+	/** Logs a debug message */
 	static void debug(String message) {
 		String prefix = "[DEBUG] "
 		log(prefix + message)
 	}
 
-	static pprint(input) {
+	/** Tries to pretty print the given Object. Especially interesting for Lists or JSON content */
+	static pprint(Object input) {
 		println new JsonBuilder(input).toPrettyString()
 	}
 }

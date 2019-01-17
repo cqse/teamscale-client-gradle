@@ -28,6 +28,11 @@ teamscale {
 			"apps-munichre" {
 				"TQE" {
 					"SampleApp" {
+						// Maximum number of days after the lastest build until a warning is logged
+						// Default is 30, meaning if a build hasn't been done for this definition in the last 30 days
+						// a warning will be logged the next time any ADOS task is executed on this project.
+						maxDaysBetweenBuilds = 30
+
 						// Base name for the partition where the results are being uploaded to.
 						// Every definition should have its own partition. Especially because in the future more
 						// definition might come.
@@ -35,7 +40,7 @@ teamscale {
 
 						tests {
 							// ### Configuration of test results and coverage ###
-							// both `result` and `coverage` function similar
+							// both `result`, `coverage`, `release` work similar
 							// result/coverage type, file-regex, artifact-regex
 							//
 							// type		 		A teamscale EReportFormat.java type. If the type is wrong the upload will fail
@@ -51,8 +56,13 @@ teamscale {
 							// artifact-regex	(Optional) Regex matching a published artifact. If the regex matches the name of
 							//					the artifact the coverage/results are files inside of the artifact matched by the
 							//					file-regex
-							result "MS_TEST", /.*trx/
-							coverage "VS_COVERAGE", /.*coverage/
+							result "MS_TEST", "**/*.trx"
+							coverage "VS_COVERAGE", /.*\.coverage/
+
+							// Checks if there are any release test results for the build. Only the latest build will be
+							// checked continuously for new releases. The intial execution will of course check all recent builds,
+							// but after a build has been processed, besides the latest, it will not be looked at again.
+							release "MS_TEST", /.*\.trx/
 						}
 					}
 
@@ -65,11 +75,11 @@ teamscale {
 						// parser-type	 		See ELogAnalyzerType.groovy for implemented types
 						//
 						// log-name-pattern		Every build consists of different tasks which are executed one after
-						// 						the	other. Insert a regex here which matches all task names whose logs should be parsed.
+						// 						the	other. Insert a regex pattern here which matches all task names whose logs should be parsed.
 						parseLogs "CSHARP", /Build.*/
 
 						tests {
-							result "MS_TEST", /.*trx/, /drop/
+							result "MS_TEST", "**/*.trx", /drop/
 						}
 					}
 				}
