@@ -32,17 +32,30 @@ class CollectNewBuildsTask extends DefaultTask {
 				}
 			}
 
+			checkMaxTimeBetweenBuilds(definition, minTime)
+
 			if (builds.size() == 0) {
 				log("No unprocessed builds since $minTime", definition)
-
-				int daysBeforeWarning = definition.options.maxDaysBetweenBuilds
-				if (Duration.between(minTime, Instant.now()).toDays() > daysBeforeWarning) {
-					warn("Last build for $definition.name was executed over $daysBeforeWarning days ago!")
-				}
 			} else {
 				log("Found ${builds.size()} unprocessed build(s)", definition)
 				definition.getBuilds().addAll(builds)
 			}
+		}
+	}
+
+	/**
+	 * Checks the time of the last build of the given definition. If this exceeds a certain number
+	 * of days, which are defined in the definition options, then a warning will be logged.
+	 *
+	 * This check needs to run even if unprocessed builds could be found, because the release tests uploads
+	 * must always check the latest build even if it has already been processed.
+	 */
+	protected static void checkMaxTimeBetweenBuilds(Definition definition, Instant latestBuild) {
+		int daysBeforeWarning = definition.options.maxDaysBetweenBuilds
+		long daysAfterLastBuild = Duration.between(latestBuild, Instant.now()).toDays()
+		if (daysAfterLastBuild > daysBeforeWarning) {
+			warn("Last build for '$definition.name' was executed $daysAfterLastBuild " +
+				"days ago (max: $daysBeforeWarning)!", definition)
 		}
 	}
 

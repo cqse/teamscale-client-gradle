@@ -16,7 +16,7 @@ class Build {
 	String targetBranch
 	String uri
 
-	Instant latestProcessedReleaseTest
+	Instant latestProcessedReleaseTest = Instant.EPOCH
 
 	Build(Map data, Closure branchMapping) {
 		// Maps the json properties to the actual object fields
