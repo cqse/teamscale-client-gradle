@@ -24,7 +24,7 @@ class LoggingUtils {
 	}
 
 	static void warn(String message) {
-		String prefix = "[WARN]"
+		String prefix = "[WARN] "
 
 		println prefix + createMessage(message, null, null)
 	}
