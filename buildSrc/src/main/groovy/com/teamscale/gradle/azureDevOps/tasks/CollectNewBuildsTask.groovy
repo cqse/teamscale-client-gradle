@@ -36,7 +36,7 @@ class CollectNewBuildsTask extends DefaultTask {
 
 			if (builds.isEmpty()) {
 				if(minTime.minusMillis(1) == Instant.EPOCH) {
-					warn("No builds found for '$definition.name` which match the provided branch mapping")
+					warn("No builds found for [$definition.name] which match the provided branch mapping")
 				} else {
 					log("No unprocessed builds since $minTime", definition)
 				}
@@ -69,7 +69,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		int daysBeforeWarning = definition.options.maxDaysBetweenBuilds
 		long daysAfterLastBuild = Duration.between(lastBuildTime, Instant.now()).toDays()
 		if (daysAfterLastBuild > daysBeforeWarning) {
-			warn("Last processable build for '$definition.name' was executed $daysAfterLastBuild " +
+			warn("Last processable build for [$definition.name] was executed $daysAfterLastBuild " +
 				"days ago (max: $daysBeforeWarning)!")
 		}
 	}

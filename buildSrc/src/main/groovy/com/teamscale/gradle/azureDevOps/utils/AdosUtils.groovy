@@ -25,7 +25,7 @@ class AdosUtils {
 			def contents = definition.http.getArtifactContents(artifact)
 
 			if (!contents) {
-				LoggingUtils.warn("The contents for the artifact '$artifact.name' could not be found.\n" +
+				LoggingUtils.warn("The contents for the artifact [$artifact.name] could not be found.\n" +
 					"Probably a different `data` field. It should be in the form of `#/<number>/<artifact>`\n" +
 					"$artifact", definition, build)
 				return
