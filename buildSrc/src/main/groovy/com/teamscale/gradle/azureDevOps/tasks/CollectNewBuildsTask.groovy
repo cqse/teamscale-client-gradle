@@ -32,10 +32,14 @@ class CollectNewBuildsTask extends DefaultTask {
 				}
 			}
 
-			checkMaxTimeBetweenBuilds(definition)
+			checkMaxTimeBetweenBuilds(definition, builds, minTime)
 
-			if (builds.size() == 0) {
-				log("No unprocessed builds since $minTime", definition)
+			if (builds.isEmpty()) {
+				if(minTime.minusMillis(1) == Instant.EPOCH) {
+					warn("No builds found for '$definition.name` which match the provided branch mapping")
+				} else {
+					log("No unprocessed builds since $minTime", definition)
+				}
 			} else {
 				log("Found ${builds.size()} unprocessed build(s)", definition)
 				definition.getBuilds().addAll(builds)
@@ -50,15 +54,22 @@ class CollectNewBuildsTask extends DefaultTask {
 	 * This check needs to run even if unprocessed builds could be found, because the release tests uploads
 	 * must always check the latest build even if it has already been processed.
 	 */
-	protected static void checkMaxTimeBetweenBuilds(Definition definition) {
+	protected static void checkMaxTimeBetweenBuilds(Definition definition, List<Build> builds, Instant lastProcessed) {
 		if(!definition.lastCompletedTime) {
 			return
 		}
 
+		def lastBuildTime = lastProcessed
+		if(builds.size() > 0) {
+			lastBuildTime = builds.finishTime.max()
+		} else if(lastProcessed.minusMillis(1) == Instant.EPOCH) {
+			return
+		}
+
 		int daysBeforeWarning = definition.options.maxDaysBetweenBuilds
-		long daysAfterLastBuild = Duration.between(definition.lastCompletedTime, Instant.now()).toDays()
+		long daysAfterLastBuild = Duration.between(lastBuildTime, Instant.now()).toDays()
 		if (daysAfterLastBuild > daysBeforeWarning) {
-			warn("Last build for '$definition.name' was executed $daysAfterLastBuild " +
+			warn("Last processable build for '$definition.name' was executed $daysAfterLastBuild " +
 				"days ago (max: $daysBeforeWarning)!")
 		}
 	}

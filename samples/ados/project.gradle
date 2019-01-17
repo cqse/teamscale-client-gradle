@@ -1,6 +1,14 @@
 apply plugin: "com.teamscale.gradle"
 
 teamscale {
+	debug {
+		// Prevents any upload to teamscale. For the tasks, every upload seems to be successful
+		disableTeamscaleUploads()
+
+		// Disable the reading and writing of the cache for ADOS tasks
+		disableCache()
+	}
+
 	server {
 		url = "url"
 		username = "user"
