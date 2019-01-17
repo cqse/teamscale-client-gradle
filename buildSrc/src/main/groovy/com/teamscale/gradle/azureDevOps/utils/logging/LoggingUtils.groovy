@@ -23,13 +23,10 @@ class LoggingUtils {
 		return "$info$message"
 	}
 
-	static void warn(String message, Definition definition = null, Build build = null) {
+	static void warn(String message) {
 		String prefix = "[WARN]"
-		if (!definition && !build) {
-			prefix += " "
-		}
 
-		println prefix + createMessage(message, definition, build)
+		println prefix + createMessage(message, null, null)
 	}
 
 	static void log(String message, Definition definition = null, Build build = null) {
