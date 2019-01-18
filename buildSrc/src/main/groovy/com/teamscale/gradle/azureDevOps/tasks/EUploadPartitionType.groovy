@@ -5,7 +5,8 @@ enum EUploadPartitionType {
 	BUILD_FINDINGS("Build Findings"),
 	TEST_RESULTS("Test Results"),
 	TEST_COVERAGE("Test Coverage"),
-	RELEASE_TEST_RESULTS("Release Test Results")
+	RELEASE_TEST_RESULTS("Release Test Results"),
+	BUILD_REPORT("Metrics")
 
 	String content
 

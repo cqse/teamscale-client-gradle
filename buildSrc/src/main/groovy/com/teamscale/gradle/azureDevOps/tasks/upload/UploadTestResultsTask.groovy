@@ -1,12 +1,13 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.upload
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static EBuildInformationType.TEST_RESULT
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadTestResultsTask extends UploadTask {
@@ -24,7 +25,7 @@ class UploadTestResultsTask extends UploadTask {
 
 	@Override
 	EBuildInformationType getUploadType() {
-		return TEST_RESULT
+		return EBuildInformationType.TEST_RESULT
 	}
 
 	@Override

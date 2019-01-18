@@ -1,15 +1,17 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.upload
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.teamscale.StandardQueryParameter
+import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
-import static com.teamscale.gradle.teamscale.TeamscaleClient.UPLOAD_SUCCESS_RETURN
 
 /**
  * Superclass for tasks which are based on the processing of a single build
@@ -119,7 +121,7 @@ abstract class UploadTask extends DefaultTask {
 	 * the given message will be logged.
 	 */
 	protected void processUploadResult(Definition definition, Build build, String result, String successMessage) {
-		if (result == UPLOAD_SUCCESS_RETURN) {
+		if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
 			log(successMessage, definition, build)
 			setBuildAsProcessed(definition, build)
 		} else {

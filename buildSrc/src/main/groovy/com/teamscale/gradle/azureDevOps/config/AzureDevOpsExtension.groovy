@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps.config
 
 import com.teamscale.gradle.azureDevOps.data.Definition
-import com.teamscale.gradle.azureDevOps.tasks.Cache
+import com.teamscale.gradle.azureDevOps.utils.Cache
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 

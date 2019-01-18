@@ -14,7 +14,7 @@ class AdosUtils {
 	static List<File> getFilesFromBuildArtifact(Definition definition, Build build, ReportLocationMatcher options) {
 		List<File> coverageFiles = new ArrayList<>()
 
-		if(!options.mustSearchInArtifact()) {
+		if (!options.mustSearchInArtifact()) {
 			return coverageFiles
 		}
 		List<Object> artifacts = definition.http.getArtifacts(build.id).findAll { artifact ->

@@ -21,7 +21,11 @@ class StandardQueryParameter {
 		}
 	}
 
-	void appendToMessage(String append) {
-		this.message += ": $append"
+	void appendToMessage(String toAppend) {
+		this.message += ": $toAppend"
+	}
+
+	void appendToPartition(String toAppend) {
+		this.partition += " $toAppend"
 	}
 }

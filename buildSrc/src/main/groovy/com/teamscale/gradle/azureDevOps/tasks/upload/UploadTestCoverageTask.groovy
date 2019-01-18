@@ -1,14 +1,15 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.upload
 
 import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static EBuildInformationType.TEST_COVERAGE
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 /**
@@ -19,7 +20,7 @@ class UploadTestCoverageTask extends UploadTask {
 
 	@Override
 	EBuildInformationType getUploadType() {
-		return TEST_COVERAGE
+		return EBuildInformationType.TEST_COVERAGE
 	}
 
 	@Override

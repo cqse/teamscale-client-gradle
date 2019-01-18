@@ -1,7 +1,8 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.utils
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 

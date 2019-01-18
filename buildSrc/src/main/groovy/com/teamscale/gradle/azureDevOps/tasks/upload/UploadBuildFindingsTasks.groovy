@@ -1,11 +1,13 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.upload
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 import com.teamscale.gradle.teamscale.TeamscaleFinding
 
+import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD_FINDINGS
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadBuildFindingsTasks extends UploadTask {
@@ -34,7 +36,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 		Set<TeamscaleFinding> findings = parseFindingsFromLogs(matchedLogs, definition, build)
 
 		// Upload findings
-		def params = getStandardQueryParameters(EUploadPartitionType.BUILD_FINDINGS, definition, build)
+		def params = getStandardQueryParameters(BUILD_FINDINGS, definition, build)
 
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		def result = http.uploadExternalFindings(params, new ArrayList<>(findings))

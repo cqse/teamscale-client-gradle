@@ -2,14 +2,21 @@ package com.teamscale.gradle
 
 import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.config.DebugOptions
-import com.teamscale.gradle.azureDevOps.tasks.*
+import com.teamscale.gradle.azureDevOps.tasks.CollectBuildDefinitionsTask
+import com.teamscale.gradle.azureDevOps.tasks.CollectNewBuildsTask
+import com.teamscale.gradle.azureDevOps.tasks.upload.UploadBuildFindingsTasks
+import com.teamscale.gradle.azureDevOps.tasks.upload.UploadBuildStatusTask
+import com.teamscale.gradle.azureDevOps.tasks.upload.UploadExternalReportsTask
+import com.teamscale.gradle.azureDevOps.tasks.upload.UploadReleaseTestResultsTasks
+import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTestCoverageTask
+import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTestResultsTask
 import com.teamscale.gradle.azureDevOps.utils.logging.CustomTaskLogger
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 
-import static com.teamscale.gradle.azureDevOps.tasks.UploadTask.TASK_GROUP
+import static com.teamscale.gradle.azureDevOps.tasks.upload.UploadTask.TASK_GROUP
 
 class TeamscalePlugin implements Plugin<Project> {
 	@Override
@@ -33,6 +40,7 @@ class TeamscalePlugin implements Plugin<Project> {
 		uploadTasks.add(createTask(project, UploadTestCoverageTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(createTask(project, UploadExternalReportsTask, TASK_GROUP, collectNewBuilds))
 		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).group(TASK_GROUP)
 
 		project.afterEvaluate {

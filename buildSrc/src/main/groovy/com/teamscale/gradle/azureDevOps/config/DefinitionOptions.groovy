@@ -20,6 +20,8 @@ class DefinitionOptions {
 
 	String partition
 
+	List<ReportConfig> reports = new ArrayList<>()
+
 	/** Maximum number of days  */
 	int maxDaysBetweenBuilds = 30
 
@@ -56,5 +58,10 @@ class DefinitionOptions {
 
 		def logAnalyzerType = ELogAnalyzerType.valueOf(type)
 		logAnalyzer = LogAnalyzerFactory.getLogAnalyzer(logAnalyzerType)
+	}
+
+	/** Define the location and type of a report which should be uploaded */
+	def report(String type, String pathPattern, String artifactPattern, String partition = null) {
+		reports.add(new ReportConfig(type, pathPattern, artifactPattern, partition))
 	}
 }

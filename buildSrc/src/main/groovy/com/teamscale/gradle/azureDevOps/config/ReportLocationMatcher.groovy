@@ -30,11 +30,11 @@ class ReportLocationMatcher {
 
 	@Override
 	String toString() {
-		String string = "type: $type, path-pattern: $pathPattern"
+		String string = "[type: $type, path-pattern: $pathPattern"
 		if(artifactPattern) {
 			string += ", artifact-pattern: $artifactPattern"
 		}
-		return string
+		return string + "]"
 	}
 
 	ReportLocationMatcher(String type, String pathPattern, String artifactPattern = null) {

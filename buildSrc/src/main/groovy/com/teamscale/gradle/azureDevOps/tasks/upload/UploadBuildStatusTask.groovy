@@ -1,7 +1,8 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.upload
 
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.EAssessment
@@ -9,7 +10,6 @@ import com.teamscale.gradle.teamscale.NonCodeMetric
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static EBuildInformationType.BUILD_STATUS
 import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD
 import static com.teamscale.gradle.teamscale.EAssessment.*
 
@@ -18,7 +18,7 @@ class UploadBuildStatusTask extends UploadTask {
 
 	@Override
 	EBuildInformationType getUploadType() {
-		return BUILD_STATUS
+		return EBuildInformationType.BUILD_STATUS
 	}
 
 	@Override
