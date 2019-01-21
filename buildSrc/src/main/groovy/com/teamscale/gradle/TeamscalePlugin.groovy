@@ -12,6 +12,7 @@ import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTestCoverageTask
 import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTestResultsTask
 import com.teamscale.gradle.azureDevOps.utils.logging.CustomTaskLogger
 import com.teamscale.gradle.teamscale.TeamscaleExtension
+import com.teamscale.gradle.teamscale.tasks.helper.MuteTestSuccessMetric
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -19,6 +20,8 @@ import org.gradle.api.Task
 import static com.teamscale.gradle.azureDevOps.tasks.upload.UploadTask.TASK_GROUP
 
 class TeamscalePlugin implements Plugin<Project> {
+	public static final String HELPER_TASKS = "Teamscale Helper"
+
 	@Override
 	void apply(Project project) {
 		project.getGradle().useLogger(new CustomTaskLogger())
@@ -31,6 +34,15 @@ class TeamscalePlugin implements Plugin<Project> {
 	}
 
 	static createAzureDevOpsTasks(Project project) {
+		createUploadTasks(project)
+		createHelperTasks(project)
+
+		project.afterEvaluate {
+			checkConfig(project)
+		}
+	}
+
+	static void createUploadTasks(Project project) {
 		def collectDefinitions = createTask(project, CollectBuildDefinitionsTask)
 		def collectNewBuilds = createTask(project, CollectNewBuildsTask, null, collectDefinitions)
 
@@ -41,11 +53,11 @@ class TeamscalePlugin implements Plugin<Project> {
 		uploadTasks.add(createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(createTask(project, UploadExternalReportsTask, TASK_GROUP, collectNewBuilds))
-		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).group(TASK_GROUP)
+		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
+	}
 
-		project.afterEvaluate {
-			checkConfig(project)
-		}
+	static void createHelperTasks(Project project) {
+		project.tasks.create(MuteTestSuccessMetric.TASK_NAME, MuteTestSuccessMetric).setGroup(HELPER_TASKS)
 	}
 
 	/** Assert that obligatory settings have been set */

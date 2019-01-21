@@ -14,7 +14,7 @@ import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD
 import static com.teamscale.gradle.teamscale.EAssessment.*
 
 class UploadBuildStatusTask extends UploadTask {
-	final static String NAME = "uploadBuildStatus"
+	final static String NAME = "uploadNonCodeMetrics"
 
 	@Override
 	EBuildInformationType getUploadType() {
@@ -28,7 +28,7 @@ class UploadBuildStatusTask extends UploadTask {
 		queryParams.appendToMessage(nonCodeMetric.content)
 
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
-		String result = http.uploadBuildStatus(queryParams, [nonCodeMetric])
+		String result = http.uploadNonCodeMetrics(queryParams, [nonCodeMetric])
 
 		processUploadResult(definition, build, result, result)
 	}

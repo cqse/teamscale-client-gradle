@@ -63,7 +63,7 @@ class TeamscaleClient extends HttpClient {
 	}
 
 	/** Uploads the given build's result */
-	String uploadBuildStatus(StandardQueryParameter standard, List<NonCodeMetric> metrics) {
+	String uploadNonCodeMetrics(StandardQueryParameter standard, List<NonCodeMetric> metrics) {
 		def query = standard.asMap() + ["skip-session": "true"]
 
 		def setBody = { request ->
@@ -80,11 +80,6 @@ class TeamscaleClient extends HttpClient {
 	 */
 	String uploadExternalReports(StandardQueryParameter standard, List<String> reports, String type,
 								 Map<String, String> optionalParameter = [:]) {
-		if (reports.size() == 0) {
-			// TODO: What should happen if no reports are given for the upload?
-			return "success"
-		}
-
 		def query = standard.asMap() + ["format": type] + optionalParameter
 
 		def setRequest = { request ->
@@ -116,5 +111,15 @@ class TeamscaleClient extends HttpClient {
 		}
 
 		return doCall("put", path, query, setRequest)
+	}
+
+	List getExternalUploads() {
+		def path = ["external-result-upload"]
+
+		def setRequest = { request ->
+			request.accept = "application/json"
+		}
+
+		return doCall("get", path, [:], setRequest) as List
 	}
 }
