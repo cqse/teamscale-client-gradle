@@ -34,7 +34,7 @@ class MuteTestSuccessMetric extends DefaultTask {
 		})
 
 		partitions.each { partition ->
-			LoggingUtils.log("Muting the test success metric for partition [$partition]")
+			LoggingUtils.log("Muting the test success metric for $project.name and partition [$partition]")
 
 			def standard = new StandardQueryParameter(partition: partition, message: "Mute",
 				t: System.currentTimeMillis().toString())
