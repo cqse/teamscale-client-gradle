@@ -34,10 +34,18 @@ class TeamscalePlugin implements Plugin<Project> {
 	}
 
 	static createAzureDevOpsTasks(Project project) {
-		createUploadTasks(project)
-		createHelperTasks(project)
 
 		project.afterEvaluate {
+			TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
+
+			// Only create the tasks for real projects
+			if(!teamscale?.config?.project) {
+				return
+			}
+
+			createUploadTasks(project)
+			createHelperTasks(project)
+
 			checkConfig(project)
 		}
 	}
