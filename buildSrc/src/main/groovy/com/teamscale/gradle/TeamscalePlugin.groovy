@@ -4,15 +4,11 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.config.DebugOptions
 import com.teamscale.gradle.azureDevOps.tasks.CollectBuildDefinitionsTask
 import com.teamscale.gradle.azureDevOps.tasks.CollectNewBuildsTask
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadBuildFindingsTasks
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadBuildStatusTask
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadExternalReportsTask
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadReleaseTestResultsTasks
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTestCoverageTask
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTestResultsTask
+import com.teamscale.gradle.azureDevOps.tasks.upload.*
 import com.teamscale.gradle.azureDevOps.utils.logging.CustomTaskLogger
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 import com.teamscale.gradle.teamscale.tasks.helper.MuteTestSuccessMetric
+import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -39,7 +35,7 @@ class TeamscalePlugin implements Plugin<Project> {
 			TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
 
 			// Only create the tasks for real projects
-			if(!teamscale?.config?.project) {
+			if (!teamscale?.config?.project) {
 				return
 			}
 
@@ -80,8 +76,8 @@ class TeamscalePlugin implements Plugin<Project> {
 	 * Create a task for the project.
 	 * Optional parameters can set a group and dependencies to other tasks
 	 */
-	static createTask(Project project, Class cls, String group = null, Object... dependsOn) {
-		Task task = project.tasks.create((String) cls.NAME, cls)
+	static createTask(Project project, Class<DefaultTask> cls, String group = null, Object... dependsOn) {
+		Task task = project.tasks.create((String) cls.TASK_NAME, cls)
 		if (dependsOn) {
 			task.dependsOn(dependsOn)
 		}

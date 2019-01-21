@@ -7,11 +7,10 @@ import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 import com.teamscale.gradle.teamscale.TeamscaleFinding
 
-import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD_FINDINGS
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadBuildFindingsTasks extends UploadTask {
-	static final String NAME = "uploadBuildFindings"
+	static final String TASK_NAME = "uploadBuildFindings"
 
 	/** Maximum number of lines of a log which will be downloaded at once */
 	static final Integer MAX_LOG_LINES = 10000
@@ -36,7 +35,7 @@ class UploadBuildFindingsTasks extends UploadTask {
 		Set<TeamscaleFinding> findings = parseFindingsFromLogs(matchedLogs, definition, build)
 
 		// Upload findings
-		def params = getStandardQueryParameters(BUILD_FINDINGS, definition, build)
+		def params = getStandardQueryParameters(definition, build)
 
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 		def result = http.uploadExternalFindings(params, new ArrayList<>(findings))
@@ -109,6 +108,11 @@ class UploadBuildFindingsTasks extends UploadTask {
 		def logAnalyzerDefined = definition.options.logAnalyzer != null
 
 		return patternDefined && logAnalyzerDefined
+	}
+
+	@Override
+	protected String getDefaultPartitionPart() {
+		return "Build Findings"
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
@@ -16,7 +15,7 @@ import static com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType.RELEA
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadReleaseTestResultsTasks extends UploadTask {
-	static final String NAME = "uploadReleaseTestResults"
+	static final String TASK_NAME = "uploadReleaseTestResults"
 
 	@Override
 	String getRejectReason() {
@@ -69,7 +68,7 @@ class UploadReleaseTestResultsTasks extends UploadTask {
 			build.setLatestProcessedReleaseTest(Instant.parse((String) testRuns.completedDate.min()))
 
 			// get parameters
-			def standard = getStandardQueryParameters(EUploadPartitionType.RELEASE_TEST_RESULTS, definition, build)
+			def standard = getStandardQueryParameters(definition, build, options)
 			def type = options.type.toString()
 			List<String> contents = testResults.collect { it.text }
 
@@ -114,5 +113,10 @@ class UploadReleaseTestResultsTasks extends UploadTask {
 	@Override
 	protected boolean isConfiguredForTask(Definition definition) {
 		return definition.options.tests && definition.options.tests.releaseResultOptions
+	}
+
+	@Override
+	protected String getDefaultPartitionPart() {
+		return "Release Test Results"
 	}
 }

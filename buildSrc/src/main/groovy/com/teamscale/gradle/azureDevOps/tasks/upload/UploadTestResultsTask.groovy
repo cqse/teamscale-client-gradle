@@ -3,7 +3,6 @@ package com.teamscale.gradle.azureDevOps.tasks.upload
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
@@ -11,11 +10,16 @@ import com.teamscale.gradle.teamscale.TeamscaleExtension
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadTestResultsTask extends UploadTask {
-	final static String NAME = "uploadTestResults"
+	final static String TASK_NAME = "uploadTestResults"
 
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
 		return (definition.options.tests != null && definition.options.tests.resultOptions)
+	}
+
+	@Override
+	protected String getDefaultPartitionPart() {
+		return "Test Results"
 	}
 
 	@Override
@@ -47,7 +51,7 @@ class UploadTestResultsTask extends UploadTask {
 		}
 
 		// upload to teamscale
-		def standard = getStandardQueryParameters(EUploadPartitionType.TEST_RESULTS, definition, build)
+		def standard = getStandardQueryParameters(definition, build, options)
 		def type = options.type.toString()
 		def contents = testResults.collect { it.text }
 

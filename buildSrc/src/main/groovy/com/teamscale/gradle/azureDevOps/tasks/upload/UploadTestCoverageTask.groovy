@@ -4,7 +4,6 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
 import com.teamscale.gradle.teamscale.TeamscaleClient
@@ -16,7 +15,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
  * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
  */
 class UploadTestCoverageTask extends UploadTask {
-	final static String NAME = "uploadTestCoverage"
+	final static String TASK_NAME = "uploadTestCoverage"
 
 	@Override
 	EBuildInformationType getUploadType() {
@@ -50,7 +49,7 @@ class UploadTestCoverageTask extends UploadTask {
 		List<String> contents = convertCoverage(coverageFiles, type)
 
 		// upload to teamscale
-		def standard = getStandardQueryParameters(EUploadPartitionType.TEST_COVERAGE, definition, build)
+		def standard = getStandardQueryParameters(definition, build, coverageOptions)
 		standard.appendToMessage(type)
 
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
@@ -91,6 +90,11 @@ class UploadTestCoverageTask extends UploadTask {
 	@Override
 	boolean isConfiguredForTask(Definition definition) {
 		return definition.options.tests && definition.options.tests.coverageOptions
+	}
+
+	@Override
+	protected String getDefaultPartitionPart() {
+		return "Test Coverage"
 	}
 
 	@Override

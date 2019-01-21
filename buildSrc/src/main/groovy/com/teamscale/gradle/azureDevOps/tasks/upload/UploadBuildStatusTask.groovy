@@ -10,11 +10,10 @@ import com.teamscale.gradle.teamscale.NonCodeMetric
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
-import static com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType.BUILD
 import static com.teamscale.gradle.teamscale.EAssessment.*
 
 class UploadBuildStatusTask extends UploadTask {
-	final static String NAME = "uploadNonCodeMetrics"
+	final static String TASK_NAME = "uploadNonCodeMetrics"
 
 	@Override
 	EBuildInformationType getUploadType() {
@@ -23,7 +22,7 @@ class UploadBuildStatusTask extends UploadTask {
 
 	@Override
 	void run(Definition definition, Build build) {
-		def queryParams = getStandardQueryParameters(BUILD, definition, build)
+		def queryParams = getStandardQueryParameters(definition, build)
 		def nonCodeMetric = getNonCodeMetric(definition, build)
 		queryParams.appendToMessage(nonCodeMetric.content)
 
@@ -66,6 +65,11 @@ class UploadBuildStatusTask extends UploadTask {
 	boolean isConfiguredForTask(Definition definition) {
 		// Build Status is always uploaded
 		return true
+	}
+
+	@Override
+	protected String getDefaultPartitionPart() {
+		return "Build"
 	}
 
 	@Override

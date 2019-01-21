@@ -1,10 +1,9 @@
 package com.teamscale.gradle.azureDevOps.tasks.upload
 
-import com.teamscale.gradle.azureDevOps.config.ReportConfig
+import com.teamscale.gradle.azureDevOps.config.ReportLocationConfig
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 
@@ -12,7 +11,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadExternalReportsTask extends UploadTask {
-	static final String NAME = "uploadBuildReports"
+	static final String TASK_NAME = "uploadBuildReports"
 
 	@Override
 	String getRejectReason() {
@@ -26,7 +25,7 @@ class UploadExternalReportsTask extends UploadTask {
 
 	@Override
 	void run(Definition definition, Build build) {
-		List<ReportConfig> reports = definition.options.reports
+		List<ReportLocationConfig> reports = definition.options.reports
 
 		def processedReports = []
 
@@ -39,7 +38,7 @@ class UploadExternalReportsTask extends UploadTask {
 					return
 				}
 
-				def standard = getStandardQueryParameters(EUploadPartitionType.BUILD_REPORT, definition, build)
+				def standard = getStandardQueryParameters(definition, build, options)
 				def type = options.type.toString()
 				def contents = files.text
 
@@ -60,5 +59,10 @@ class UploadExternalReportsTask extends UploadTask {
 	@Override
 	protected boolean isConfiguredForTask(Definition definition) {
 		return !definition.options.reports.isEmpty()
+	}
+
+	@Override
+	protected String getDefaultPartitionPart() {
+		return "Metrics"
 	}
 }

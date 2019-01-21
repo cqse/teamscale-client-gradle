@@ -3,7 +3,6 @@ package com.teamscale.gradle.azureDevOps.tasks
 import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
-import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTask
 import com.teamscale.gradle.teamscale.TeamscaleExtension
 import org.gradle.api.DefaultTask
@@ -16,7 +15,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class CollectNewBuildsTask extends DefaultTask {
-	static String NAME = "collectNewBuilds"
+	static String TASK_NAME = "collectNewBuilds"
 
 	@TaskAction
 	def collect() {
@@ -37,7 +36,7 @@ class CollectNewBuildsTask extends DefaultTask {
 			checkMaxTimeBetweenBuilds(definition, builds, minTime)
 
 			if (builds.isEmpty()) {
-				if(minTime.minusMillis(1) == Instant.EPOCH) {
+				if (minTime.minusMillis(1) == Instant.EPOCH) {
 					warn("No builds found for [$definition.name] which match the provided branch mapping")
 				} else {
 					log("No unprocessed builds since $minTime", definition)
@@ -57,14 +56,14 @@ class CollectNewBuildsTask extends DefaultTask {
 	 * must always check the latest build even if it has already been processed.
 	 */
 	protected static void checkMaxTimeBetweenBuilds(Definition definition, List<Build> builds, Instant lastProcessed) {
-		if(!definition.lastCompletedTime) {
+		if (!definition.lastCompletedTime) {
 			return
 		}
 
 		def lastBuildTime = lastProcessed
-		if(builds.size() > 0) {
+		if (builds.size() > 0) {
 			lastBuildTime = builds.finishTime.max()
-		} else if(lastProcessed.minusMillis(1) == Instant.EPOCH) {
+		} else if (lastProcessed.minusMillis(1) == Instant.EPOCH) {
 			return
 		}
 

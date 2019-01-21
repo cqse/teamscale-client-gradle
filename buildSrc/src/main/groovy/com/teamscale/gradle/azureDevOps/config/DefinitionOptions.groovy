@@ -20,7 +20,7 @@ class DefinitionOptions {
 
 	String partition
 
-	List<ReportConfig> reports = new ArrayList<>()
+	List<ReportLocationConfig> reports = new ArrayList<>()
 
 	/** Maximum number of days  */
 	int maxDaysBetweenBuilds = 30
@@ -62,6 +62,10 @@ class DefinitionOptions {
 
 	/** Define the location and type of a report which should be uploaded */
 	def report(String type, String pathPattern, String artifactPattern, String partition = null) {
-		reports.add(new ReportConfig(type, pathPattern, artifactPattern, partition))
+		if(partition == null) {
+			partition = "($type)"
+		}
+
+		reports.add(new ReportLocationConfig(type, pathPattern, artifactPattern, partition))
 	}
 }

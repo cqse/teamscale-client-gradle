@@ -4,11 +4,12 @@ import com.teamscale.gradle.azureDevOps.utils.BuildUtils
 
 import java.util.regex.Pattern
 
-/**
- * Provides the config and methods for matching the location of a report which is either simply defined
- * by a file name or located inside of an artifact.
- */
-class ReportLocationMatcher {
+class ReportLocationConfig {
+	/**
+	 * The partition the report will be uploaded to.
+	 */
+	final String partition
+
 	/**
 	 * The report type which must match any of the EReportTypeFormat in teamscale.
 	 * If not, the upload of the report will fail.
@@ -28,17 +29,10 @@ class ReportLocationMatcher {
 	 */
 	Pattern artifactPattern = null
 
-	@Override
-	String toString() {
-		String string = "[type: $type, path-pattern: $pathPattern"
-		if(artifactPattern) {
-			string += ", artifact-pattern: $artifactPattern"
-		}
-		return string + "]"
-	}
-
-	ReportLocationMatcher(String type, String pathPattern, String artifactPattern = null) {
+	ReportLocationConfig(String type, String pathPattern, String artifactPattern = null, String partition = null) {
 		this.type = type
+		this.partition = partition
+
 		this.pathPattern = BuildUtils.getPatternFromRegexOrAntGlobbing(pathPattern)
 		checkPattern(this.pathPattern)
 
@@ -46,6 +40,19 @@ class ReportLocationMatcher {
 			this.artifactPattern = BuildUtils.getPatternFromRegexOrAntGlobbing(artifactPattern)
 			checkPattern(this.artifactPattern)
 		}
+	}
+
+	@Override
+	String toString() {
+		String string = "[type: $type, path-pattern: $pathPattern, partition: $partition"
+		if(artifactPattern) {
+			string += ", artifact-pattern: $artifactPattern"
+		}
+
+		if(partition) {
+			string += ", partition: $partition"
+		}
+		return string + "]"
 	}
 
 	private static void checkPattern(Pattern pattern) {

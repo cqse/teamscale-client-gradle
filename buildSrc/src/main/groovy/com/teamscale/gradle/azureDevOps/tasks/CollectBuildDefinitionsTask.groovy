@@ -12,7 +12,7 @@ import org.gradle.api.tasks.TaskAction
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class CollectBuildDefinitionsTask extends DefaultTask {
-	static String NAME = "collectBuildDefinitions"
+	static String TASK_NAME = "collectBuildDefinitions"
 
 	@TaskAction
 	void collect() {

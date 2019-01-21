@@ -1,9 +1,9 @@
 package com.teamscale.gradle.azureDevOps.tasks.upload
 
+import com.teamscale.gradle.azureDevOps.config.ReportLocationConfig
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.tasks.EUploadPartitionType
 import com.teamscale.gradle.teamscale.StandardQueryParameter
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.TeamscaleExtension
@@ -78,6 +78,12 @@ abstract class UploadTask extends DefaultTask {
 	protected abstract boolean isConfiguredForTask(Definition definition)
 
 	/**
+	 * Return the default partition part for the upload task.
+	 * If the definition has a partition as well it will be appended
+	 */
+	protected abstract String getDefaultPartitionPart();
+
+	/**
 	 * Returns the value for the `t` parameter in every teamscale service call.
 	 * The value is determined by the given build. This includes the time when the build finished as well
 	 * as the target branch on the teamscale instance.
@@ -98,12 +104,29 @@ abstract class UploadTask extends DefaultTask {
 	/**
 	 * Create and return the standard parameters for the build.
 	 */
-	static StandardQueryParameter getStandardQueryParameters(EUploadPartitionType type, Definition definition, Build build) {
-		def partition = appendPartitionName(type.content, ":", definition)
+	StandardQueryParameter getStandardQueryParameters(Definition definition, Build build) {
+		getStandardQueryParameters(build, appendPartitionName(getDefaultPartitionPart(), ":", definition))
+	}
+
+	/**
+	 * Create and return the standard parameters for the build.
+	 */
+	StandardQueryParameter getStandardQueryParameters(Definition definition, Build build, ReportLocationConfig options) {
+		if (!options.partition) {
+			return getStandardQueryParameters(definition, build)
+		}
+		return getStandardQueryParameters(build, options.partition)
+	}
+
+	/**
+	 * Create and return the standard parameters for the build.
+	 */
+	static StandardQueryParameter getStandardQueryParameters(Build build, String partition) {
 		def message = String.format(UPLOAD_MESSAGE, partition)
 		def t = createRequestTimeParameter(build)
 		return new StandardQueryParameter(partition: partition, message: message, t: t)
 	}
+
 
 	/**
 	 * Modifies the given partition name by adding any optionally suffixes, which are
