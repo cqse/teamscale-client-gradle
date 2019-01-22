@@ -10,6 +10,10 @@
 			os.toString().trim()
 		}
 	}
+	
+## Get Assembly version of an assembly in Powershell
+
+https://stackoverflow.com/a/47523557/1396068
 
 ## Category traces based on subfolder structure, creates separate partition and disting message
 
