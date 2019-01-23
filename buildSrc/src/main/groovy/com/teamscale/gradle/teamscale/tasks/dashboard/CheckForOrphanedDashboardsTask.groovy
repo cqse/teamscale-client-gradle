@@ -6,6 +6,7 @@ import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 import static com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtils.getAllDashboards
 import static com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtils.getDashboard
@@ -31,6 +32,8 @@ class CheckForOrphanedDashboardsTask extends DefaultTask {
 
 			if (!projects.containsAll(shared)) {
 				warn("Dashboard [$dashboard.name] is not shared with any existing project: $shared")
+			} else {
+				log("Checking dashboard [$dashboard.name]: success")
 			}
 		}
 	}
