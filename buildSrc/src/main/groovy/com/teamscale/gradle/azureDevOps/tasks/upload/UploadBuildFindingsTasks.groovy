@@ -4,8 +4,8 @@ import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.teamscale.TeamscaleClient
-import com.teamscale.gradle.teamscale.TeamscaleExtension
-import com.teamscale.gradle.teamscale.TeamscaleFinding
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 

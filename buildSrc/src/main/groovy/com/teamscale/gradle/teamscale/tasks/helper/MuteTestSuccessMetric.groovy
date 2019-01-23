@@ -1,9 +1,9 @@
 package com.teamscale.gradle.teamscale.tasks.helper
 
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
-import com.teamscale.gradle.teamscale.StandardQueryParameter
+import com.teamscale.gradle.teamscale.data.StandardQueryParameter
 import com.teamscale.gradle.teamscale.TeamscaleClient
-import com.teamscale.gradle.teamscale.TeamscaleExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 

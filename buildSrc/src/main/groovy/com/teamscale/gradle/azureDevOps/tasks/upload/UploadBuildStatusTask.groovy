@@ -5,12 +5,12 @@ import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
-import com.teamscale.gradle.teamscale.EAssessment
-import com.teamscale.gradle.teamscale.NonCodeMetric
+import com.teamscale.gradle.teamscale.data.EAssessment
+import com.teamscale.gradle.teamscale.data.NonCodeMetric
 import com.teamscale.gradle.teamscale.TeamscaleClient
-import com.teamscale.gradle.teamscale.TeamscaleExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
-import static com.teamscale.gradle.teamscale.EAssessment.*
+import static com.teamscale.gradle.teamscale.data.EAssessment.*
 
 class UploadBuildStatusTask extends UploadTask {
 	final static String TASK_NAME = "uploadNonCodeMetrics"

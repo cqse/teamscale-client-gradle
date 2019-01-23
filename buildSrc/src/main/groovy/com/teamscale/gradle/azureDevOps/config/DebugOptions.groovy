@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps.config
 
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
-import com.teamscale.gradle.teamscale.TeamscaleExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.Project
 
 class DebugOptions {

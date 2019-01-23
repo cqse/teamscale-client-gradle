@@ -6,7 +6,8 @@ import com.teamscale.gradle.azureDevOps.tasks.CollectBuildDefinitionsTask
 import com.teamscale.gradle.azureDevOps.tasks.CollectNewBuildsTask
 import com.teamscale.gradle.azureDevOps.tasks.upload.*
 import com.teamscale.gradle.azureDevOps.utils.logging.CustomTaskLogger
-import com.teamscale.gradle.teamscale.TeamscaleExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
+import com.teamscale.gradle.teamscale.tasks.dashboard.DashboardPlugin
 import com.teamscale.gradle.teamscale.tasks.helper.MuteTestSuccessMetric
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
@@ -41,6 +42,7 @@ class TeamscalePlugin implements Plugin<Project> {
 
 			createUploadTasks(project)
 			createHelperTasks(project)
+			DashboardPlugin.createTasks(project)
 
 			checkConfig(project)
 		}

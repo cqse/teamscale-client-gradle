@@ -1,5 +1,9 @@
 package com.teamscale.gradle.teamscale
 
+import com.teamscale.gradle.teamscale.data.NonCodeMetric
+import com.teamscale.gradle.teamscale.data.StandardQueryParameter
+import com.teamscale.gradle.teamscale.data.TeamscaleConfig
+import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 import groovyx.net.http.MultipartContent
 import groovyx.net.http.OkHttpBuilder
 import groovyx.net.http.OkHttpEncoders
@@ -17,6 +21,10 @@ class TeamscaleClient extends HttpClient {
 
 	/** The value which is returned when an upload to teamscale was successful */
 	static final String UPLOAD_SUCCESS_RETURN = "success"
+
+	static Closure acceptJson = { request ->
+		request.accept = "application/json"
+	}
 
 	TeamscaleClient(TeamscaleConfig server) {
 		super(createHttpClient(server))
@@ -50,17 +58,44 @@ class TeamscaleClient extends HttpClient {
 	/**
 	 * Makes an HTTP call to the teamscale server. Prepends any necessary prefix or subpath.
 	 */
-	protected Object doCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		List<String> path = ([prefix, "p", server.project] + service).findAll {
+	protected Object doCall(String method, List<String> service, Map<String, String> query, setRequest = {}, boolean projectCall = true) {
+		List<String> path = [prefix]
+		if(projectCall) {
+			path += ["p", server.project]
+		}
+
+		path = (path + service).findAll {
 			it != null
 		}
 
-		if (disableUpload) {
+		if (disableUpload && method in ["post", "put"]) {
 			return UPLOAD_SUCCESS_RETURN
 		}
 
 		return super.doCall(method, path, query, setRequest)
 	}
+
+	/**
+	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
+	 */
+	protected Object doProjectCall(String method, String service, Map<String, String> query, setRequest = {}) {
+		return doCall(method, [service], query, setRequest, true)
+	}
+
+	/**
+	 * Calls a global REST Api service call for teamscale.
+	 */
+	protected Object doGlobalCall(String method, String service, Map<String, String> query, setRequest = {}) {
+		return doGlobalCall(method, [service], query, setRequest)
+	}
+
+	/**
+	 * Calls a global REST Api service call for teamscale.
+	 */
+	protected Object doGlobalCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
+		return doCall(method, service, query, setRequest, false)
+	}
+
 
 	/** Uploads the given build's result */
 	String uploadNonCodeMetrics(StandardQueryParameter standard, List<NonCodeMetric> metrics) {
@@ -71,7 +106,7 @@ class TeamscaleClient extends HttpClient {
 			request.body = metrics
 		}
 
-		return doCall("put", ["add-non-code-metrics"], query, setBody)
+		return doProjectCall("put", "add-non-code-metrics", query, setBody)
 	}
 
 	/**
@@ -93,14 +128,13 @@ class TeamscaleClient extends HttpClient {
 			}
 		}
 
-		return doCall("post", ["external-report"], query, setRequest)
+		return doProjectCall("post", "external-report", query, setRequest)
 	}
 
 	/**
 	 * Uploads the given findings to teamscale.
 	 */
 	String uploadExternalFindings(StandardQueryParameter standard, List<TeamscaleFinding> findings) {
-		def path = ["add-external-findings"]
 		def query = standard.asMap() + ["skip-session": "true"]
 
 		def setRequest = { request ->
@@ -110,16 +144,14 @@ class TeamscaleClient extends HttpClient {
 			}
 		}
 
-		return doCall("put", path, query, setRequest)
+		return doProjectCall("put", "add-external-findings", query, setRequest)
 	}
 
 	List getExternalUploads() {
-		def path = ["external-result-upload"]
+		return doProjectCall("get", "external-result-upload", [:], acceptJson) as List
+	}
 
-		def setRequest = { request ->
-			request.accept = "application/json"
-		}
-
-		return doCall("get", path, [:], setRequest) as List
+	List<String> getAllProjects() {
+		return doGlobalCall("get", "projects", [:], acceptJson) as List
 	}
 }

@@ -1,7 +1,8 @@
-package com.teamscale.gradle.teamscale
+package com.teamscale.gradle.teamscale.data
 
 import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.config.DebugOptions
+import com.teamscale.gradle.teamscale.TeamscaleClient
 import org.gradle.api.Action
 import org.gradle.api.Project
 

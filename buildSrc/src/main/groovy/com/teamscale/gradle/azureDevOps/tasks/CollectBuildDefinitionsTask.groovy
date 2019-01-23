@@ -5,7 +5,7 @@ import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.config.OrganizationConfig
 import com.teamscale.gradle.azureDevOps.config.ProjectConfig
 import com.teamscale.gradle.azureDevOps.data.Definition
-import com.teamscale.gradle.teamscale.TeamscaleExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 

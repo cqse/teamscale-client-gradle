@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.utils.loganalyzer
 
-import com.teamscale.gradle.teamscale.TeamscaleFinding
+import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern

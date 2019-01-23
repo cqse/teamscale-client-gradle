@@ -1,4 +1,4 @@
-package com.teamscale.gradle.teamscale
+package com.teamscale.gradle.teamscale.data
 
 import groovy.transform.Canonical
 import groovy.transform.EqualsAndHashCode
