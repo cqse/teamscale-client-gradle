@@ -1,7 +1,8 @@
 apply from: "$rootDir/gradle/base-teamscale.gradle"
 
-import groovy.json.JsonSlurper
+
 import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 import groovy.transform.Canonical
 import groovy.xml.XmlUtil
 
@@ -110,7 +111,7 @@ def getProjectInfos(tool, dataPath) {
 		def teamscaleId = project[tool].teamscale.project.split("/").last()
 
 		def path = project[tool].teamscale.path.split("/") as List
-		path = path.subList(path.indexOf("code.html#") + 1, path.size()).join("/")
+		path = path.subList(path.indexOf("code.html#") + 2, path.size()).join("/")
 
 
 		def qualifiedName = project.name
@@ -118,7 +119,7 @@ def getProjectInfos(tool, dataPath) {
 		def qualityGoal = project[tool].qualityGoal
 		def profile = getProjectInfo(teamscaleId)?.profile?.text()
 
-		assert teamscaleId &&  qualifiedName && dashboardName && qualityGoal != null: "Insufficient data"
+		assert teamscaleId && qualifiedName && dashboardName && qualityGoal != null: "Insufficient data"
 
 		projectInfos.add(new ProjectInfo(teamscaleId, path, qualifiedName, dashboardName, qualityGoal, profile))
 	}
@@ -154,7 +155,7 @@ def downloadDashboard(name, saveTo = null) {
 
 		return result?.text
 	} finally {
-		if(!saveTo) {
+		if (!saveTo) {
 			file?.delete()
 		}
 	}
@@ -194,7 +195,7 @@ def uploadDashboard(dashboard, projectId) {
 /** Sets the sharing for the given dashboard */
 def setSharing(dashboard, projectInfo) {
 	dashboard.payload.projectAccessEntries.children().each { child ->
-		if(child.userOrGroup == DUMMY_PROJECT) {
+		if (child.userOrGroup == DUMMY_PROJECT) {
 			child.userOrGroup = projectInfo.id
 		}
 	}
@@ -220,7 +221,7 @@ def createDashboard(template, projectInfo) {
 	def json = new JsonSlurper().parseText(xml.payload.descriptorJSON.text())
 	json.widgets.each { widget ->
 		// Label Title
-		if(widget["widget-id"] == "label") {
+		if (widget["widget-id"] == "label") {
 			widget.Title = widget.Title
 				.replaceFirst(/<[^>]+>/, projectInfo.qualifiedName)
 				.replace("<QG>", projectInfo.qualityGoal as String)
@@ -229,13 +230,13 @@ def createDashboard(template, projectInfo) {
 		}
 
 		// Project paths
-		if(widget.Path) {
+		if (widget.Path) {
 			widget.Path.project = projectInfo.id
 			widget.Path.path = projectInfo.path
 		}
 
 		// Baselines
-		if(widget.Trend && widget.Trend.type == "BASELINE") {
+		if (widget.Trend && widget.Trend.type == "BASELINE") {
 			widget.Trend.value.project = projectInfo.id
 		}
 	}
@@ -249,7 +250,7 @@ def createDashboard(template, projectInfo) {
 task createUniformDashboardForAllProjects {
 	doLast {
 		def template = getDashboardTemplate()
-		if(!template) {
+		if (!template) {
 			return
 		}
 		def propertyInfos = getProjectInfos(TOOL, PORTFOLIO_DATA_PATH)
@@ -295,7 +296,7 @@ task backupAllDashboards {
 	doLast {
 		getDashboards().each { dashboard ->
 			def name = URLEncoder.encode(dashboard, "UTF-8")
-			new File("$rootDir/tmp/backup/").mkdirs()createMonthly
+			new File("$rootDir/tmp/backup/").mkdirs() createMonthly
 			downloadDashboard(dashboard, "tmp/backup/${name}.tsdashboard")
 		}
 	}
