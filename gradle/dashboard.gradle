@@ -230,7 +230,8 @@ def createDashboard(template, projectInfo) {
 
 		// Project paths
 		if(widget.Path) {
-			widget.Path.project = projectInfo.path
+			widget.Path.project = projectInfo.id
+			widget.Path.path = projectInfo.path
 		}
 
 		// Baselines
