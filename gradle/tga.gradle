@@ -345,7 +345,7 @@ task uploadTrace(dependsOn: collectTraces) {
 				
 				println "  -> $traces.size Traces: "
 				println "     .... $message"
-				println "     ... for timestamp $timestamp"
+				println "     ... for version $version"
 				println "     ... for bucket $key.bucket"
 				println "     ... to project $project"
 
@@ -364,6 +364,8 @@ task uploadTrace(dependsOn: collectTraces) {
 							request.uri.path = "/p/$project/dotnet-ephemeral-trace-upload"
 							request.contentType = 'multipart/form-data'
 							request.uri.query = [
+                                // the timestamp is ignored by the service but older versions of
+                                // Teamscale still require that one be given anyways
 								t: timestamp,
 								version: version,
 								adjusttimestamp: true,
