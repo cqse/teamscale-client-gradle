@@ -8,5 +8,4 @@ enum EBuildInformationType {
 	TEST_COVERAGE,
 	RELEASE_BUILD,
 	LAST_RELEASE
-
 }

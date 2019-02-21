@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks.upload
 
-import com.teamscale.gradle.azureDevOps.config.ReportLocationConfig
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
@@ -25,7 +25,7 @@ class UploadExternalReportsTask extends UploadTask {
 
 	@Override
 	void run(Definition definition, Build build) {
-		List<ReportLocationConfig> reports = definition.options.reports
+		List<ReportLocationMatcher> reports = definition.options.reports
 
 		def processedReports = []
 

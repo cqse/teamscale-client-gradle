@@ -1,10 +1,8 @@
-package com.teamscale.gradle.azureDevOps.config
-
-import com.teamscale.gradle.azureDevOps.utils.BuildUtils
+package com.teamscale.gradle.azureDevOps.utils
 
 import java.util.regex.Pattern
 
-class ReportLocationConfig {
+class ReportLocationMatcher {
 	/**
 	 * The partition the report will be uploaded to.
 	 */
@@ -29,7 +27,7 @@ class ReportLocationConfig {
 	 */
 	Pattern artifactPattern = null
 
-	ReportLocationConfig(String type, String pathPattern, String artifactPattern = null, String partition = null) {
+	ReportLocationMatcher(String type, String pathPattern, String artifactPattern = null, String partition = null) {
 		this.type = type
 		this.partition = partition
 
@@ -45,11 +43,11 @@ class ReportLocationConfig {
 	@Override
 	String toString() {
 		String string = "[type: $type, path-pattern: $pathPattern, partition: $partition"
-		if(artifactPattern) {
+		if (artifactPattern) {
 			string += ", artifact-pattern: $artifactPattern"
 		}
 
-		if(partition) {
+		if (partition) {
 			string += ", partition: $partition"
 		}
 		return string + "]"

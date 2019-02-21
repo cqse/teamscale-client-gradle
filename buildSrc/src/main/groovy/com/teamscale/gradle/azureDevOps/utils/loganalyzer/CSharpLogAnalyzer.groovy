@@ -20,8 +20,6 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 	TeamscaleFinding analyze(String logLine) {
 		Matcher matcher = COMBINED.matcher(logLine)
 		if (matcher.find()) {
-			// TODO: remove findings with the wrong file ending?
-
 			def filePath = matcher.group(1).replaceAll("\\\\", "/")
 			def line = matcher.group(2)
 			def findingId = matcher.group(3)

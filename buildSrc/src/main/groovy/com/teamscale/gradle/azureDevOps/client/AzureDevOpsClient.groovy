@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.client
 
-import com.teamscale.gradle.azureDevOps.config.Credentials
+import com.teamscale.gradle.azureDevOps.extensions.Credentials
 import com.teamscale.gradle.teamscale.HttpClient
 import groovyx.net.http.OkHttpBuilder
 import groovyx.net.http.optional.Download

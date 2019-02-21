@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
-import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.upload.UploadTask
@@ -19,7 +19,7 @@ class CollectNewBuildsTask extends DefaultTask {
 
 	@TaskAction
 	def collect() {
-		AzureDevOpsExtension ados = TeamscaleExtension.getFrom(project).azureDevOps
+		AzureDevOps ados = TeamscaleExtension.getFrom(project).azureDevOps
 
 		ados.definitions.each { Definition definition ->
 			def http = definition.getHttp()

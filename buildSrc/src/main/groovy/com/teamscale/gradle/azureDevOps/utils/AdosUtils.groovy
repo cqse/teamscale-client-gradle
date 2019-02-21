@@ -1,7 +1,6 @@
 package com.teamscale.gradle.azureDevOps.utils
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.config.ReportLocationConfig
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
@@ -11,7 +10,7 @@ class AdosUtils {
 	 * Downloads the all files matching the artifact- and file-pattern in the given options.
 	 * The artifactPattern in the given options must be set!
 	 */
-	static List<File> getFilesFromBuildArtifact(Definition definition, Build build, ReportLocationConfig options) {
+	static List<File> getFilesFromBuildArtifact(Definition definition, Build build, ReportLocationMatcher options) {
 		List<File> coverageFiles = new ArrayList<>()
 
 		if (!options.mustSearchInArtifact()) {
@@ -45,7 +44,7 @@ class AdosUtils {
 	/**
 	 * Downloads the files defined by the given options from the attachments of the test runs of the build.
 	 */
-	static List<File> getFilesFromTestRuns(Definition definition, Build build, ReportLocationConfig options) {
+	static List<File> getFilesFromTestRuns(Definition definition, Build build, ReportLocationMatcher options) {
 		// get test runs
 		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).findAll {
 			it.release == null // Ignore release test runs
@@ -57,7 +56,7 @@ class AdosUtils {
 	/**
 	 * Downloads the files defined by the given options from the attachments of the given test runs ids
 	 */
-	static List<File> getFilesFromTestRuns(AzureDevOpsClient http, ReportLocationConfig options, List<Integer> testRunsIds) {
+	static List<File> getFilesFromTestRuns(AzureDevOpsClient http, ReportLocationMatcher options, List<Integer> testRunsIds) {
 		// check if the test runs have attachments
 		List<String> attachmentUrls = testRunsIds.collect { http.getAttachmentsOfTestRun(it) }
 			.flatten().findAll { attachment ->

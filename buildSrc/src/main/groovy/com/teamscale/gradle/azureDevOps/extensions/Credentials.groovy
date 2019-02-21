@@ -1,4 +1,4 @@
-package com.teamscale.gradle.azureDevOps.config
+package com.teamscale.gradle.azureDevOps.extensions
 
 class Credentials {
 	String name

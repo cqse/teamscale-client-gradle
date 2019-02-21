@@ -1,4 +1,5 @@
-package com.teamscale.gradle.azureDevOps.config
+package com.teamscale.gradle.azureDevOps.extensions
+
 
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.utils.Cache
@@ -6,13 +7,13 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
 /**
- * Gradle extension for the config related to the Azure dev ops services (ADOS) build processing.
+ * Gradle extension for the extensions related to the Azure dev ops services (ADOS) build processing.
  */
-class AzureDevOpsExtension {
+class AzureDevOps {
 	public final static NAME = "azureDevOps"
 
 	/**
-	 * The configured definitions and its builds (named builds because it is more clear for the config)
+	 * The configured definitions and its builds (named builds because it is more clear for the extensions)
 	 */
 	NamedDomainObjectContainer<OrganizationConfig> builds
 
@@ -20,6 +21,11 @@ class AzureDevOpsExtension {
 	 * Credentials for the different organization
 	 */
 	NamedDomainObjectContainer<Credentials> credentials
+
+	/**
+	 * TODO
+	 */
+	XamlExtension xaml = new XamlExtension()
 
 	/**
 	 * The downloaded information about the configured definitions from ADOS.
@@ -43,7 +49,7 @@ class AzureDevOpsExtension {
 	 */
 	String codeCoverageExePath
 
-	AzureDevOpsExtension(project) {
+	AzureDevOps(project) {
 		builds = project.container(OrganizationConfig)
 		credentials = project.container(Credentials)
 		this.project = project
@@ -61,6 +67,12 @@ class AzureDevOpsExtension {
 	 */
 	def credentials(Closure closure) {
 		credentials.configure(closure)
+	}
+
+	def xaml(Closure closure) {
+		closure.delegate = xaml
+		closure.resolveStrategy = Closure.DELEGATE_ONLY
+		closure.run()
 	}
 
 	/**

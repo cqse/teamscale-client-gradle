@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks.upload
 
-import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
@@ -79,7 +79,7 @@ class UploadTestCoverageTask extends UploadTask {
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.codeCoverageExePath
 
 		assert path != null: "No code coverage exe given! In order to use VS_COVERAGE you need " +
-			"to provide a code coverage exe in ${AzureDevOpsExtension.NAME} with 'codeCoverageExe \"<path>\"'. " +
+			"to provide a code coverage exe in ${AzureDevOps.NAME} with 'codeCoverageExe \"<path>\"'. " +
 			"VS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
 
 		assert (new File(path)).exists(): "Code coverage exe at path $path does not exists"

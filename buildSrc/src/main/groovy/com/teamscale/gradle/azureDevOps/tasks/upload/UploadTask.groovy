@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks.upload
 
-import com.teamscale.gradle.azureDevOps.config.ReportLocationConfig
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.data.Build
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
@@ -111,7 +111,7 @@ abstract class UploadTask extends DefaultTask {
 	/**
 	 * Create and return the standard parameters for the build.
 	 */
-	StandardQueryParameter getStandardQueryParameters(Definition definition, Build build, ReportLocationConfig options) {
+	StandardQueryParameter getStandardQueryParameters(Definition definition, Build build, ReportLocationMatcher options) {
 		if (!options.partition) {
 			return getStandardQueryParameters(definition, build)
 		}

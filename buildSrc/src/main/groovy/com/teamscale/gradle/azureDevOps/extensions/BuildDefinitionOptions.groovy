@@ -1,6 +1,7 @@
-package com.teamscale.gradle.azureDevOps.config
+package com.teamscale.gradle.azureDevOps.extensions
 
 import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ELogAnalyzerType
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ILogAnalyzer
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
@@ -8,7 +9,7 @@ import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
-class DefinitionOptions {
+class BuildDefinitionOptions {
 	/** Name of the definition */
 	String name
 
@@ -20,7 +21,7 @@ class DefinitionOptions {
 
 	String partition
 
-	List<ReportLocationConfig> reports = new ArrayList<>()
+	List<ReportLocationMatcher> reports = new ArrayList<>()
 
 	/** Maximum number of days  */
 	int maxDaysBetweenBuilds = 30
@@ -31,7 +32,7 @@ class DefinitionOptions {
 	 */
 	ILogAnalyzer logAnalyzer
 
-	DefinitionOptions(String name) {
+	BuildDefinitionOptions(String name) {
 		this.name = name
 	}
 
@@ -66,6 +67,6 @@ class DefinitionOptions {
 			partition = "($type)"
 		}
 
-		reports.add(new ReportLocationConfig(type, pathPattern, artifactPattern, partition))
+		reports.add(new ReportLocationMatcher(type, pathPattern, artifactPattern, partition))
 	}
 }

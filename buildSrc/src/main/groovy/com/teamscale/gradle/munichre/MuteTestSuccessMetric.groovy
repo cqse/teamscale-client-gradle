@@ -1,4 +1,4 @@
-package com.teamscale.gradle.teamscale.tasks.helper
+package com.teamscale.gradle.munichre
 
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.StandardQueryParameter

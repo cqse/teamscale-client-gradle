@@ -1,4 +1,4 @@
-package com.teamscale.gradle.azureDevOps.config
+package com.teamscale.gradle.azureDevOps.extensions
 
 /**
  * You can have a gradle DSL container were the contents of the form `<name> {}`

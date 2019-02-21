@@ -1,9 +1,9 @@
 package com.teamscale.gradle.azureDevOps.tasks
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.config.AzureDevOpsExtension
-import com.teamscale.gradle.azureDevOps.config.OrganizationConfig
-import com.teamscale.gradle.azureDevOps.config.ProjectConfig
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
+import com.teamscale.gradle.azureDevOps.extensions.OrganizationConfig
+import com.teamscale.gradle.azureDevOps.extensions.ProjectConfig
 import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
@@ -16,7 +16,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 
 	@TaskAction
 	void collect() {
-		AzureDevOpsExtension azureDevOps = TeamscaleExtension.getFrom(project).azureDevOps
+		AzureDevOps azureDevOps = TeamscaleExtension.getFrom(project).azureDevOps
 
 		azureDevOps.builds.each { OrganizationConfig organization ->
 			def credentials = azureDevOps.credentials[organization.name]
@@ -59,7 +59,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 						assert definition.options.partition: "The project '$projectConfig.name' " +
 							"has ${definitions.size()} definitions, but there is no partition defined for " +
 							"'$definition.name ($definition.id)'.\nIf there are multiple definitions for a project, " +
-							"each one has to have a 'partition' property in its config gradle-file"
+							"each one has to have a 'partition' property in its extensions gradle-file"
 					}
 				}
 			}
