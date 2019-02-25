@@ -1,9 +1,10 @@
 package com.teamscale.gradle.azureDevOps.tasks.upload
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.data.Build
-import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.data.AdosBuild
+import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
@@ -14,21 +15,13 @@ import static com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType.LAST_
 import static com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType.RELEASE_BUILD
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
-class UploadReleaseTestResultsTasks extends UploadTask {
-	static final String TASK_NAME = "uploadReleaseTestResults"
+class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
+	static final String TASK_NAME = "uploadAdosReleaseTestResults"
+	public static final String REJECT_REASON = "No release tests configured"
+	public static final String PARTITION = "Release Test Results"
 
 	@Override
-	String getRejectReason() {
-		return "No release tests configured"
-	}
-
-	@Override
-	EBuildInformationType getUploadType() {
-		return RELEASE_BUILD
-	}
-
-	@Override
-	void run(Definition definition, Build build) {
+	void run(AdosDefinition definition, AdosBuild build) {
 		AzureDevOpsClient azureClient = definition.http
 		build.setLatestProcessedReleaseTest(definition.cache.get(definition, LAST_RELEASE))
 
@@ -68,7 +61,7 @@ class UploadReleaseTestResultsTasks extends UploadTask {
 			build.setLatestProcessedReleaseTest(Instant.parse((String) testRuns.completedDate.min()))
 
 			// get parameters
-			def standard = getStandardQueryParameters(definition, build, options)
+			def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 			def type = options.type.toString()
 			List<String> contents = testResults.collect { it.text }
 
@@ -104,19 +97,29 @@ class UploadReleaseTestResultsTasks extends UploadTask {
 	}
 
 	@Override
-	protected void setBuildAsProcessed(Definition definition, Build build) {
-		// Always check the latest build for any new releases
-		definition.setLastProcessedTime(getUploadType(), build.getFinishTime().minusMillis(1))
-		definition.cache.set(definition, LAST_RELEASE, build.getLatestProcessedReleaseTest())
+	String getRejectReason() {
+		return REJECT_REASON
 	}
 
 	@Override
-	protected boolean isConfiguredForTask(Definition definition) {
+	EBuildInformationType getUploadType() {
+		return RELEASE_BUILD
+	}
+
+	@Override
+	protected void setBuildAsProcessed(AdosDefinition definition, AdosBuild build) {
+		// Always check the latest build for any new releases
+		definition.getCache().set(definition, getUploadType(), build.getFinishTime().minusMillis(1))
+		definition.getCache().set(definition, LAST_RELEASE, build.getLatestProcessedReleaseTest())
+	}
+
+	@Override
+	protected boolean isConfiguredForTask(AdosDefinition definition) {
 		return definition.options.tests && definition.options.tests.releaseResultOptions
 	}
 
 	@Override
-	protected String getDefaultPartitionPart() {
-		return "Release Test Results"
+	protected String getDefaultPartition() {
+		return PARTITION
 	}
 }

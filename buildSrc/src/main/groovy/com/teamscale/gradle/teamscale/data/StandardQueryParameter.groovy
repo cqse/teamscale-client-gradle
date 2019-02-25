@@ -28,4 +28,9 @@ class StandardQueryParameter {
 	void appendToPartition(String toAppend) {
 		this.partition += " $toAppend"
 	}
+
+	@Override
+	String toString() {
+		return "[partition: $partition, message: $message, t: $t]"
+	}
 }

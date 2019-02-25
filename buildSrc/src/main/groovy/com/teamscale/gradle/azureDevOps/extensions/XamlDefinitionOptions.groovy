@@ -7,27 +7,37 @@ class XamlDefinitionOptions {
 
 	String partition
 
-	Closure branchMapping = { "" }
+	String branch
 
-	List<ReportLocationMatcher> reports = []
+	ReportLocationMatcher warnings
 
-	ReportLocationMatcher warnings = new ReportLocationMatcher(null, "BuildTypes/Warnings.txt")
+	ReportLocationMatcher errors
 
-	ReportLocationMatcher errors = new ReportLocationMatcher(null, "BuildTypes/Errors.txt")
+	ReportLocationMatcher result
+
+	ReportLocationMatcher coverage
 
 	XamlDefinitionOptions(String name) {
 		this.name = name
+	}
+
+	def branch(String branch) {
+		this.branch = branch
 	}
 
 	def warnings(String type, String pattern) {
 		warnings = new ReportLocationMatcher(type, pattern)
 	}
 
-	def errors(String type, String pattern) {
-		errors = new ReportLocationMatcher(type, pattern)
+	def errors(String pattern) {
+		errors = new ReportLocationMatcher(null, pattern)
 	}
 
-	def report(String type, String pattern) {
-		reports.add(new ReportLocationMatcher(type, pattern))
+	def result(String type, String pattern) {
+		result = new ReportLocationMatcher(type, pattern)
+	}
+
+	def coverage(String type, String pattern) {
+		coverage = new ReportLocationMatcher(type, pattern)
 	}
 }

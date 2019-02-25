@@ -5,7 +5,7 @@ import java.time.Instant
 /**
  * Information of a specific build from ADOS.
  */
-class Build {
+class AdosBuild implements IBuild {
 	String id
 	String buildNumber
 	String result
@@ -18,7 +18,7 @@ class Build {
 
 	Instant latestProcessedReleaseTest = Instant.EPOCH
 
-	Build(Map data, Closure branchMapping) {
+	AdosBuild(Map data, Closure branchMapping) {
 		// Maps the json properties to the actual object fields
 		metaClass.properties.findAll { it.name != "class" && data.containsKey(it.name) }.each {
 			Object value
@@ -84,11 +84,13 @@ class Build {
 	}
 
 	/** Returns the time the build took in seconds */
+	@Override
 	long getExecutionTime() {
 		return (finishTime.toEpochMilli() - startTime.toEpochMilli()) / 1000
 	}
 
 	/** Return the time the build finished */
+	@Override
 	Instant getFinishTime() {
 		return finishTime
 	}
@@ -99,5 +101,20 @@ class Build {
 
 	Instant getLatestProcessedReleaseTest() {
 		return latestProcessedReleaseTest
+	}
+
+	@Override
+	Instant getStartTime() {
+		return queueTime
+	}
+
+	@Override
+	String getTeamscaleBranch() {
+		return targetBranch
+	}
+
+	@Override
+	String getName() {
+		return buildNumber
 	}
 }

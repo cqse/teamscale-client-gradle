@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps.extensions
 
 
-import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.utils.Cache
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -30,7 +30,7 @@ class AzureDevOps {
 	/**
 	 * The downloaded information about the configured definitions from ADOS.
 	 */
-	List<Definition> definitions = new ArrayList<>()
+	List<AdosDefinition> definitions = new ArrayList<>()
 
 	/**
 	 * Cache object for the project. This handles the saving of the times a build has last been processed

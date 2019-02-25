@@ -1,12 +1,10 @@
 package com.teamscale.gradle.azureDevOps.utils.loganalyzer
 
-import static ELogAnalyzerType.CSHARP
-
 class LogAnalyzerFactory {
-	static ILogAnalyzer getLogAnalyzer(ELogAnalyzerType type) {
-		switch (type) {
-			case CSHARP:
-				return new CSharpLogAnalyzer()
+	static ILogAnalyzer getFor(String type) {
+		switch (type.toUpperCase()) {
+			case "CSHARP":
+				return CSharpLogAnalyzer.getInstance()
 			default:
 				throw new IllegalArgumentException("There is no log analyzer for $type")
 		}

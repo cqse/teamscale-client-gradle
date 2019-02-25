@@ -1,5 +1,7 @@
 package com.teamscale.gradle.azureDevOps.extensions
 
+import com.teamscale.gradle.azureDevOps.data.XamlDefinition
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -16,6 +18,8 @@ class XamlExtension extends NamedClosureContainer {
 
 	/** Directory of the zip store */
 	Path zipStore
+
+	List<XamlDefinition> definitions = []
 
 	def inbox(String path) {
 		inbox = Paths.get(path)

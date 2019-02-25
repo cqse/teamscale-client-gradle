@@ -9,7 +9,7 @@ import java.time.Instant
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
-class Definition {
+class AdosDefinition implements IDefinition {
 	/** Options for this definition */
 	final BuildDefinitionOptions options
 
@@ -24,9 +24,9 @@ class Definition {
 
 	final AzureDevOpsClient http
 
-	final List<Build> builds = new ArrayList<>()
+	final List<AdosBuild> builds = new ArrayList<>()
 
-	Definition(BuildDefinitionOptions options, AzureDevOpsClient http, Object data, Cache cache) {
+	AdosDefinition(BuildDefinitionOptions options, AzureDevOpsClient http, Object data, Cache cache) {
 		this.options = options
 		this.name = data.name
 		this.id = data.id
@@ -42,24 +42,14 @@ class Definition {
 		lastCompletedTime = time
 	}
 
-	/**
-	 * Return the ADOS organization where the definition is located.
-	 * E.g. 'apps-munichre'
-	 */
+	@Override
 	String getOrganization() {
 		return http.organization
 	}
 
-	/**
-	 * Return the project which contains the definition.
-	 */
+	@Override
 	String getProject() {
 		return http.project
-	}
-
-	/** Sets the last processed time for the given build info */
-	void setLastProcessedTime(EBuildInformationType option, Instant instant) {
-		cache.set(this, option, instant)
 	}
 
 	/**
@@ -68,5 +58,10 @@ class Definition {
 	 */
 	Instant getMinLastProcessedTimeFor(List<EBuildInformationType> types) {
 		return cache.getMinTime(this, types)
+	}
+
+	@Override
+	String getPartition() {
+		return options.partition
 	}
 }

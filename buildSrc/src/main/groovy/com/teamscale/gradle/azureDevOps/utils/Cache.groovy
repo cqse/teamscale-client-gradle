@@ -1,7 +1,8 @@
 package com.teamscale.gradle.azureDevOps.utils
 
-import com.teamscale.gradle.azureDevOps.data.Build
-import com.teamscale.gradle.azureDevOps.data.Definition
+
+import com.teamscale.gradle.azureDevOps.data.IBuild
+import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
@@ -67,7 +68,7 @@ class Cache {
 	/**
 	 * Checks whether the given build hasn't been processed yet with the given type
 	 */
-	boolean hasNotBeenProcessed(Definition definition, EBuildInformationType type, Build build) {
+	boolean hasNotBeenProcessed(IDefinition definition, IBuild build, EBuildInformationType type) {
 		Instant last = get(definition, type)
 		if (!last) {
 			return true
@@ -77,12 +78,12 @@ class Cache {
 	}
 
 	/** Returns the last processed timestamp for the given definition and build information type */
-	Instant get(Definition definition, EBuildInformationType type) {
+	Instant get(IDefinition definition, EBuildInformationType type) {
 		return cache.get(getKey(definition), new HashMap<>()).getOrDefault(type, Instant.EPOCH)
 	}
 
 	/** Sets the last processed timestamp for the given definition and build information type */
-	void set(Definition definition, EBuildInformationType type, Instant instant) {
+	void set(IDefinition definition, EBuildInformationType type, Instant instant) {
 		cache.get(getKey(definition), new HashMap<>()).put(type, instant)
 		save()
 	}
@@ -91,7 +92,7 @@ class Cache {
 	 * Returns the earliest timestamp for the given types. If there is no timestamp for a given type than
 	 * the minimum is always Instant.EPOCH
 	 */
-	Instant getMinTime(Definition definition, List<EBuildInformationType> types) {
+	Instant getMinTime(IDefinition definition, List<EBuildInformationType> types) {
 		Instant min = null
 
 		types.each { EBuildInformationType type ->
@@ -112,7 +113,7 @@ class Cache {
 		return min
 	}
 
-	private static String getKey(Definition definition) {
-		return "${definition.getOrganization()}/${definition.getProject()}/$definition.name"
+	private static String getKey(IDefinition definition) {
+		return "${definition.getOrganization()}/${definition.getProject()}/${definition.getName()}"
 	}
 }

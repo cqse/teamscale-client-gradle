@@ -5,14 +5,17 @@ import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.tasks.CollectBuildDefinitionsTask
 import com.teamscale.gradle.azureDevOps.tasks.CollectNewBuildsTask
 import com.teamscale.gradle.azureDevOps.tasks.upload.*
-import com.teamscale.gradle.azureDevOps.tasks.xaml.ProcessInboxTask
+import com.teamscale.gradle.azureDevOps.tasks.xaml.ProcessBuildArchivesTask
 import com.teamscale.gradle.azureDevOps.tasks.xaml.PruneZipStore
-import com.teamscale.gradle.azureDevOps.tasks.xaml.UploadXamlBuildInformation
+import com.teamscale.gradle.azureDevOps.tasks.xaml.UploadXamlBuildFindingsTask
+import com.teamscale.gradle.azureDevOps.tasks.xaml.UploadXamlBuildStatusTask
+import com.teamscale.gradle.azureDevOps.tasks.xaml.UploadXamlTestCoverageTask
+import com.teamscale.gradle.azureDevOps.tasks.xaml.UploadXamlTestResultsTask
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.Project
 import org.gradle.api.Task
 
-import static com.teamscale.gradle.azureDevOps.tasks.upload.UploadTask.TASK_GROUP
+import static com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask.TASK_GROUP
 
 class AzureDevOpsPlugin {
 	public static final String XAML_TASKS = "Azure XAML Build Information Upload"
@@ -33,9 +36,15 @@ class AzureDevOpsPlugin {
 	}
 
 	static void createXamlTasks(Project project) {
-		Task processInbox = PluginUtils.createTask(project, ProcessInboxTask, XAML_TASKS)
+		Task processInbox = PluginUtils.createTask(project, ProcessBuildArchivesTask, XAML_TASKS)
 		Task prune = PluginUtils.createTask(project, PruneZipStore, XAML_TASKS)
-		PluginUtils.createTask(project, UploadXamlBuildInformation, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune)
+
+		def uploadTasks = []
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildStatusTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildFindingsTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestResultsTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestCoverageTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
+		project.tasks.create("uploadXamlBuildInformation").dependsOn(uploadTasks as Object[]).finalizedBy(prune).setGroup(XAML_TASKS)
 	}
 
 	static void createBuildUploadTasks(Project project) {
@@ -43,13 +52,13 @@ class AzureDevOpsPlugin {
 		Task collectNewBuilds = PluginUtils.createTask(project, CollectNewBuildsTask, TASK_GROUP, collectDefinitions)
 
 		def uploadTasks = []
-		uploadTasks.add(PluginUtils.createTask(project, UploadBuildStatusTask, TASK_GROUP, collectNewBuilds))
-		uploadTasks.add(PluginUtils.createTask(project, UploadBuildFindingsTasks, TASK_GROUP, collectNewBuilds))
-		uploadTasks.add(PluginUtils.createTask(project, UploadTestCoverageTask, TASK_GROUP, collectNewBuilds))
-		uploadTasks.add(PluginUtils.createTask(project, UploadTestResultsTask, TASK_GROUP, collectNewBuilds))
-		uploadTasks.add(PluginUtils.createTask(project, UploadReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
-		uploadTasks.add(PluginUtils.createTask(project, UploadExternalReportsTask, TASK_GROUP, collectNewBuilds))
-		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosBuildStatusTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosBuildFindingsTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosTestCoverageTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosTestResultsTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosExternalReportsTask, TASK_GROUP, collectNewBuilds))
+		project.tasks.create("uploadAdosBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
 	}
 
 	/** Assert that obligatory settings have been set */

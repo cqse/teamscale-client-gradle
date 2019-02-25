@@ -1,12 +1,11 @@
-package com.teamscale.gradle.azureDevOps.tasks.upload
+package com.teamscale.gradle.azureDevOps.tasks.base
 
+import com.teamscale.gradle.azureDevOps.data.IBuild
+import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
-import com.teamscale.gradle.azureDevOps.data.Build
-import com.teamscale.gradle.azureDevOps.data.Definition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.utils.AdosUtils
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
-import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
@@ -14,30 +13,11 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 /**
  * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
  */
-class UploadTestCoverageTask extends UploadTask {
-	final static String TASK_NAME = "uploadTestCoverage"
+abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> extends UploadTask<S, T> {
+	public static final String PARTITION = "Test Coverage"
+	public static final String REJECT_REASON = "No test coverage configured"
 
-	@Override
-	EBuildInformationType getUploadType() {
-		return EBuildInformationType.TEST_COVERAGE
-	}
-
-	@Override
-	void run(Definition definition, Build build) {
-		def coverageOptions = definition.options.tests.coverageOptions
-
-		List<File> coverageFiles
-		// The test coverage can be downloaded from the coverage REST service call or from a
-		// published artifact
-		if (coverageOptions.mustSearchInArtifact()) {
-			coverageFiles = AdosUtils.getFilesFromBuildArtifact(definition, build, coverageOptions)
-		} else {
-			coverageFiles = definition.http.downloadTestCoverage(build.id)
-			if (coverageFiles.isEmpty()) {
-				coverageFiles = AdosUtils.getFilesFromTestRuns(definition, build, coverageOptions)
-			}
-		}
-
+	void upload(S definition, T build, List<File> coverageFiles, ReportLocationMatcher coverageOptions) {
 		if (coverageFiles.isEmpty()) {
 			log("No test coverage found with '$coverageOptions'", definition, build)
 			setBuildAsProcessed(definition, build)
@@ -45,16 +25,14 @@ class UploadTestCoverageTask extends UploadTask {
 		}
 
 		// transform coverage
-		def type = coverageOptions.type.toString()
+		def type = coverageOptions.type
 		List<String> contents = convertCoverage(coverageFiles, type)
 
 		// upload to teamscale
-		def standard = getStandardQueryParameters(definition, build, coverageOptions)
+		def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), coverageOptions)
 		standard.appendToMessage(type)
 
-		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
-		def result = http.uploadExternalReports(standard, contents, type)
-
+		def result = getTeamscaleClient().uploadExternalReports(standard, contents, type)
 		processUploadResult(definition, build, result, "$type (${coverageFiles.size()}): $result")
 	}
 
@@ -62,7 +40,7 @@ class UploadTestCoverageTask extends UploadTask {
 	 * Convert the given files. Some files must be converted to another format in order
 	 * to be uploaded to teamscale.
 	 */
-	private List<String> convertCoverage(List<File> coverageFiles, String type) {
+	List<String> convertCoverage(List<File> coverageFiles, String type) {
 		switch (type) {
 			case "VS_COVERAGE":
 				return CSharpTestCoverageConverter.convert(coverageFiles, getCoverageExePath())
@@ -88,17 +66,17 @@ class UploadTestCoverageTask extends UploadTask {
 	}
 
 	@Override
-	boolean isConfiguredForTask(Definition definition) {
-		return definition.options.tests && definition.options.tests.coverageOptions
+	EBuildInformationType getUploadType() {
+		return EBuildInformationType.TEST_COVERAGE
 	}
 
 	@Override
-	protected String getDefaultPartitionPart() {
-		return "Test Coverage"
+	protected String getDefaultPartition() {
+		return PARTITION
 	}
 
 	@Override
 	String getRejectReason() {
-		return "No test coverage configured"
+		return REJECT_REASON
 	}
 }

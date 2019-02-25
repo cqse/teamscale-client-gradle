@@ -1,8 +1,8 @@
 package com.teamscale.gradle.azureDevOps.utils
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.data.Build
-import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.data.AdosBuild
+import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 
 class AdosUtils {
@@ -10,7 +10,7 @@ class AdosUtils {
 	 * Downloads the all files matching the artifact- and file-pattern in the given options.
 	 * The artifactPattern in the given options must be set!
 	 */
-	static List<File> getFilesFromBuildArtifact(Definition definition, Build build, ReportLocationMatcher options) {
+	static List<File> getFilesFromBuildArtifact(AdosDefinition definition, AdosBuild build, ReportLocationMatcher options) {
 		List<File> coverageFiles = new ArrayList<>()
 
 		if (!options.mustSearchInArtifact()) {
@@ -44,7 +44,7 @@ class AdosUtils {
 	/**
 	 * Downloads the files defined by the given options from the attachments of the test runs of the build.
 	 */
-	static List<File> getFilesFromTestRuns(Definition definition, Build build, ReportLocationMatcher options) {
+	static List<File> getFilesFromTestRuns(AdosDefinition definition, AdosBuild build, ReportLocationMatcher options) {
 		// get test runs
 		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).findAll {
 			it.release == null // Ignore release test runs

@@ -14,7 +14,9 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 	final static String PATH = "((?:\\w:)?(?:[^:#\\s]+)\\\\?\\w+\\.\\w+)\\(([0-9]+),[0-9,]+\\):"
 	final static String FINDING_ID = "(?:[\\w\\s]+)?warning\\s((?:[A-Z]{2,3})[0-9]+):"
 	final static String MESSAGE = "(.*?)\\s+\\[[^\\]]*\\]"
-	final static Pattern COMBINED = ~"$DATE_TIME\\s+$PATH\\s$FINDING_ID\\s+$MESSAGE"
+	final static Pattern COMBINED = ~"(?:$DATE_TIME\\s+)?$PATH\\s$FINDING_ID\\s+$MESSAGE"
+
+	private final static CSharpLogAnalyzer instance = new CSharpLogAnalyzer()
 
 	@Override
 	TeamscaleFinding analyze(String logLine) {
@@ -25,9 +27,14 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 			def findingId = matcher.group(3)
 			def message = matcher.group(4)
 
-			return new TeamscaleFinding(findingTypeId: findingId, message: message, path: filePath, startLine: line, endLine: line)
+			return new TeamscaleFinding(findingTypeId: findingId, message: message, path: filePath,
+				startLine: line, endLine: line)
 		}
 
 		return null
+	}
+
+	static ILogAnalyzer getInstance() {
+		return instance
 	}
 }

@@ -15,4 +15,9 @@ class NonCodeMetric {
 	void addAssessment(EAssessment type, Integer value) {
 		assessment.put(type, value)
 	}
+
+	@Override
+	String toString() {
+		return "[path: $path, content: $content, time: $time]"
+	}
 }

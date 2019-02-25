@@ -1,13 +1,6 @@
 package com.teamscale.gradle.azureDevOps.extensions
 
-import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
-import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ELogAnalyzerType
-import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ILogAnalyzer
-import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
-
-import java.util.regex.Pattern
-import java.util.regex.PatternSyntaxException
 
 class BuildDefinitionOptions {
 	/** Name of the definition */
@@ -15,7 +8,11 @@ class BuildDefinitionOptions {
 
 	Closure branchMapping = { it }
 
-	Pattern logNamePattern
+	/**
+	 * The pattern for the name of the build step whose logs should be analyzed for
+	 * build findings
+	 */
+	ReportLocationMatcher logNameMatcher
 
 	TestsConfig tests
 
@@ -26,16 +23,11 @@ class BuildDefinitionOptions {
 	/** Maximum number of days  */
 	int maxDaysBetweenBuilds = 30
 
-	/**
-	 * Instance of log analyzer for this project.
-	 * The log analyzer parses build task logs for any possible finding which can be uploaded to teamscale.
-	 */
-	ILogAnalyzer logAnalyzer
-
 	BuildDefinitionOptions(String name) {
 		this.name = name
 	}
 
+	@Override
 	String toString() {
 		def props = new HashMap<>(this.properties)
 		props.remove("class")
@@ -51,22 +43,11 @@ class BuildDefinitionOptions {
 
 	/** Define the log analyzer for this definition */
 	def parseLogs(String type, String logNamePattern) {
-		try {
-			this.logNamePattern = ~logNamePattern
-		} catch (PatternSyntaxException e) {
-			new AzureBuildException("'$logNamePattern' is no a valid regex", e)
-		}
-
-		def logAnalyzerType = ELogAnalyzerType.valueOf(type)
-		logAnalyzer = LogAnalyzerFactory.getLogAnalyzer(logAnalyzerType)
+		this.logNameMatcher = new ReportLocationMatcher(type, logNamePattern)
 	}
 
 	/** Define the location and type of a report which should be uploaded */
 	def report(String type, String pathPattern, String artifactPattern, String partition = null) {
-		if(partition == null) {
-			partition = "($type)"
-		}
-
 		reports.add(new ReportLocationMatcher(type, pathPattern, artifactPattern, partition))
 	}
 }

@@ -1,21 +1,19 @@
 package com.teamscale.gradle.azureDevOps.tasks.xaml
 
-import com.teamscale.gradle.azureDevOps.extensions.XamlDefinitionOptions
-import com.teamscale.gradle.azureDevOps.extensions.XamlProjectConfig
+import com.teamscale.gradle.azureDevOps.extensions.XamlExtension
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
 
-import java.nio.file.Path
-
-class PruneZipStore extends XamlTask {
+class PruneZipStore extends DefaultTask {
 	final static String TASK_NAME = "pruneZipStore"
 
-	@Override
-	void process(Path buildDir, XamlProjectConfig adosProject, XamlDefinitionOptions definition) {
-		// Check if there are too many files in the folder
+	@TaskAction
+	def action() {
+		XamlExtension xaml = TeamscaleExtension.getFrom(project).azureDevOps.xaml
 
-		// Load processed file
-
-		// Check if all of them have been processed yet
-
-		// delete all old processed files
+		xaml.definitions.each { definition ->
+			//
+		}
 	}
 }

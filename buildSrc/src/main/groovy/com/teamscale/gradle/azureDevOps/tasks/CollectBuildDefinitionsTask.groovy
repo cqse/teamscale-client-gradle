@@ -4,7 +4,7 @@ import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.extensions.OrganizationConfig
 import com.teamscale.gradle.azureDevOps.extensions.ProjectConfig
-import com.teamscale.gradle.azureDevOps.data.Definition
+import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -30,11 +30,11 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 					def idMatches = projectConfig.definitions.containsKey(data.id.toString())
 
 					if (idMatches) {
-						return new Definition(projectConfig.get(data.id.toString()), http, data, azureDevOps.cache)
+						return new AdosDefinition(projectConfig.get(data.id.toString()), http, data, azureDevOps.cache)
 					}
 
 					if (nameMatches) {
-						return new Definition(projectConfig.get(data.name.toString()), http, data, azureDevOps.cache)
+						return new AdosDefinition(projectConfig.get(data.name.toString()), http, data, azureDevOps.cache)
 					}
 				}
 
@@ -45,7 +45,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 				assert diff.size() == 0: "No definition(s) found on \"$organization.name/$projectConfig.name\" with " +
 					"the following name(s): " + diff
 
-				definitions.each { Definition definition ->
+				definitions.each { AdosDefinition definition ->
 					azureDevOps.definitions.add(definition)
 
 					def lastCompleted = "No builds yet"
