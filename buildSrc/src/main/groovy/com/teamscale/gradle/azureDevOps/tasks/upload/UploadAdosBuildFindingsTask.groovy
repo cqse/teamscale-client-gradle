@@ -21,7 +21,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 		List matchedLogs = getMatchingLogs(definition, build, logs)
 
 		if (matchedLogs.isEmpty()) {
-			log("No log(s) matched '$definition.options.logNamePattern'. Remember that the regex" +
+			log("No log(s) matched $definition.options.logNameMatcher. Remember that the regex" +
 				"must match the complete name, not just a part! The name of all available logs are: ${logs.name}",
 				definition, build)
 			return
