@@ -58,7 +58,7 @@ class AzureDevOpsPlugin {
 		uploadTasks.add(PluginUtils.createTask(project, UploadAdosTestResultsTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(PluginUtils.createTask(project, UploadAdosReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(PluginUtils.createTask(project, UploadAdosExternalReportsTask, TASK_GROUP, collectNewBuilds))
-		project.tasks.create("uploadAdosBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
+		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
 	}
 
 	/** Assert that obligatory settings have been set */

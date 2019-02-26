@@ -7,7 +7,7 @@ import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 class UploadAdosTestResultsTask extends UploadTestResultsTask<AdosDefinition, AdosBuild> {
-	final static String TASK_NAME = "uploadAdosTestResults"
+	final static String TASK_NAME = "uploadTestResults"
 
 	@Override
 	void run(AdosDefinition definition, AdosBuild build) {

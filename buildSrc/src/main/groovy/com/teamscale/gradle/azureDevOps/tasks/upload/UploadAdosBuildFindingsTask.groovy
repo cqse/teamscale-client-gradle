@@ -10,7 +10,7 @@ import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition, AdosBuild> {
-	static final String TASK_NAME = "uploadAdosBuildFindings"
+	static final String TASK_NAME = "uploadBuildFindings"
 
 	/** Maximum number of lines of a log which will be downloaded at once */
 	static final Integer MAX_LOG_LINES = 10000

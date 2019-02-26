@@ -6,7 +6,7 @@ import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 class UploadAdosBuildStatusTask extends UploadBuildStatusTask<AdosDefinition, AdosBuild> {
-	public final static String TASK_NAME = "uploadAdosBuildStatus"
+	public final static String TASK_NAME = "uploadBuildStatus"
 
 	@Override
 	void run(AdosDefinition definition, AdosBuild build) {

@@ -13,7 +13,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadAdosExternalReportsTask extends AdosUploadTask {
 
-	public static final String TASK_NAME = "uploadAdosBuildReports"
+	public static final String TASK_NAME = "uploadBuildReports"
 	public static final String PARTITION = "Metrics"
 	public static final String REJECT_REASON = "No build report upload configured"
 

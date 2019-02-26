@@ -10,7 +10,7 @@ import com.teamscale.gradle.teamscale.data.TeamscaleExtension
  * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
  */
 class UploadAdosTestCoverageTask extends UploadTestCoverageTask<AdosDefinition, AdosBuild> {
-	final static String TASK_NAME = "uploadAdosTestCoverage"
+	final static String TASK_NAME = "uploadTestCoverage"
 
 	@Override
 	void run(AdosDefinition definition, AdosBuild build) {

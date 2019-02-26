@@ -16,7 +16,7 @@ import static com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType.RELEA
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
-	static final String TASK_NAME = "uploadAdosReleaseTestResults"
+	static final String TASK_NAME = "uploadReleaseTestResults"
 	public static final String REJECT_REASON = "No release tests configured"
 	public static final String PARTITION = "Release Test Results"
 
