@@ -4,6 +4,8 @@ import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask
+import com.teamscale.gradle.azureDevOps.tasks.base.UploadTask
+import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -24,7 +26,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		ados.definitions.each { AdosDefinition definition ->
 			def http = definition.getHttp()
 
-			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(1)
+			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(10)
 
 			List builds = http.getBuildsForDefinition(definition.id, minTime).findResults { Map data ->
 				def build = new AdosBuild(data, definition.getOptions().getBranchMapping())
@@ -80,7 +82,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		def taskTypes = []
 
 		project.gradle.taskGraph.allTasks.each { task ->
-			if (task instanceof AdosUploadTask && task.isConfiguredForTask(definition)) {
+			if (task instanceof UploadTask && task.isConfiguredForTask(definition)) {
 				taskTypes.add(task.getUploadType())
 			}
 		}

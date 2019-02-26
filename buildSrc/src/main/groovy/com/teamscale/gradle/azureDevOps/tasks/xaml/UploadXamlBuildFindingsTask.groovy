@@ -47,7 +47,7 @@ class UploadXamlBuildFindingsTask extends UploadBuildFindingsTask<XamlDefinition
 	}
 
 	@Override
-	protected boolean isConfiguredForTask(XamlDefinition definition) {
+	boolean isConfiguredForTask(XamlDefinition definition) {
 		return definition.config.warnings
 	}
 }

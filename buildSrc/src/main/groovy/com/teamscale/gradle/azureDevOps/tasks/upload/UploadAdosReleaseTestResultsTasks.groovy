@@ -114,7 +114,7 @@ class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
 	}
 
 	@Override
-	protected boolean isConfiguredForTask(AdosDefinition definition) {
+	boolean isConfiguredForTask(AdosDefinition definition) {
 		return definition.options.tests && definition.options.tests.releaseResultOptions
 	}
 

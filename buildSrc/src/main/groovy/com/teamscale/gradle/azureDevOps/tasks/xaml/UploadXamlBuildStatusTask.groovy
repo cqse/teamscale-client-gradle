@@ -18,9 +18,8 @@ class UploadXamlBuildStatusTask extends UploadBuildStatusTask<XamlDefinition, Xa
 		return TeamscaleExtension.getFrom(project).azureDevOps.xaml.definitions
 	}
 
-
 	@Override
-	protected boolean isConfiguredForTask(XamlDefinition definition) {
+	boolean isConfiguredForTask(XamlDefinition definition) {
 		return definition.config.errors
 	}
 }

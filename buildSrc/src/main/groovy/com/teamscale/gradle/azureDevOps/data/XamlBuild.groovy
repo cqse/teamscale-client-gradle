@@ -16,13 +16,13 @@ class XamlBuild implements IBuild {
 	String targetBranch
 	Instant time
 	String result
-	ZipFile archive
+	Path archive
 
 	XamlBuild(XamlDefinition definition, Path archive) {
 		this.name = "$archive.fileName".substring(0, "$archive.fileName".length() - 4) // remove .zip from the end
 		this.targetBranch = definition.config.branch
 		this.time = getTimeOfBuildFromName("$archive.fileName", definition.getName())
-		this.archive = new ZipFile(archive.toAbsolutePath().toString())
+		this.archive = archive
 	}
 
 	@Override

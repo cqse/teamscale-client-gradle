@@ -11,7 +11,7 @@ import java.nio.file.Paths
 class XamlExtension extends NamedClosureContainer {
 	Map<String, XamlOrganizationConfig> organizations = [:]
 
-	int maxZips
+	int maxStoredZips
 
 	/** Directory of the inbox */
 	Path inbox

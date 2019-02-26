@@ -24,7 +24,7 @@ class UploadXamlTestCoverageTask extends UploadTestCoverageTask<XamlDefinition, 
 	}
 
 	@Override
-	protected boolean isConfiguredForTask(XamlDefinition definition) {
+	boolean isConfiguredForTask(XamlDefinition definition) {
 		return definition.config.coverage
 	}
 }

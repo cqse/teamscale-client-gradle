@@ -30,17 +30,16 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 				return
 			}
 
-			if (definition.getBuilds().isEmpty()) {
+			def noBuildsProcessed = true
+			(definition.getBuilds() as List<T>).each { T build ->
+				if(hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)) {
+					noBuildsProcessed = false
+					run(definition, build)
+				}
+			}
+
+			if (noBuildsProcessed) {
 				log("No builds to process", definition)
-				return
-			}
-
-			def builds = definition.getBuilds().findAll { T build ->
-				hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)
-			}
-
-			builds.each { T build ->
-				run(definition, build)
 			}
 		}
 	}
@@ -76,7 +75,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 	abstract void run(S definition, T build)
 
 	/** Check if the preconditions for running the task are fulfilled */
-	protected abstract boolean isConfiguredForTask(S definition)
+	abstract boolean isConfiguredForTask(S definition)
 
 	/**
 	 * Return the default partition part for the upload task.
@@ -92,7 +91,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 	 * than be overwritten in teamscale.
 	 */
 	static String createRequestTimeParameter(IBuild build) {
-		def param = "${build.getStartTime()}"
+		def param = "${build.getStartTime().toEpochMilli()}"
 		if (build.getTeamscaleBranch()) {
 			param = "${build.getTeamscaleBranch()}:$param"
 		}

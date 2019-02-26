@@ -65,7 +65,7 @@ class AdosBuild implements IBuild {
 	 * request, which should than automatically be excluded from the processing.
 	 */
 	private static boolean shouldBeExcluded(String branchName) {
-		return branchName ==~ /^refs\/pull/
+		return branchName =~ /^refs\/pull/
 	}
 
 	/**

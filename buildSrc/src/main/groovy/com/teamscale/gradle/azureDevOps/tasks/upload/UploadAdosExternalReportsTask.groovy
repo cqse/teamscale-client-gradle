@@ -12,7 +12,8 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadAdosExternalReportsTask extends AdosUploadTask {
-	static final String TASK_NAME = "uploadAdosBuildReports"
+
+	public static final String TASK_NAME = "uploadAdosBuildReports"
 	public static final String PARTITION = "Metrics"
 	public static final String REJECT_REASON = "No build report upload configured"
 
@@ -31,11 +32,10 @@ class UploadAdosExternalReportsTask extends AdosUploadTask {
 					return
 				}
 
-				def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
+				def partition = "${getDefaultPartition()} ($options.type)"
+				def standard = getStandardQueryParameters(definition, build, partition, options)
 				def type = options.type.toString()
 				def contents = files.text
-
-				standard.appendToPartition(" ($options.type)")
 
 				def result = TeamscaleExtension.getFrom(project).http.uploadExternalReports(standard, contents, type)
 				processUploadResult(definition, build, result, "$type (${files.size()})")
@@ -60,7 +60,7 @@ class UploadAdosExternalReportsTask extends AdosUploadTask {
 	}
 
 	@Override
-	protected boolean isConfiguredForTask(AdosDefinition definition) {
+	boolean isConfiguredForTask(AdosDefinition definition) {
 		return !definition.options.reports.isEmpty()
 	}
 

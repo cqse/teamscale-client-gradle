@@ -84,7 +84,7 @@ class AzureDevOpsClient extends HttpClient {
 			parameters.put("minTime", minTime.toString())
 		}
 
-		return doCall("get", ["build", "builds"], parameters).value as List
+		return doCall("get", ["build", "builds"], parameters).value as List<Map>
 	}
 
 	/**

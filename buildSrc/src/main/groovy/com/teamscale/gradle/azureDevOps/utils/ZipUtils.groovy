@@ -10,7 +10,9 @@ class ZipUtils {
 	/**
 	 * Searches for and returns all matches for the given patterns in the archive.
 	 */
-	static List<Path> getMatchesInArchive(ZipFile file, ReportLocationMatcher matcher) {
+	static List<Path> getMatchesInArchive(Path archive, ReportLocationMatcher matcher) {
+		ZipFile file = new ZipFile(archive.toAbsolutePath().toString())
+
 		return (file.entries() as List<ZipEntry>).findResults { ZipEntry entry ->
 			if (matcher.pathMatches(entry.name)) {
 				return getFile(file, entry.name)

@@ -36,14 +36,14 @@ class AzureDevOpsPlugin {
 	}
 
 	static void createXamlTasks(Project project) {
-		Task processInbox = PluginUtils.createTask(project, ProcessBuildArchivesTask, XAML_TASKS)
-		Task prune = PluginUtils.createTask(project, PruneZipStore, XAML_TASKS)
+		Task process = PluginUtils.createTask(project, ProcessBuildArchivesTask, XAML_TASKS)
+		Task prune = PluginUtils.createTask(project, PruneZipStore, XAML_TASKS).dependsOn(process)
 
 		def uploadTasks = []
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildStatusTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildFindingsTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestResultsTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestCoverageTask, XAML_TASKS).dependsOn(processInbox).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildStatusTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildFindingsTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestResultsTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestCoverageTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
 		project.tasks.create("uploadXamlBuildInformation").dependsOn(uploadTasks as Object[]).finalizedBy(prune).setGroup(XAML_TASKS)
 	}
 

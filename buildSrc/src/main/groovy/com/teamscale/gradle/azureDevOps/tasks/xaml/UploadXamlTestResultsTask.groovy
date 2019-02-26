@@ -18,7 +18,7 @@ class UploadXamlTestResultsTask extends UploadTestResultsTask<XamlDefinition, Xa
 	}
 
 	@Override
-	protected boolean isConfiguredForTask(XamlDefinition definition) {
+	boolean isConfiguredForTask(XamlDefinition definition) {
 		return definition.config.result
 	}
 
