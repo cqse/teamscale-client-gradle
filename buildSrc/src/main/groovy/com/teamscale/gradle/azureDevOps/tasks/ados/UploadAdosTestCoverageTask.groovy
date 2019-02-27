@@ -1,4 +1,4 @@
-package com.teamscale.gradle.azureDevOps.tasks.upload
+package com.teamscale.gradle.azureDevOps.tasks.ados
 
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition

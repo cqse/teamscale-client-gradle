@@ -1,4 +1,4 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.ados
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps

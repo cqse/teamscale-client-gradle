@@ -1,8 +1,9 @@
-package com.teamscale.gradle.azureDevOps.tasks
+package com.teamscale.gradle.azureDevOps.tasks.ados
 
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
+import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadTask
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils

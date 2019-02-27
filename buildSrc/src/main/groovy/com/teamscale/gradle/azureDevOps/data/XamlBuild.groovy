@@ -1,10 +1,9 @@
 package com.teamscale.gradle.azureDevOps.data
 
-import com.teamscale.gradle.azureDevOps.tasks.upload.UploadAdosBuildStatusTask
+import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
 
 import java.nio.file.Path
 import java.time.Instant
-import java.util.zip.ZipFile
 
 /**
  * Representing a XAML build, which are given as zip files.
@@ -53,7 +52,7 @@ class XamlBuild implements IBuild {
 
 	@Override
 	boolean hasFailed() {
-		return result == UploadAdosBuildStatusTask.BUILD_FAILED
+		return result == UploadBuildStatusTask.BUILD_FAILED
 	}
 
 	void setResult(String result) {

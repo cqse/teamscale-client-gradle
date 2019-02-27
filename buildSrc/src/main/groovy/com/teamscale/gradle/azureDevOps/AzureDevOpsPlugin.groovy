@@ -2,9 +2,14 @@ package com.teamscale.gradle.azureDevOps
 
 import com.teamscale.gradle.PluginUtils
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
-import com.teamscale.gradle.azureDevOps.tasks.CollectBuildDefinitionsTask
-import com.teamscale.gradle.azureDevOps.tasks.CollectNewBuildsTask
-import com.teamscale.gradle.azureDevOps.tasks.upload.*
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosBuildFindingsTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosBuildStatusTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosExternalReportsTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosReleaseTestResultsTasks
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosTestCoverageTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosTestResultsTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.CollectBuildDefinitionsTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.CollectNewBuildsTask
 import com.teamscale.gradle.azureDevOps.tasks.xaml.ProcessBuildArchivesTask
 import com.teamscale.gradle.azureDevOps.tasks.xaml.PruneZipStore
 import com.teamscale.gradle.azureDevOps.tasks.xaml.UploadXamlBuildFindingsTask
