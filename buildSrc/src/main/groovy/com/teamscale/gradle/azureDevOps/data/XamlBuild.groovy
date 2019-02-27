@@ -36,7 +36,6 @@ class XamlBuild implements IBuild {
 
 	@Override
 	long getExecutionTime() {
-		// TODO: find out if there is an execution time in the old build upload scripts
 		return 0
 	}
 

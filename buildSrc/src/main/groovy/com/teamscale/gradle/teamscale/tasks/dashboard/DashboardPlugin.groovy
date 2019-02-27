@@ -1,12 +1,12 @@
 package com.teamscale.gradle.teamscale.tasks.dashboard
 
-import com.teamscale.gradle.PluginUtils
 import org.gradle.api.Project
 
-class DashboardPlugin {
-	public static final String DASHBOARD_TASKS = "Teamscale Dashboard Utils"
+import static com.teamscale.gradle.PluginUtils.createTask
+import static com.teamscale.gradle.TeamscalePlugin.UTIL_TASKS
 
-	static void create(Project project) {
-		PluginUtils.createTask(project, CheckForOrphanedDashboardsTask, DASHBOARD_TASKS)
+class DashboardPlugin {
+	static void createTasks(Project project) {
+		createTask(project, CheckForOrphanedDashboardsTask, UTIL_TASKS)
 	}
 }

@@ -17,6 +17,8 @@ class TeamscaleExtension {
 
 	DebugOptions debug
 
+	UtilsExtension utils = new UtilsExtension()
+
 	void server(Action<? super TeamscaleConfig> action) {
 		action.execute(config)
 		http = new TeamscaleClient(config)
@@ -28,6 +30,10 @@ class TeamscaleExtension {
 
 	void debug(Action<? super DebugOptions> action) {
 		action.execute(debug)
+	}
+
+	void utils(Action<? super UtilsExtension> action) {
+		action.execute(utils)
 	}
 
 	/** Return the teamscale extension for the given project */

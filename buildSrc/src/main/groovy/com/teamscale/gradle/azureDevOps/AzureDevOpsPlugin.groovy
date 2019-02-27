@@ -25,31 +25,18 @@ import static com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask.TASK_GR
 class AzureDevOpsPlugin {
 	public static final String XAML_TASKS = "Azure XAML Build Information Upload"
 
-	static void create(Project project) {
-		project.afterEvaluate {
-			TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
-
-			// Only create the tasks for real projects
-			if (!teamscale?.config?.project) {
-				return
-			}
-
-			checkConfig(project)
-			createBuildUploadTasks(project)
-			createXamlTasks(project)
-		}
+	static void createTasks(Project project) {
+		checkConfig(project)
+		createBuildUploadTasks(project)
+		createXamlTasks(project)
 	}
 
-	static void createXamlTasks(Project project) {
-		Task process = PluginUtils.createTask(project, ProcessBuildArchivesTask, XAML_TASKS)
-		Task prune = PluginUtils.createTask(project, PruneZipStore, XAML_TASKS).dependsOn(process)
+	/** Assert that obligatory settings have been set */
+	static void checkConfig(Project project) {
+		TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
 
-		def uploadTasks = []
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildStatusTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildFindingsTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestResultsTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
-		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestCoverageTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
-		project.tasks.create("uploadXamlBuildInformation").dependsOn(uploadTasks as Object[]).finalizedBy(prune).setGroup(XAML_TASKS)
+		assert teamscale.azureDevOps.cache != null: "No cache set. Please use the 'cacheDir <path>` method" +
+			"inside of $AzureDevOps.NAME {}"
 	}
 
 	static void createBuildUploadTasks(Project project) {
@@ -66,11 +53,15 @@ class AzureDevOpsPlugin {
 		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
 	}
 
-	/** Assert that obligatory settings have been set */
-	static void checkConfig(Project project) {
-		TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
+	static void createXamlTasks(Project project) {
+		Task process = PluginUtils.createTask(project, ProcessBuildArchivesTask, XAML_TASKS)
+		Task prune = PluginUtils.createTask(project, PruneZipStore, XAML_TASKS).dependsOn(process)
 
-		assert teamscale.azureDevOps.cache != null: "No cache set. Please use the 'cacheDir <path>` method" +
-			"inside of $AzureDevOps.NAME {}"
+		def uploadTasks = []
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildStatusTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlBuildFindingsTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestResultsTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		uploadTasks.add(PluginUtils.createTask(project, UploadXamlTestCoverageTask, XAML_TASKS).dependsOn(process).finalizedBy(prune))
+		project.tasks.create("uploadXamlBuildInformation").dependsOn(uploadTasks as Object[]).finalizedBy(prune).setGroup(XAML_TASKS)
 	}
 }
