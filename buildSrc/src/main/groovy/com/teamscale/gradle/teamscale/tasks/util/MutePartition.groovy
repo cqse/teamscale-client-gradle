@@ -13,7 +13,7 @@ import org.gradle.api.tasks.TaskAction
  */
 class MutePartition extends DefaultTask {
 
-	public static final String TASK_NAME = "MutePartition"
+	public static final String TASK_NAME = "mutePartition"
 
 	@TaskAction
 	def run() {

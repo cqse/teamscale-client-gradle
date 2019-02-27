@@ -55,7 +55,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 				// TODO: check what happens if file is being copied
 				Path newPath = Paths.get("${definition.buildDir.toAbsolutePath()}", "${file.fileName}")
 
-				if(file.renameTo(newPath.toString())) {
+				if (file.renameTo(newPath.toString())) {
 					LoggingUtils.log("Moving new build to zipstore: $file.fileName", definition)
 					moved++
 				}
@@ -79,7 +79,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 			definition.builds.add(build)
 		}
 
-		definition.builds.sort({ a, b -> a.getStartTime().compareTo(b.getStartTime())})
+		definition.builds.sort({ a, b -> a.getStartTime().compareTo(b.getStartTime()) })
 	}
 
 	/**
