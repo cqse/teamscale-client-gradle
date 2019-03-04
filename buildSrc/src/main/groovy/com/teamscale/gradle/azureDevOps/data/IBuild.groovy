@@ -1,5 +1,7 @@
 package com.teamscale.gradle.azureDevOps.data
 
+import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
+
 import java.time.Instant
 
 interface IBuild {
@@ -13,7 +15,7 @@ interface IBuild {
 
 	String getName()
 
-	String getResult()
+	EBuildResult getResult()
 
 	boolean hasFailed()
 }

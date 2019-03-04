@@ -1,5 +1,7 @@
 package com.teamscale.gradle.azureDevOps.data
 
+import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
+
 import java.time.Instant
 
 /**
@@ -8,7 +10,7 @@ import java.time.Instant
 class AdosBuild implements IBuild {
 	String id
 	String buildNumber
-	String result
+	EBuildResult result
 	Instant startTime
 	Instant finishTime
 	Instant queueTime
@@ -24,6 +26,8 @@ class AdosBuild implements IBuild {
 			Object value
 			if (it.type.equals(Instant)) {
 				value = Instant.parse((String) data[it.name])
+			} else if (it.type.equals(EBuildResult)) {
+				value = EBuildResult.fromString((String) data[it.name])
 			} else {
 				// default is string
 				value = data[it.name]
@@ -57,7 +61,7 @@ class AdosBuild implements IBuild {
 
 	/** Whether the build failed */
 	boolean hasFailed() {
-		return this.result == "failed"
+		return this.result == EBuildResult.FAILED
 	}
 
 	/**

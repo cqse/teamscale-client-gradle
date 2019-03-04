@@ -1,6 +1,6 @@
 package com.teamscale.gradle.azureDevOps.data
 
-import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
+import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
 
 import java.nio.file.Path
 import java.time.Instant
@@ -14,7 +14,7 @@ class XamlBuild implements IBuild {
 	String name
 	String targetBranch
 	Instant time
-	String result
+	EBuildResult result
 	Path archive
 
 	XamlBuild(XamlDefinition definition, Path archive) {
@@ -51,10 +51,10 @@ class XamlBuild implements IBuild {
 
 	@Override
 	boolean hasFailed() {
-		return result == UploadBuildStatusTask.BUILD_FAILED
+		return result == EBuildResult.FAILED
 	}
 
-	void setResult(String result) {
+	void setResult(EBuildResult result) {
 		this.result = result
 	}
 

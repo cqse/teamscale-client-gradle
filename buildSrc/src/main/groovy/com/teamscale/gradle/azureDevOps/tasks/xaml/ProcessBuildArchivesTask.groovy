@@ -4,6 +4,7 @@ import com.teamscale.gradle.azureDevOps.data.XamlBuild
 import com.teamscale.gradle.azureDevOps.data.XamlDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.extensions.XamlExtension
+import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
@@ -97,9 +98,9 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		def errorsFile = matches[0]
 
 		if (errorsFile.text.length() > 0) {
-			build.setResult(UploadBuildStatusTask.BUILD_FAILED)
+			build.setResult(EBuildResult.FAILED)
 		} else {
-			build.setResult(UploadBuildStatusTask.BUILD_SUCCEEDED)
+			build.setResult(EBuildResult.SUCCEEDED)
 		}
 	}
 

@@ -4,7 +4,7 @@ enum EBuildResult {
 	SUCCEEDED("succeeded"),
 	PARTIALLY_SUCCEEDED("partiallySucceeded"),
 	FAILED("failed"),
-	IGNORE(""); // Ignore the build with the given result
+	IGNORE("ignore"); // Ignore the build with the given result
 
 	final String value
 
