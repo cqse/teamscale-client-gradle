@@ -102,4 +102,15 @@ class AzureDevOps {
 			"The path to the code coverage exe does not point to a file: $path"
 		codeCoverageExePath = path
 	}
+
+	/**
+	 * Configure the location of the code coverage exe which converts `.coverage` files to `.xml`, which
+	 * can be processed by TS
+	 */
+	def coverageMergerExe(String path) {
+		def coverageMergerExe = new File(path)
+		assert coverageMergerExe.exists() && coverageMergerExe.isFile():
+			"The path to the code coverage exe does not point to a file: $path"
+		coverageMergerExePath = path
+	}
 }
