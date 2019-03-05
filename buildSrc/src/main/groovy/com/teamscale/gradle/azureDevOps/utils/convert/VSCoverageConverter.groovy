@@ -24,8 +24,8 @@ class VSCoverageConverter {
 
 		try {
 			// file musn't exist, otherwise nothing will be written to it
-			if (xml.exists()) {
-				xml.delete()
+			if(Files.exists(xml)) {
+				Files.delete(xml)
 			}
 
 			List<String> coverageFiles = files.collect { "\"$it.absolutePath\"" as String }
@@ -40,7 +40,7 @@ class VSCoverageConverter {
 				throw new AzureBuildException("Converting the coverage file failed: $errorStream")
 			}
 
-			if (!xml.exists() || xml.text.size() == 0) {
+			if (!Files.exists(xml) || xml.text.size() == 0) {
 				throw new AzureBuildException("Conversion of the coverage file did not work. " +
 					"Consider using MS_COVERAGE instead, because the coverage files might be in an older format.")
 			}
