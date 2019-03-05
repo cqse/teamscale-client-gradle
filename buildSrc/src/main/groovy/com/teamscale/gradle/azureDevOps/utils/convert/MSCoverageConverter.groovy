@@ -13,7 +13,7 @@ class MSCoverageConverter {
 		try {
 			// copy coverage files to directory
 			files.each {
-				Files.createTempFile(coverageDir, "tmp", ".coverage") << it
+				Files.createTempFile(coverageDir, "tmp", ".coverage") << it.text
 			}
 
 			def command = ["cmd", "/C", "\"\"$execPath\"",
