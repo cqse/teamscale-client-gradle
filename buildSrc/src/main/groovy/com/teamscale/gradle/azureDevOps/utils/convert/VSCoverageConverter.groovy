@@ -48,7 +48,7 @@ class VSCoverageConverter {
 			return [xml.text]
 		} finally {
 			// prevent clogging of the temp dir
-			if(Files.exists(xml))
+			if(Files.exists(xml)) {
 				Files.delete(xml)
 			}
 		}
