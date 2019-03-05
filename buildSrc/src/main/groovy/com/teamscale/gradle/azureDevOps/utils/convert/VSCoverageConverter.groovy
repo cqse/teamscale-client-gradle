@@ -48,8 +48,8 @@ class VSCoverageConverter {
 			return [xml.text]
 		} finally {
 			// prevent clogging of the temp dir
-			if (xml.exists()) {
-				xml.delete()
+			if(Files.exists(xml))
+				Files.delete(xml)
 			}
 		}
 	}
