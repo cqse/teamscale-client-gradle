@@ -41,9 +41,14 @@ class CSharpTestCoverageConverter {
 					throw new AzureBuildException("Converting the coverage file failed: $errorStream")
 				}
 
-				if (!xml.exists() || xml.text.size() == 0) {
+				if (!xml.exists()) {
 					throw new AzureBuildException("Conversion of the coverage file did not work. " +
-						"The converted file does not exist or is empty.")
+						"The converted file does not exist.")
+				}
+
+				if(xml.text.size() == 0) {
+					throw new AzureBuildException("Conversion of the coverage file did not work. " +
+						"The converted file is empty.")
 				}
 
 				contents.add(xml.text)
