@@ -5,7 +5,8 @@ import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
-import com.teamscale.gradle.azureDevOps.utils.convert.CSharpTestCoverageConverter
+import com.teamscale.gradle.azureDevOps.utils.convert.MSCoverageConverter
+import com.teamscale.gradle.azureDevOps.utils.convert.VSCoverageConverter
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
@@ -26,7 +27,17 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 
 		// transform coverage
 		def type = coverageOptions.type
-		List<String> contents = convertCoverage(coverageFiles, type)
+		List<String> contents = []
+		try {
+			contents = convertCoverage(coverageFiles, type)
+		} finally {
+			// prevent the clogging of the temp file
+			coverageFiles.each { it.delete() }
+		}
+
+		if(contents.size() != coverageFiles.size()) {
+			log("Only ${contents.size()}/${coverageFiles.size()} were converted", definition, build)
+		}
 
 		// upload to teamscale
 		def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), coverageOptions)
@@ -43,17 +54,18 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 	List<String> convertCoverage(List<File> coverageFiles, String type) {
 		switch (type) {
 			case "VS_COVERAGE":
-				return CSharpTestCoverageConverter.convert(coverageFiles, getCoverageExePath())
+				return VSCoverageConverter.convert(coverageFiles, getCodeCoverageExePath())
+			case "MS_COVERAGE":
+				return MSCoverageConverter.convert(coverageFiles, getCodeMergerPath())
 			default:
 				return coverageFiles.collect { it.text }
 		}
 	}
 
 	/**
-	 * Get the path to the executable which can convert a .coverage file to
-	 * an .xml
+	 * Get the path to the executable which can convert a .coverage file to an .xml
 	 */
-	private String getCoverageExePath() {
+	private String getCodeCoverageExePath() {
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.codeCoverageExePath
 
 		assert path != null: "No code coverage exe given! In order to use VS_COVERAGE you need " +
@@ -61,6 +73,21 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 			"VS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
 
 		assert (new File(path)).exists(): "Code coverage exe at path $path does not exists"
+
+		return path
+	}
+
+	/**
+	 * Get the path to the executable which can convert a .coverage file to an .xml
+	 */
+	private String getCodeMergerPath() {
+		def path = TeamscaleExtension.getFrom(project).azureDevOps.coverageMergerExePath
+
+		assert path != null: "No coverage merger exe given! In order to use MS_COVERAGE you need " +
+			"to provide a coverage merger exe in ${AzureDevOps.NAME} with 'coverageMergerPath \"<path>\"'. " +
+			"MS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
+
+		assert (new File(path)).exists(): "Coverage merger exe at path $path does not exists"
 
 		return path
 	}

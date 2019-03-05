@@ -49,6 +49,11 @@ class AzureDevOps {
 	 */
 	String codeCoverageExePath
 
+	/**
+	 * Path to the TS coverage merger exe which can be used to convert older .coverage files to MS_COVERAGE format
+	 */
+	String coverageMergerExePath
+
 	AzureDevOps(project) {
 		builds = project.container(OrganizationConfig)
 		credentials = project.container(Credentials)

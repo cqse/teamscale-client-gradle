@@ -108,6 +108,8 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		Path path = Paths.get(basePath, projectName, definitionName)
 
 		if (!Files.exists(path)) {
+			// TODO: does not work. Throws FileAlreadyExistsException for some reason
+			// If a path that does not exists in the inbox is specified
 			Files.createDirectories(path)
 		}
 
