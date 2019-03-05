@@ -1,5 +1,6 @@
 package com.teamscale.gradle.azureDevOps.utils
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
@@ -11,7 +12,7 @@ class ZipUtils {
 	 * Searches for and returns all matches for the given patterns in the archive.
 	 */
 	static List<Path> getMatchesInArchive(Path archive, ReportLocationMatcher matcher) {
-		ZipFile file = new ZipFile(archive.toAbsolutePath().toString())
+		ZipFile file = new ZipFile(archive.toAbsolutePath().toString(), StandardCharsets.UTF_8)
 
 		return (file.entries() as List<ZipEntry>).findResults { ZipEntry entry ->
 			if (matcher.pathMatches(entry.name)) {
