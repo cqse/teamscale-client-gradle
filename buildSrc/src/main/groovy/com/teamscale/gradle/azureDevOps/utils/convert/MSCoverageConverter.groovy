@@ -33,7 +33,7 @@ class MSCoverageConverter {
 
 			return [xml.text]
 		} finally {
-			coverageDir.eachFile { it.delete }
+			coverageDir.eachFile { it.delete() }
 			Files.delete(coverageDir)
 			Files.delete(xml)
 		}
