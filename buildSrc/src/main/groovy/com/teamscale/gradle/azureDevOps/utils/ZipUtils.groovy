@@ -30,7 +30,7 @@ class ZipUtils {
 		ZipEntry entry = archive.getEntry(path)
 		Path tmp = Files.createTempFile("temp", ".tmp")
 		if (entry) {
-			tmp << archive.getInputStream(entry).text
+			tmp << archive.getInputStream(entry).bytes
 			return tmp
 		}
 		return null
@@ -64,7 +64,7 @@ class ZipUtils {
 		ZipEntry entry = archive.getEntry(path)
 
 		if (entry) {
-			extracted << archive.getInputStream(entry).text
+			extracted << archive.getInputStream(entry).bytes
 		}
 	}
 }

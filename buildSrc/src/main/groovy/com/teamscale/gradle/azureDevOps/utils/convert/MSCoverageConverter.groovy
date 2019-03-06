@@ -41,7 +41,6 @@ class MSCoverageConverter {
 			return xml
 		} finally {
 			folder.deleteDir()
-			Files.delete(xml)
 		}
 	}
 }
