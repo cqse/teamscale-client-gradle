@@ -5,7 +5,6 @@ import com.teamscale.gradle.azureDevOps.data.XamlDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
 import com.teamscale.gradle.azureDevOps.extensions.XamlExtension
 import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
-import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
@@ -88,7 +87,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 	 * The build status is defined if the errors.txt in the build files has entries or not.
 	 */
 	static void setBuildStatus(XamlDefinition definition, XamlBuild build) {
-		List<Path> matches = ZipUtils.getMatchesInArchive(build.archive, definition.config.errors)
+		List<Path> matches = ZipUtils.getMatches(build.archive, definition.config.errors)
 
 		if (matches.size() != 1) {
 			LoggingUtils.warn("Found ${matches.size()} matches for $definition.config.errors.pathPattern but " +

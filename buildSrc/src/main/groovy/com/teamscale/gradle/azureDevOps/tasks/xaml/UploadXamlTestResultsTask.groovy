@@ -12,7 +12,7 @@ class UploadXamlTestResultsTask extends UploadTestResultsTask<XamlDefinition, Xa
 	@Override
 	void run(XamlDefinition definition, XamlBuild build) {
 		def options = definition.config.result
-		List<File> testResults = ZipUtils.getMatchesInArchive(build.archive, options).collect { it.toFile() }
+		List<File> testResults = ZipUtils.getMatches(build.archive, options).collect { it.toFile() }
 
 		upload(definition, build, options, testResults)
 	}

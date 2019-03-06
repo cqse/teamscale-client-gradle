@@ -5,19 +5,26 @@ import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ * Converts the binary coverage-files from VS test runs.
+ * The files will be converted into the MS_COVERAGE format which can be uploaded to teamscale.
+ */
 class MSCoverageConverter {
-	static List<String> convert(List<File> files, String execPath) {
-		Path coverageDir = Files.createTempDirectory("coverage")
+
+	/**
+	 * Fetches and converts all coverage files inside of the given folder.
+	 * It is important that the folder does not only contain the coverage files but also dlls which are needed for
+	 * the conversion process.
+	 *
+	 * Returns an xml file which can be uploaded to teamscale as a MS_COVERAGE report.
+	 */
+	static Path convert(Path folder, String execPath) {
 		Path xml = Files.createTempFile("coverage", ".xml")
 
 		try {
 			// copy coverage files to directory
-			files.each {
-				Files.createTempFile(coverageDir, "tmp", ".coverage") << it.text
-			}
-
 			def command = ["cmd", "/C", "\"\"$execPath\"",
-						   "-d", "\"$coverageDir\"",
+						   "-d", "\"$folder\"",
 						   "-o", "\"$xml\"", "\""].execute()
 
 			def errorStream = new StringBuffer()
@@ -31,10 +38,9 @@ class MSCoverageConverter {
 				throw new AzureBuildException("Conversion of the coverage file resulted in an empty file")
 			}
 
-			return [xml.text]
+			return xml
 		} finally {
-			coverageDir.eachFile { Path it -> Files.delete(it) }
-			Files.delete(coverageDir)
+			folder.deleteDir()
 			Files.delete(xml)
 		}
 	}

@@ -5,6 +5,9 @@ import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
+/**
+ * Determines and uploads the status of a XAML build, which is in the form of a zip archive.
+ */
 class UploadAdosBuildStatusTask extends UploadBuildStatusTask<AdosDefinition, AdosBuild> {
 	public final static String TASK_NAME = "uploadBuildStatus"
 

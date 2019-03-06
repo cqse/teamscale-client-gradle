@@ -1,6 +1,5 @@
 package com.teamscale.gradle.azureDevOps.tasks.base
 
-
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
@@ -23,6 +22,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 	final static UPLOAD_MESSAGE = "External Analysis (%s)"
 
 	@TaskAction
+	/** Main entry point for the task */
 	def action() {
 		getDefinitions().each { S definition ->
 			if (!isConfiguredForTask(definition)) {
@@ -32,7 +32,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 
 			def noBuildsProcessed = true
 			(definition.getBuilds() as List<T>).each { T build ->
-				if(hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)) {
+				if (hasNotBeenProcessed(definition, build) && canBeProcessed(definition, build)) {
 					noBuildsProcessed = false
 					run(definition, build)
 				}
@@ -44,6 +44,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 		}
 	}
 
+	/** Returns all defined definitions */
 	abstract List<S> getDefinitions()
 
 	/** The reason a definition has been rejected for this upload task */
@@ -64,6 +65,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 		return true
 	}
 
+	/** Type of the information which is getting uploaded to teamscale */
 	abstract EBuildInformationType getUploadType()
 
 	/** Sets the given build and additional information as processed for the definition */
@@ -103,16 +105,12 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 		return appendPartitionName(basePath, "/", definition)
 	}
 
-	/**
-	 * Create and return the standard parameters for the build.
-	 */
+	/** Create and return the standard parameters for the build. */
 	static StandardQueryParameter getStandardQueryParameters(IDefinition definition, IBuild build, String partition) {
 		getStandardQueryParameters(build, appendPartitionName(partition, ": ", definition))
 	}
 
-	/**
-	 * Create and return the standard parameters for the build.
-	 */
+	/** Create and return the standard parameters for the build. */
 	static StandardQueryParameter getStandardQueryParameters(IDefinition definition, IBuild build,
 															 String partition, ReportLocationMatcher options) {
 		if (options.partition) {
@@ -121,9 +119,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 		return getStandardQueryParameters(definition, build, partition)
 	}
 
-	/**
-	 * Create and return the standard parameters for the build.
-	 */
+	/** Create and return the standard parameters for the build. */
 	static StandardQueryParameter getStandardQueryParameters(IBuild build, String partition) {
 		def message = String.format(UPLOAD_MESSAGE, partition)
 		def t = createRequestTimeParameter(build)
@@ -155,7 +151,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 		}
 	}
 
-	/** Fetch the teamscale client */
+	/** Returns client which communicates with teamscale */
 	TeamscaleClient getTeamscaleClient() {
 		return TeamscaleExtension.getFrom(project).http
 	}

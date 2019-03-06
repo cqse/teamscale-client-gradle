@@ -11,6 +11,9 @@ import org.gradle.api.tasks.TaskAction
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
+/**
+ * Collect the information about all defined build definitions.
+ */
 class CollectBuildDefinitionsTask extends DefaultTask {
 	static String TASK_NAME = "collectBuildDefinitions"
 

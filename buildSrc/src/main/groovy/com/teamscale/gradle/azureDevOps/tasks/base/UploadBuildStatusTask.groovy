@@ -13,11 +13,15 @@ import static com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult.PARTIALLY
 import static com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult.SUCCEEDED
 import static com.teamscale.gradle.teamscale.data.EAssessment.*
 
+/**
+ * Base class for uploading the build status of a build from Azure DevOps Services to teamscale.
+ */
 abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> extends UploadTask<S, T> {
 	public static final String NON_CODE_METRIC_PATH = "Build Stability"
 	public static final String PARTITION = "Build"
 	public static final String REJECT_REASON = "Parsing of build status not configured"
 
+	/** Upload the build status to teamscale */
 	void upload(S definition, T build) {
 		def queryParams = getStandardQueryParameters(definition, build, getDefaultPartition())
 		def nonCodeMetric = getNonCodeMetric(definition, build)
@@ -58,6 +62,7 @@ abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> ex
 		}
 	}
 
+	/** Data class containing the assessment of a build status and the message for the assessment. */
 	private static class BuildResultInfo {
 		EAssessment assessment
 		String message
