@@ -58,7 +58,6 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		int moved = 0
 		Files.list(definitionInbox).each { Path file ->
 			if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
-				// TODO: check what happens if file is being copied
 				Path newPath = Paths.get("${definition.buildDir.toAbsolutePath()}", "${file.fileName}")
 
 				if (file.renameTo(newPath.toString())) {
@@ -81,8 +80,11 @@ class ProcessBuildArchivesTask extends DefaultTask {
 			.findAll { Path path -> path.fileName.toString().toLowerCase().endsWith(".zip")
 		} as List<Path>).each { Path archive ->
 			XamlBuild build = new XamlBuild(definition, archive)
-			setBuildStatus(definition, build)
-			definition.builds.add(build)
+
+			if(setBuildStatus(definition, build)) {
+				// If the build status cannot be determined skip the build
+				definition.builds.add(build)
+			}
 		}
 
 		definition.builds.sort({ a, b -> a.getStartTime().compareTo(b.getStartTime()) })
@@ -92,13 +94,13 @@ class ProcessBuildArchivesTask extends DefaultTask {
 	 * Set the build status for the given build.
 	 * The build status is defined if the errors.txt in the build files has entries or not.
 	 */
-	static void setBuildStatus(XamlDefinition definition, XamlBuild build) {
+	static boolean setBuildStatus(XamlDefinition definition, XamlBuild build) {
 		List<Path> matches = ZipUtils.getMatches(build.archive, definition.config.errors)
 
 		if (matches.size() != 1) {
 			LoggingUtils.warn("Found ${matches.size()} matches for $definition.config.errors.pathPattern but " +
-				"expected exactly one.")
-			return
+				"expected exactly one. Skipping the build")
+			return false
 		}
 		def errorsFile = matches[0]
 
@@ -107,6 +109,8 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		} else {
 			build.setResult(EBuildResult.SUCCEEDED)
 		}
+
+		return true
 	}
 
 	protected static Path createZipstoreDirectory(String basePath, String projectName, String definitionName) {
