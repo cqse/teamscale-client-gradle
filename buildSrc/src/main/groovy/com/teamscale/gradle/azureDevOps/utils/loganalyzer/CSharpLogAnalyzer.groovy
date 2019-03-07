@@ -27,11 +27,22 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 			def findingId = matcher.group(3)
 			def message = matcher.group(4)
 
-			return new TeamscaleFinding(findingTypeId: findingId, message: message, path: filePath,
-				startLine: line, endLine: line)
+			if(isIncluded(findingId)) {
+				return new TeamscaleFinding(findingTypeId: findingId, message: message, path: filePath,
+					startLine: line, endLine: line)
+			}
 		}
 
 		return null
+	}
+
+	/** Checks if the finding should be included based on its findings id */
+	static boolean isIncluded(String findingId) {
+		// Filter out FxCops findings
+		if(findingId =~ /^(CA)/) {
+			return false
+		}
+		return true
 	}
 
 	static ILogAnalyzer getInstance() {
