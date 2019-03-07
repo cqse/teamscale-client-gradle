@@ -36,10 +36,16 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 		return null
 	}
 
-	/** Checks if the finding should be included based on its findings id */
+	/**
+	 * Checks if the finding should be included based on its findings id
+	 *
+	 * Excluded findings are:
+	 * 	- FxCop
+	 * 	- MSBuild
+	 */
 	static boolean isIncluded(String findingId) {
 		// Filter out FxCops findings
-		if(findingId =~ /^(CA)/) {
+		if(findingId =~ /^(CA|MSB)/) {
 			return false
 		}
 		return true
