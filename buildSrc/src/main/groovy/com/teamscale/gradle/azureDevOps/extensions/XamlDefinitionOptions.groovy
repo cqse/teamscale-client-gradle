@@ -21,6 +21,10 @@ class XamlDefinitionOptions {
 		this.name = name
 	}
 
+	def partition(String partition) {
+		this.partition = partition
+	}
+
 	def uploadToBranch(String branch) {
 		this.branch = branch
 	}

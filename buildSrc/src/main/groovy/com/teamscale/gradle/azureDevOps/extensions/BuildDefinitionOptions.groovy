@@ -50,4 +50,8 @@ class BuildDefinitionOptions {
 	def report(String type, String pathPattern, String artifactPattern, String partition = null) {
 		reports.add(new ReportLocationMatcher(type, pathPattern, artifactPattern, partition))
 	}
+
+	def partition(String partition) {
+		this.partition = partition
+	}
 }
