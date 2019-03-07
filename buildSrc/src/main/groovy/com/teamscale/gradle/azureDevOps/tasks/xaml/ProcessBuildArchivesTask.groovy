@@ -30,7 +30,13 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		xaml.organizations.values().each { organization ->
 			organization.projects.values().each { project ->
 				project.definitions.values().each { options ->
-					Path buildDir = getProjectDir(xaml.zipStore.toString(), project.name, options.name)
+					Path definitionInbox = Paths.get(xaml.inbox.toString(), project.name, options.name)
+					if (!Files.exists(definitionInbox)) {
+						LoggingUtils.warn("Inbox '$definitionInbox' does not exists, so no builds can be processed")
+						return false
+					}
+
+					Path buildDir = createZipstoreDirectory(xaml.zipStore.toString(), project.name, options.name)
 
 					def definition = new XamlDefinition(options, buildDir, ados.cache, organization.name, project.name)
 					xaml.definitions.add(definition)
@@ -47,7 +53,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 
 	void process(XamlDefinition definition) {
 		XamlExtension xaml = TeamscaleExtension.getFrom(project).azureDevOps.xaml
-		Path definitionInbox = getProjectDir(xaml.inbox.toString(), definition.getProject(), definition.getName())
+		Path definitionInbox = Paths.get(xaml.inbox.toString(), definition.getProject(), definition.getName())
 
 		int moved = 0
 		Files.list(definitionInbox).each { Path file ->
@@ -103,17 +109,15 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		}
 	}
 
-	protected static Path getProjectDir(String basePath, String projectName, String definitionName) {
+	protected static Path createZipstoreDirectory(String basePath, String projectName, String definitionName) {
 		Path path = Paths.get(basePath, projectName, definitionName)
 
 		if (!Files.exists(path)) {
-			// TODO: does not work. Throws FileAlreadyExistsException for some reason
-			// If a path that does not exists in the inbox is specified
 			Files.createDirectories(path)
 		}
 
 		if (!Files.isDirectory(path)) {
-			// TODO: log warning that this is not a directory for some reason
+			LoggingUtils.warn("Zipstore for $path is not a directory.")
 		}
 
 		return path
