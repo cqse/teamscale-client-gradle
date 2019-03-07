@@ -67,6 +67,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 			}
 		}
 
+		// TODO: add warning if no builds have been found for 30 days
 		if (moved > 0) {
 			LoggingUtils.log("Moved $moved new build files", definition)
 		} else {

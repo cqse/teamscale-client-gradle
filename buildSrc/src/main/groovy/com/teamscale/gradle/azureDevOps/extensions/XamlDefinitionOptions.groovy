@@ -42,6 +42,6 @@ class XamlDefinitionOptions {
 	}
 
 	def coverage(String type, String pattern, String partition = null) {
-		coverage = new ReportLocationMatcher(type, pattern, partition)
+		coverage = new ReportLocationMatcher(type, pattern, null, partition)
 	}
 }

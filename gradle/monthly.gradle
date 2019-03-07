@@ -191,3 +191,11 @@ task createTGAStartIfMissing {
 		}
 	}
 }
+
+task createTSAStartIfMissing {
+	doLast {
+		getProjects().each { project ->
+			createDefaultBaselineIfMissing(project, "TSA Start")
+		}
+	}
+}
