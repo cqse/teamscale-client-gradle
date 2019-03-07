@@ -21,7 +21,7 @@ class XamlDefinitionOptions {
 		this.name = name
 	}
 
-	def branch(String branch) {
+	def uploadToBranch(String branch) {
 		this.branch = branch
 	}
 
