@@ -113,7 +113,7 @@ abstract class UploadTask<S extends IDefinition, T extends IBuild> extends Defau
 	/** Create and return the standard parameters for the build. */
 	static StandardQueryParameter getStandardQueryParameters(IDefinition definition, IBuild build,
 															 String partition, ReportLocationMatcher options) {
-		if (options.partition) {
+		if (options && options.partition) {
 			return getStandardQueryParameters(build, options.partition)
 		}
 		return getStandardQueryParameters(definition, build, partition)

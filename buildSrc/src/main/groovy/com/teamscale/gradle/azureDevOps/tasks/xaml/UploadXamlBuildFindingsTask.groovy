@@ -37,7 +37,7 @@ class UploadXamlBuildFindingsTask extends UploadBuildFindingsTask<XamlDefinition
 			logAnalyzer.analyze(line)
 		}
 
-		upload(definition, build, findings)
+		upload(definition, build, findings, definition.config.warnings)
 	}
 
 	@Override

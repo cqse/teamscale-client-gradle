@@ -10,7 +10,7 @@ class UploadXamlBuildStatusTask extends UploadBuildStatusTask<XamlDefinition, Xa
 
 	@Override
 	void run(XamlDefinition definition, XamlBuild build) {
-		upload(definition, build)
+		upload(definition, build, definition.config.errors)
 	}
 
 	@Override

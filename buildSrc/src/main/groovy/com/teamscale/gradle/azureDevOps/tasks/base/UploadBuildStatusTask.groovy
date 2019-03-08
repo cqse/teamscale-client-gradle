@@ -4,6 +4,7 @@ import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.EAssessment
 import com.teamscale.gradle.teamscale.data.NonCodeMetric
@@ -22,8 +23,8 @@ abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> ex
 	public static final String REJECT_REASON = "Parsing of build status not configured"
 
 	/** Upload the build status to teamscale */
-	void upload(S definition, T build) {
-		def queryParams = getStandardQueryParameters(definition, build, getDefaultPartition())
+	void upload(S definition, T build, ReportLocationMatcher options = null) {
+		def queryParams = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 		def nonCodeMetric = getNonCodeMetric(definition, build)
 		queryParams.appendToMessage(nonCodeMetric.content)
 

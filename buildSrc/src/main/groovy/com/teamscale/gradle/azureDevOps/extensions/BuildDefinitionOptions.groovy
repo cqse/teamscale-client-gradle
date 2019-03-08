@@ -42,8 +42,8 @@ class BuildDefinitionOptions {
 	}
 
 	/** Define the log analyzer for this definition */
-	def parseLogs(String type, String logNamePattern) {
-		this.logNameMatcher = new ReportLocationMatcher(type, logNamePattern)
+	def parseLogs(String type, String logNamePattern, String partition = null) {
+		this.logNameMatcher = new ReportLocationMatcher(type, logNamePattern, null, partition)
 	}
 
 	/** Define the location and type of a report which should be uploaded */

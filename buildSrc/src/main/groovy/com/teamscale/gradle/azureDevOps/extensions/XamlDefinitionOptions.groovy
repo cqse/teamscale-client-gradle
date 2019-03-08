@@ -29,12 +29,12 @@ class XamlDefinitionOptions {
 		this.branch = branch
 	}
 
-	def warnings(String type, String pattern) {
-		warnings = new ReportLocationMatcher(type, pattern)
+	def warnings(String type, String pattern, String partition = null) {
+		warnings = new ReportLocationMatcher(type, pattern, null, partition)
 	}
 
-	def errors(String pattern) {
-		errors = new ReportLocationMatcher(null, pattern)
+	def errors(String pattern, String partition = null) {
+		errors = new ReportLocationMatcher(null, pattern, null, partition)
 	}
 
 	def result(String type, String pattern, String partition = null) {

@@ -29,7 +29,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 
 		Set<TeamscaleFinding> findings = parseFindingsFromLogs(matchedLogs, definition, build)
 
-		upload(definition, build, findings)
+		upload(definition, build, findings, definition.options.logNameMatcher)
 	}
 
 	/** Downloads the content of the given logs and extracts possible findings from them */

@@ -3,6 +3,7 @@ package com.teamscale.gradle.azureDevOps.tasks.base
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.ILogAnalyzer
 import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
@@ -17,8 +18,8 @@ abstract class UploadBuildFindingsTask<S extends IDefinition, T extends IBuild> 
 	public static final String REJECT_REASON = "No log analyzer or log name pattern defined"
 
 	/** Upload the findings to teamscale */
-	void upload(S definition, T build, Set<TeamscaleFinding> findings) {
-		def params = getStandardQueryParameters(definition, build, getDefaultPartition())
+	void upload(S definition, T build, Set<TeamscaleFinding> findings, ReportLocationMatcher options = null) {
+		def params = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 		def result = getTeamscaleClient().uploadExternalFindings(params, new ArrayList<>(findings))
 
 		processUploadResult(definition, build, result, "Uploading ${findings.size()} finding(s): $result")
