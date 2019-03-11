@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps.data
 
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
-import com.teamscale.gradle.azureDevOps.extensions.BuildDefinitionOptions
+import com.teamscale.gradle.azureDevOps.extensions.BuildDefinitionConfiguration
 import com.teamscale.gradle.azureDevOps.utils.Cache
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 
@@ -11,7 +11,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 class AdosDefinition implements IDefinition {
 	/** Options for this definition */
-	final BuildDefinitionOptions options
+	final BuildDefinitionConfiguration options
 
 	final String name
 
@@ -26,7 +26,7 @@ class AdosDefinition implements IDefinition {
 
 	final List<AdosBuild> builds = new ArrayList<>()
 
-	AdosDefinition(BuildDefinitionOptions options, AzureDevOpsClient http, Object data, Cache cache) {
+	AdosDefinition(BuildDefinitionConfiguration options, AzureDevOpsClient http, Object data, Cache cache) {
 		this.options = options
 		this.name = data.name
 		this.id = data.id

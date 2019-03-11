@@ -3,7 +3,7 @@ package com.teamscale.gradle.azureDevOps.extensions
 class ProjectConfig extends NamedClosureContainer {
 	String name
 
-	Map<String, BuildDefinitionOptions> definitions = new HashMap<>()
+	Map<String, BuildDefinitionConfiguration> definitions = new HashMap<>()
 
 	ProjectConfig(String name) {
 		this.name = name
@@ -15,7 +15,7 @@ class ProjectConfig extends NamedClosureContainer {
 
 	@Override
 	protected Object getNewInstance(String name) {
-		definitions.put(name, new BuildDefinitionOptions(name))
+		definitions.put(name, new BuildDefinitionConfiguration(name))
 		return definitions.get(name)
 	}
 }

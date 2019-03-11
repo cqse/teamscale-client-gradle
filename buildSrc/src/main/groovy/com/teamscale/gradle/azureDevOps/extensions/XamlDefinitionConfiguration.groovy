@@ -2,22 +2,37 @@ package com.teamscale.gradle.azureDevOps.extensions
 
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 
-class XamlDefinitionOptions {
+/**
+ * Configuration which determines which information of a XAML build should be taken and uploded to
+ * teamscale.
+ */
+class XamlDefinitionConfiguration {
+	/** Name of the definition */
 	String name
 
+	/**
+	 * A suffix to the name of the partition the information of the build will be uploaded to.
+	 * This needs to be set if there are two or more definitions for the same project, otherwise
+	 * the information of all the builds will be uploaded to the same partition, thus overwriting it.
+	 */
 	String partition
 
-	String branch
+	/** Teamscale branch the build info will be uploaded to */
+	String teamscaleBranch
 
+	/** Matcher for the file containing the warnings logs of the build */
 	ReportLocationMatcher warnings
 
+	/** Matcher for the file containing any errors which happened during the build */
 	ReportLocationMatcher errors
 
+	/** Matcher for any test result files */
 	ReportLocationMatcher result
 
+	/** Matcher for any coverage files */
 	ReportLocationMatcher coverage
 
-	XamlDefinitionOptions(String name) {
+	XamlDefinitionConfiguration(String name) {
 		this.name = name
 	}
 
@@ -26,7 +41,7 @@ class XamlDefinitionOptions {
 	}
 
 	def uploadToBranch(String branch) {
-		this.branch = branch
+		this.teamscaleBranch = branch
 	}
 
 	def warnings(String type, String pattern, String partition = null) {

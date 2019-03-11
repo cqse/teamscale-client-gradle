@@ -3,7 +3,7 @@ package com.teamscale.gradle.azureDevOps.extensions
 class XamlProjectConfig extends NamedClosureContainer {
 	String name
 
-	Map<String, XamlDefinitionOptions> definitions = new HashMap<>()
+	Map<String, XamlDefinitionConfiguration> definitions = new HashMap<>()
 
 	XamlProjectConfig(String name) {
 		this.name = name
@@ -15,7 +15,7 @@ class XamlProjectConfig extends NamedClosureContainer {
 
 	@Override
 	protected Object getNewInstance(String name) {
-		definitions.put(name, new XamlDefinitionOptions(name))
+		definitions.put(name, new XamlDefinitionConfiguration(name))
 		return definitions.get(name)
 	}
 }

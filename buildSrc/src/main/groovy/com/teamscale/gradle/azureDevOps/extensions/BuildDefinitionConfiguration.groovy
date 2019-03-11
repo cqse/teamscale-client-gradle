@@ -2,10 +2,14 @@ package com.teamscale.gradle.azureDevOps.extensions
 
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 
-class BuildDefinitionOptions {
+class BuildDefinitionConfiguration {
 	/** Name of the definition */
 	String name
 
+	/**
+	 * Closure determining the teamscale branch the information should be uploaded to.
+	 * The closure must have one parameter, which is the name of the branch the build was made from in ADOS.
+	 */
 	Closure branchMapping = { it }
 
 	/**
@@ -14,16 +18,23 @@ class BuildDefinitionOptions {
 	 */
 	ReportLocationMatcher logNameMatcher
 
+	/** Configuration for test results and coverage */
 	TestsConfig tests
 
+	/**
+	 * A suffix to the name of the partition the information of the build will be uploaded to.
+	 * This needs to be set if there are two or more definitions for the same project, otherwise
+	 * the information of all the builds will be uploaded to the same partition, thus overwriting it.
+	 */
 	String partition
 
+	/** List of matcher for any reports which should be uploaded */
 	List<ReportLocationMatcher> reports = new ArrayList<>()
 
 	/** Maximum number of days  */
 	int maxDaysBetweenBuilds = 30
 
-	BuildDefinitionOptions(String name) {
+	BuildDefinitionConfiguration(String name) {
 		this.name = name
 	}
 

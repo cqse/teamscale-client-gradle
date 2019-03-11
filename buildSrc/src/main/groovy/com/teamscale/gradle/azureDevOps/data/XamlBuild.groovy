@@ -19,7 +19,7 @@ class XamlBuild implements IBuild {
 
 	XamlBuild(XamlDefinition definition, Path archive) {
 		this.name = "$archive.fileName".substring(0, "$archive.fileName".length() - 4) // remove .zip from the end
-		this.targetBranch = definition.config.branch
+		this.targetBranch = definition.config.teamscaleBranch
 		this.time = getTimeOfBuildFromName("$archive.fileName", definition.getName())
 		this.archive = archive
 	}

@@ -1,13 +1,13 @@
 package com.teamscale.gradle.azureDevOps.data
 
-import com.teamscale.gradle.azureDevOps.extensions.XamlDefinitionOptions
+import com.teamscale.gradle.azureDevOps.extensions.XamlDefinitionConfiguration
 import com.teamscale.gradle.azureDevOps.utils.Cache
 
 import java.nio.file.Path
 
 class XamlDefinition implements IDefinition {
 
-	XamlDefinitionOptions config
+	XamlDefinitionConfiguration config
 
 	String name
 
@@ -21,7 +21,7 @@ class XamlDefinition implements IDefinition {
 
 	String organization
 
-	XamlDefinition(XamlDefinitionOptions config, Path buildDir, Cache cache,String organization, String project) {
+	XamlDefinition(XamlDefinitionConfiguration config, Path buildDir, Cache cache, String organization, String project) {
 		this.name = config.name
 		this.config = config
 		this.buildDir = buildDir

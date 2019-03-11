@@ -148,12 +148,14 @@ class AzureDevOpsClient extends HttpClient {
 		return doCall("get", path, [:]).value
 	}
 
+	/** Download the log from a build */
 	Object downloadLog(String buildId, String logId, int startLine, int endLine) {
 		def path = ["build", "builds", buildId, "logs", "$logId"]
 		def query = ["startLine": "$startLine", "endLine": "$endLine"]
 		return doCall("get", path, query)
 	}
 
+	/** Return the information about all artifacts published by the build */
 	Object getArtifacts(String buildId) {
 		def path = ["build", "builds", buildId, "artifacts"]
 		return doCall("get", path, [:]).value
