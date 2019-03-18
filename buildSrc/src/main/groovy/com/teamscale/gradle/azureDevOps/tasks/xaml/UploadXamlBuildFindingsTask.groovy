@@ -32,7 +32,8 @@ class UploadXamlBuildFindingsTask extends UploadBuildFindingsTask<XamlDefinition
 
 		Path warningsFile = matches.get(0)
 
-		ILogAnalyzer logAnalyzer = LogAnalyzerFactory.getFor(definition.config.warnings.type)
+		ILogAnalyzer logAnalyzer = LogAnalyzerFactory.getFor(definition.config.warnings.type,
+			TeamscaleExtension.getFrom(project))
 		Set<TeamscaleFinding> findings = warningsFile.readLines().findResults { line ->
 			logAnalyzer.analyze(line)
 		}

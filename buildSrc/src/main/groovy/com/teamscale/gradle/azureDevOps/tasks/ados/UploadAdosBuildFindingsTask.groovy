@@ -33,7 +33,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 	}
 
 	/** Downloads the content of the given logs and extracts possible findings from them */
-	static Set<TeamscaleFinding> parseFindingsFromLogs(List<Object> logs, AdosDefinition definition, AdosBuild build) {
+	Set<TeamscaleFinding> parseFindingsFromLogs(List<Object> logs, AdosDefinition definition, AdosBuild build) {
 		Set<TeamscaleFinding> findings = new HashSet<>()
 
 		logs.each { log ->
@@ -42,7 +42,8 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 				def endLine = currentLine + MAX_LOG_LINES
 				String logsContent = definition.http.downloadLog(build.id, "$log.id", currentLine, endLine)
 
-				def logAnalyzer = LogAnalyzerFactory.getFor(definition.options.logNameMatcher.type)
+				def logAnalyzer = LogAnalyzerFactory.getFor(definition.options.logNameMatcher.type,
+					TeamscaleExtension.getFrom(project))
 				findings.addAll(parseLog(logsContent, logAnalyzer))
 
 				// endLine is inclusive. Add one in order to prevent parsing a line twice

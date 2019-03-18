@@ -1,12 +1,10 @@
 package com.teamscale.gradle.azureDevOps.tasks.ados
 
-import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
-import com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadTask
-import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -22,7 +20,7 @@ class CollectNewBuildsTask extends DefaultTask {
 
 	@TaskAction
 	def collect() {
-		AzureDevOps ados = TeamscaleExtension.getFrom(project).azureDevOps
+		AzureDevOpsExtension ados = TeamscaleExtension.getFrom(project).azureDevOps
 
 		ados.definitions.each { AdosDefinition definition ->
 			def http = definition.getHttp()

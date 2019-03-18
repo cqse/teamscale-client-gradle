@@ -1,7 +1,7 @@
 package com.teamscale.gradle.azureDevOps
 
 import com.teamscale.gradle.PluginUtils
-import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosBuildFindingsTask
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosBuildStatusTask
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosExternalReportsTask
@@ -36,7 +36,7 @@ class AzureDevOpsPlugin {
 		TeamscaleExtension teamscale = TeamscaleExtension.getFrom(project)
 
 		assert teamscale.azureDevOps.cache != null: "No cache set. Please use the 'cacheDir <path>` method" +
-			"inside of $AzureDevOps.NAME {}"
+			"inside of $AzureDevOpsExtension.NAME {}"
 	}
 
 	static void createBuildUploadTasks(Project project) {

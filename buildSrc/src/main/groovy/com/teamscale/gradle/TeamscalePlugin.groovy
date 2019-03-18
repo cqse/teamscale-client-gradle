@@ -1,7 +1,7 @@
 package com.teamscale.gradle
 
 import com.teamscale.gradle.azureDevOps.AzureDevOpsPlugin
-import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.extensions.DebugOptions
 import com.teamscale.gradle.azureDevOps.utils.logging.CustomTaskLogger
 import com.teamscale.gradle.munichre.MunichRePlugin
@@ -20,7 +20,7 @@ class TeamscalePlugin implements Plugin<Project> {
 
 		TeamscaleExtension teamscale = project.extensions.create(TeamscaleExtension.NAME, TeamscaleExtension)
 
-		teamscale[AzureDevOps.NAME] = new AzureDevOps(project)
+		teamscale[AzureDevOpsExtension.NAME] = new AzureDevOpsExtension(project)
 		teamscale[DebugOptions.NAME] = new DebugOptions(project)
 
 		MunichRePlugin.createExtensions(project)

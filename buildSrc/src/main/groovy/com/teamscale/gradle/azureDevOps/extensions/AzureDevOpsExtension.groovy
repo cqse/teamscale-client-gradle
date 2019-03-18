@@ -9,7 +9,7 @@ import org.gradle.api.Project
 /**
  * Gradle extension for the extensions related to the Azure dev ops services (ADOS) build processing.
  */
-class AzureDevOps {
+class AzureDevOpsExtension {
 	public final static NAME = "azureDevOps"
 
 	/**
@@ -23,7 +23,7 @@ class AzureDevOps {
 	NamedDomainObjectContainer<Credentials> credentials
 
 	/**
-	 * TODO
+	 * Configuration for xaml builds
 	 */
 	XamlExtension xaml = new XamlExtension()
 
@@ -54,7 +54,12 @@ class AzureDevOps {
 	 */
 	String coverageMergerExePath
 
-	AzureDevOps(project) {
+	/**
+	 * Config options which apply generally
+	 */
+	AdosConfig options = new AdosConfig()
+
+	AzureDevOpsExtension(project) {
 		builds = project.container(OrganizationConfig)
 		credentials = project.container(Credentials)
 		this.project = project
@@ -76,6 +81,12 @@ class AzureDevOps {
 
 	def xaml(Closure closure) {
 		closure.delegate = xaml
+		closure.resolveStrategy = Closure.DELEGATE_ONLY
+		closure.run()
+	}
+
+	def options(Closure closure) {
+		closure.delegate = options
 		closure.resolveStrategy = Closure.DELEGATE_ONLY
 		closure.run()
 	}

@@ -2,7 +2,7 @@ package com.teamscale.gradle.azureDevOps.tasks.xaml
 
 import com.teamscale.gradle.azureDevOps.data.XamlBuild
 import com.teamscale.gradle.azureDevOps.data.XamlDefinition
-import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.extensions.XamlExtension
 import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
@@ -21,7 +21,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 
 	@TaskAction
 	def action() {
-		AzureDevOps ados = TeamscaleExtension.getFrom(project).azureDevOps
+		AzureDevOpsExtension ados = TeamscaleExtension.getFrom(project).azureDevOps
 		XamlExtension xaml = ados.xaml
 
 		assert xaml.inbox: "No inbox defined for the XAML build zips"

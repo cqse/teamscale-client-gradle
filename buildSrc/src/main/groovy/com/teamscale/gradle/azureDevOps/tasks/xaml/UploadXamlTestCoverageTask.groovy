@@ -2,7 +2,7 @@ package com.teamscale.gradle.azureDevOps.tasks.xaml
 
 import com.teamscale.gradle.azureDevOps.data.XamlBuild
 import com.teamscale.gradle.azureDevOps.data.XamlDefinition
-import com.teamscale.gradle.azureDevOps.extensions.AzureDevOps
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadTestCoverageTask
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 import com.teamscale.gradle.azureDevOps.utils.convert.MSCoverageConverter
@@ -38,7 +38,7 @@ class UploadXamlTestCoverageTask extends UploadTestCoverageTask<XamlDefinition, 
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.coverageMergerExePath
 
 		assert path != null: "No coverage merger exe given! In order to use MS_COVERAGE you need " +
-			"to provide a coverage merger exe in ${AzureDevOps.NAME} with 'coverageMergerPath \"<path>\"'. " +
+			"to provide a coverage merger exe in ${AzureDevOpsExtension.NAME} with 'coverageMergerPath \"<path>\"'. " +
 			"MS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
 
 		assert (new File(path)).exists(): "Coverage merger exe at path $path does not exists"

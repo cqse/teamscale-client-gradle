@@ -1,5 +1,6 @@
 package com.teamscale.gradle.azureDevOps.utils.loganalyzer
 
+import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
 import java.util.regex.Matcher
@@ -15,8 +16,11 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 	final static String FINDING_ID = "(?:[\\w\\s]+)?warning\\s((?:[A-Z]{2,3})[0-9]+):"
 	final static String MESSAGE = "(.*?)\\s+\\[[^\\]]*\\]"
 	final static Pattern COMBINED = ~"(?:$DATE_TIME\\s+)?$PATH\\s$FINDING_ID\\s+$MESSAGE"
+	final List<String> filter
 
-	private final static CSharpLogAnalyzer instance = new CSharpLogAnalyzer()
+	CSharpLogAnalyzer(TeamscaleExtension config) {
+		this.filter = config.azureDevOps.options.csharpFindings
+	}
 
 	@Override
 	TeamscaleFinding analyze(String logLine) {
@@ -36,22 +40,7 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 		return null
 	}
 
-	/**
-	 * Checks if the finding should be included based on its findings id
-	 *
-	 * Excluded findings are:
-	 * 	- FxCop
-	 * 	- MSBuild
-	 */
-	static boolean isIncluded(String findingId) {
-		// Filter out FxCops findings
-		if(findingId =~ /^(CA|MSB)/) {
-			return false
-		}
-		return true
-	}
-
-	static ILogAnalyzer getInstance() {
-		return instance
+	def isIncluded(String findingId) {
+		return (findingId =~ "^(${filter.join("|")})") as boolean
 	}
 }
