@@ -32,6 +32,9 @@ class XamlDefinitionConfiguration {
 	/** Matcher for any coverage files */
 	ReportLocationMatcher coverage
 
+	/** Matcher for the Build Log where the timestamp can be parsed out of */
+	ReportLocationMatcher timestamp
+
 	XamlDefinitionConfiguration(String name) {
 		this.name = name
 	}
@@ -58,5 +61,9 @@ class XamlDefinitionConfiguration {
 
 	def coverage(String type, String pattern, String partition = null) {
 		coverage = new ReportLocationMatcher(type, pattern, null, partition)
+	}
+
+	def timestamp(String pattern) {
+		timestamp = new ReportLocationMatcher(null, pattern)
 	}
 }
