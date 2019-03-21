@@ -17,6 +17,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class CollectNewBuildsTask extends DefaultTask {
 	static String TASK_NAME = "collectNewBuilds"
+	public static final int TIME_DELTA = 10
 
 	@TaskAction
 	def collect() {
@@ -25,7 +26,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		ados.definitions.each { AdosDefinition definition ->
 			def http = definition.getHttp()
 
-			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(10)
+			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(TIME_DELTA)
 
 			List builds = http.getBuildsForDefinition(definition.id, minTime).findResults { Map data ->
 				def build = new AdosBuild(data, definition.getOptions().getBranchMapping())
@@ -37,7 +38,7 @@ class CollectNewBuildsTask extends DefaultTask {
 			checkMaxTimeBetweenBuilds(definition, builds, minTime)
 
 			if (builds.isEmpty()) {
-				if (minTime.minusMillis(1) == Instant.EPOCH) {
+				if (minTime.minusMillis(TIME_DELTA) == Instant.EPOCH) {
 					warn("No builds found for [$definition.name] which match the provided branch mapping")
 				} else {
 					log("No unprocessed builds since $minTime", definition)
