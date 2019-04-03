@@ -15,11 +15,14 @@ class ZipUtils {
 	 */
 	static List<Path> getMatches(Path archive, ReportLocationMatcher matcher) {
 		ZipFile file = new ZipFile(archive.toAbsolutePath().toString(), Charset.forName("CP437"))
-
-		return (file.entries() as List<ZipEntry>).findResults { ZipEntry entry ->
-			if (matcher.pathMatches(entry.name)) {
-				return extractFile(file, entry.name)
+		try {
+			return (file.entries() as List<ZipEntry>).findResults { ZipEntry entry ->
+				if (matcher.pathMatches(entry.name)) {
+					return extractFile(file, entry.name)
+				}
 			}
+		} finally {
+			file.close()
 		}
 	}
 
@@ -43,14 +46,18 @@ class ZipUtils {
 	static Path getMatchesPreservePaths(Path archive, ReportLocationMatcher matcher) {
 		Path tempDir = Files.createTempDirectory("coverage")
 		ZipFile file = new ZipFile(archive.toAbsolutePath().toString(), Charset.forName("CP437"))
+		try {
 
-		(file.entries() as List<ZipEntry>).each { entry ->
-			if (matcher.pathMatches(entry.name)) {
-				extractFileToFolderPreservePath(file, tempDir, entry.name)
+			(file.entries() as List<ZipEntry>).each { entry ->
+				if (matcher.pathMatches(entry.name)) {
+					extractFileToFolderPreservePath(file, tempDir, entry.name)
+				}
 			}
-		}
 
-		return tempDir
+			return tempDir
+		} finally {
+			file.close()
+		}
 	}
 
 	/**
