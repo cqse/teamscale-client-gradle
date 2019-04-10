@@ -80,6 +80,8 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		(Files.list(definition.buildDir)
 			.findAll { Path path -> path.fileName.toString().toLowerCase().endsWith(".zip")
 		} as List<Path>).each { Path archive ->
+			LoggingUtils.log(String.format("Processing '%s'", archive.toAbsolutePath().toString()), definition)
+
 			XamlBuild build = new XamlBuild(definition, archive)
 
 			if(setBuildStatus(definition, build)) {

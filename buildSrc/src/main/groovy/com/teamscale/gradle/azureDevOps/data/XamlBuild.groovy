@@ -81,7 +81,8 @@ class XamlBuild implements IBuild {
 	Instant parseBuildTimeFromBuildLog(ReportLocationMatcher buildLogMatcher) {
 		List<Path> path = ZipUtils.getMatches(archive, buildLogMatcher)
 		if (path.size() != 1) {
-			throw new AzureBuildException("No definite match for a build log found with '$buildLogMatcher.pathPattern'")
+			throw new AzureBuildException("No definite match for a build log found with '$buildLogMatcher.pathPattern' " +
+				"in $archive.fileName")
 		}
 
 		String firstLine = ""
