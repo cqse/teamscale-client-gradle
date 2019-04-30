@@ -38,7 +38,7 @@ class TeamscalePlugin implements Plugin<Project> {
 			// Only create the tasks for real projects
 			if (teamscale?.config?.project) {
 				createProjectUtilsTasks(project)
-				AzureDevOpsPlugin.createProjectTasks(project)
+				AzureDevOpsPlugin.createTasks(project)
 			}
 		}
 	}
