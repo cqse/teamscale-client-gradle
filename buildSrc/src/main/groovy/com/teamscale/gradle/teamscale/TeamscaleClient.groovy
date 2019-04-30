@@ -58,7 +58,7 @@ class TeamscaleClient extends HttpClient {
 	/**
 	 * Makes an HTTP call to the teamscale server. Prepends any necessary prefix or subpath.
 	 */
-	protected Object doCall(String method, List<String> service, Map<String, String> query, setRequest = {}, boolean projectCall = true) {
+	protected Object doCall(String method, List<String> service, Map<String, String> query = [:], setRequest = {}, boolean projectCall = false) {
 		List<String> path = [prefix]
 		if(projectCall) {
 			path += ["p", server.project]
@@ -79,7 +79,14 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
 	 */
 	protected Object doProjectCall(String method, String service, Map<String, String> query, setRequest = {}) {
-		return doCall(method, [service], query, setRequest, true)
+		return doProjectCall(method, [service], query, setRequest)
+	}
+
+	/**
+	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
+	 */
+	protected Object doProjectCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
+		return doCall(method, service, query, setRequest, true)
 	}
 
 	/**

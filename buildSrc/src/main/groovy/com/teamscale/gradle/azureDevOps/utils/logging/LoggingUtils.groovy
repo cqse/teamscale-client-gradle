@@ -31,9 +31,7 @@ class LoggingUtils {
 
 	/** Logs a warning */
 	static void warn(String message) {
-		String prefix = "[WARN] "
-
-		println prefix + createMessage(message)
+		println "[WARN] " + createMessage(message)
 	}
 
 	/** Simple output */

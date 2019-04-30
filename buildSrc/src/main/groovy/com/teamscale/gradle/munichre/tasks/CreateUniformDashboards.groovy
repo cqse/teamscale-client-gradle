@@ -1,6 +1,7 @@
-package com.teamscale.gradle.munichre
+package com.teamscale.gradle.munichre.tasks
 
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
+import com.teamscale.gradle.munichre.extensions.DashboardExtension
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtils
@@ -8,6 +9,7 @@ import groovy.json.JsonSlurper
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
+// TODO
 class CreateUniformDashboards extends DefaultTask {
 
 	public static final String TASK_NAME = "createUniformDashboards"

@@ -12,7 +12,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 class TeamscalePlugin implements Plugin<Project> {
-	public static final String UTIL_TASKS = "Teamscale Dashboard Utils"
+	public static final String UTIL_TASKS = "Teamscale Utils"
 
 	@Override
 	void apply(Project project) {
@@ -30,19 +30,20 @@ class TeamscalePlugin implements Plugin<Project> {
 
 	static void createProjectTasks(Project project, TeamscaleExtension teamscale) {
 		project.afterEvaluate {
-			// Only create the tasks for real projects
-			if (!teamscale?.config?.project) {
-				return
+			if(teamscale?.config?.url && teamscale?.config?.username && teamscale?.config?.accesskey) {
+				MunichRePlugin.createInstanceTasks(project)
+				DashboardPlugin.createInstanceTasks(project)
 			}
 
-			createUtilsTasks(project)
-			AzureDevOpsPlugin.createTasks(project)
-			DashboardPlugin.createTasks(project)
-			MunichRePlugin.createTasks(project)
+			// Only create the tasks for real projects
+			if (teamscale?.config?.project) {
+				createProjectUtilsTasks(project)
+				AzureDevOpsPlugin.createProjectTasks(project)
+			}
 		}
 	}
 
-	static void createUtilsTasks(Project project) {
+	static void createProjectUtilsTasks(Project project) {
 		PluginUtils.createTask(project, MutePartition, UTIL_TASKS)
 	}
 }
