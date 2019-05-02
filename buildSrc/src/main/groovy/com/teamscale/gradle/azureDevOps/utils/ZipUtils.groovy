@@ -50,8 +50,7 @@ class ZipUtils {
 		try {
 			(file.entries() as List<ZipEntry>).each { entry ->
 				if (matcher.pathMatches(entry.name)) {
-					String name = Paths.get(entry.name).getFileName().toString()
-					extractFileToFolderPreserveName(file, tempDir, name)
+					extractFileToFolderPreserveName(file, tempDir, entry.name)
 				}
 			}
 
@@ -66,7 +65,9 @@ class ZipUtils {
 	 * If a file with that name already exists at the given location it will be skipped.
 	 */
 	static void extractFileToFolderPreserveName(ZipFile archive, Path destFolder, String path) {
-		Path extracted = Paths.get(destFolder.toAbsolutePath().toString(), path)
+		String name = Paths.get(path).getFileName().toString()
+		Path extracted = Paths.get(destFolder.toAbsolutePath().toString(), name)
+
 		if(extracted.toFile().exists()) {
 			return
 		}
