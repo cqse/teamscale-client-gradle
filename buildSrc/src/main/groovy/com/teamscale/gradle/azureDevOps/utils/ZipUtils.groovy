@@ -51,8 +51,6 @@ class ZipUtils {
 			(file.entries() as List<ZipEntry>).each { entry ->
 				if (matcher.pathMatches(entry.name)) {
 					String name = Paths.get(entry.name).getFileName().toString()
-					if(tempDir.con)
-
 					extractFileToFolderPreserveName(file, tempDir, name)
 				}
 			}
