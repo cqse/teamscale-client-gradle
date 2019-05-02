@@ -22,7 +22,7 @@ class UploadXamlTestCoverageTask extends UploadTestCoverageTask<XamlDefinition, 
 
 		List<File> coverageFiles
 		if (coverageOptions.type == "MS_COVERAGE") {
-			Path coverageFolder = ZipUtils.getMatchesPreservePaths(build.archive, coverageOptions)
+			Path coverageFolder = ZipUtils.getMatchesPreserveNames(build.archive, coverageOptions)
 			coverageFiles = [MSCoverageConverter.convert(coverageFolder, getCodeMergerPath()).toFile()]
 		} else {
 			coverageFiles = ZipUtils.getMatches(build.archive, definition.config.coverage).collect { it.toFile() }
