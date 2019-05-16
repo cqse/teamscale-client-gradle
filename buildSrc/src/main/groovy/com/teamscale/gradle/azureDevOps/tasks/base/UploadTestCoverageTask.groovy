@@ -9,6 +9,7 @@ import com.teamscale.gradle.azureDevOps.utils.convert.VSCoverageConverter
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 /**
  * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
@@ -19,8 +20,7 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 
 	void upload(S definition, T build, List<File> coverageFiles, ReportLocationMatcher coverageOptions) {
 		if (coverageFiles.isEmpty()) {
-			log("No test coverage found with '$coverageOptions'", definition, build)
-			setBuildAsProcessed(definition, build)
+			warn("No test coverage found with '$coverageOptions'", definition, build)
 			return
 		}
 

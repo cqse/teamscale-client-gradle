@@ -30,8 +30,8 @@ class LoggingUtils {
 	}
 
 	/** Logs a warning */
-	static void warn(String message) {
-		println "[WARN] " + createMessage(message)
+	static void warn(String message, IDefinition definition = null, IBuild build = null) {
+		println "[WARN] " + createMessage(message, definition, build)
 	}
 
 	/** Simple output */
