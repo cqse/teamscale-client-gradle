@@ -27,7 +27,12 @@ def getProjects() {
 }
 
 def createBaseline(project, name, date) {
-	def timestamp = Math.max(date.getTime() as long, getFirstCommitTimestamp(project))
+	def timestamp
+	try {
+		timestamp = Math.max(date.getTime() as long, getFirstCommitTimestamp(project))
+	} catch(groovyx.net.http.HttpException e) {
+		timestamp = Math.max(date.getTime() as long, getFirstCommitTimestampNew(project))
+	}
 
 	def http = teamscale.httpClient(teamscale)
 	return http.put {
@@ -61,6 +66,14 @@ def getFirstCommitTimestamp(project) {
 	def http = teamscale.httpClient(teamscale)
 	return http.get {
 		request.uri.path = "$teamscale.prefix/p/$project/repository-activity-summary"
+		response.failure failure
+	}.firstCommit.text() as long
+}
+
+def getFirstCommitTimestampNew(project) {
+	def http = teamscale.httpClient(teamscale)
+	return http.get {
+		request.uri.path = "$teamscale.prefix/p/$project/repository-summary"
 		response.failure failure
 	}.firstCommit.text() as long
 }

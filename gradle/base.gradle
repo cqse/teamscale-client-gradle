@@ -82,7 +82,11 @@ ext {
 	failure = { resp, reader ->
 		println "############################ Response ##################################"
 		println resp.getUri()
-		println reader
+		if (reader instanceof byte[]) {
+			println new String(reader)
+		} else {
+			println reader
+		}
 		println "########################################################################"
 		throw new HttpException(resp, reader)
 	}
