@@ -116,7 +116,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 
 			return true
 		} finally {
-			matches.forEach { it.toFile().delete() }
+			matches.forEach { Files.deleteIfExists(it) }
 		}
 	}
 

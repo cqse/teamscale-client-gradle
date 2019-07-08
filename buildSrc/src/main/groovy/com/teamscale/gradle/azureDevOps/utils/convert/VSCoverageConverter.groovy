@@ -19,14 +19,15 @@ import java.nio.file.Path
  * """
  */
 class VSCoverageConverter {
+
+	public static final String TMP_NAME = "tmp_vs_cov"
+
 	static List<String> convert(List<File> files, String execPath) {
-		Path xml = Files.createTempFile("tmp", ".xml")
+		Path xml = Files.createTempFile(TMP_NAME, ".xml")
 
 		try {
 			// file musn't exist, otherwise nothing will be written to it
-			if(Files.exists(xml)) {
-				Files.delete(xml)
-			}
+			Files.deleteIfExists(xml)
 
 			List<String> coverageFiles = files.collect { "\"$it.absolutePath\"" as String }
 			def command = (["cmd", "/C", "\"\"$execPath\"", "analyze", "/output:\"$xml.absolutePath\""]
@@ -48,9 +49,7 @@ class VSCoverageConverter {
 			return [xml.text]
 		} finally {
 			// prevent clogging of the temp dir
-			if(Files.exists(xml)) {
-				Files.delete(xml)
-			}
+			Files.deleteIfExists(xml)
 		}
 	}
 }

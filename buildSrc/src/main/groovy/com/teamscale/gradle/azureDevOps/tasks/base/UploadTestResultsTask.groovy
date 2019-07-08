@@ -5,6 +5,8 @@ import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 
+import java.nio.file.Files
+
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 
 abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> extends UploadTask<S, T> {
@@ -28,7 +30,7 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 		try {
 			contents = testResults.collect { it.text }
 		} finally {
-			testResults.forEach { it.delete() }
+			testResults.forEach { Files.deleteIfExists(it.toPath()) }
 		}
 		def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 		def type = options.type

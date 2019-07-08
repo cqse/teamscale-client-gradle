@@ -9,6 +9,8 @@ import java.util.zip.ZipFile
 
 class ZipUtils {
 
+	public static final String TMP_NAME = "temp_arch"
+
 	/**
 	 * Searches for and returns all matches for the given patterns in the archive as temporary files.
 	 * The filenames and the paths inside of the archives are not preserved.
@@ -31,7 +33,7 @@ class ZipUtils {
 	 */
 	private static Path extractFile(ZipFile archive, String path) {
 		ZipEntry entry = archive.getEntry(path)
-		Path tmp = Files.createTempFile("temp", ".tmp")
+		Path tmp = Files.createTempFile(TMP_NAME, ".tmp")
 		if (entry) {
 			tmp << archive.getInputStream(entry).bytes
 			return tmp

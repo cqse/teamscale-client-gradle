@@ -8,6 +8,8 @@ import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.convert.VSCoverageConverter
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
+import java.nio.file.Files
+
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
@@ -31,7 +33,7 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 			contents = convertCoverage(coverageFiles, type)
 		} finally {
 			// prevent the clogging of the temp file
-			coverageFiles.each { it.delete() }
+			coverageFiles.each { Files.deleteIfExists(it.toPath()) }
 		}
 
 		if (contents.size() != coverageFiles.size()) {

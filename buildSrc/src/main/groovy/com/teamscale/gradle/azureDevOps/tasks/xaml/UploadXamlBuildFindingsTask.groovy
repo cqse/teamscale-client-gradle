@@ -10,6 +10,7 @@ import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -41,7 +42,7 @@ class UploadXamlBuildFindingsTask extends UploadBuildFindingsTask<XamlDefinition
 
 		upload(definition, build, findings, definition.config.warnings)
 		} finally {
-			matches.forEach { it.toFile().delete() }
+			matches.forEach { Files.deleteIfExists(it) }
 		}
 	}
 
