@@ -24,6 +24,7 @@ class UploadXamlBuildFindingsTask extends UploadBuildFindingsTask<XamlDefinition
 	void run(XamlDefinition definition, XamlBuild build) {
 		List<Path> matches = ZipUtils.getMatches(build.archive, definition.config.warnings)
 
+		try {
 		if (matches.size() != 1) {
 			LoggingUtils.warn("Found ${matches.size()} matches for $definition.config.warnings, but expected " +
 				"exactly one")
@@ -39,6 +40,9 @@ class UploadXamlBuildFindingsTask extends UploadBuildFindingsTask<XamlDefinition
 		}
 
 		upload(definition, build, findings, definition.config.warnings)
+		} finally {
+			matches.forEach { it.toFile().delete() }
+		}
 	}
 
 	@Override

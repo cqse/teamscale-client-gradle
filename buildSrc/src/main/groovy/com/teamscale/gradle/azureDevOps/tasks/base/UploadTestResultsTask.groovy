@@ -16,8 +16,7 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 		return EBuildInformationType.TEST_RESULT
 	}
 
-	void upload(S definition, T build, ReportLocationMatcher options,
-					   List<File> testResults) {
+	void upload(S definition, T build, ReportLocationMatcher options, List<File> testResults) {
 		if (testResults.isEmpty()) {
 			log("No test results found with '$options)'", definition, build)
 			setBuildAsProcessed(definition, build)
@@ -25,9 +24,14 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 		}
 
 		// upload to teamscale
+		def contents = []
+		try {
+			contents = testResults.collect { it.text }
+		} finally {
+			testResults.forEach { it.delete() }
+		}
 		def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 		def type = options.type
-		def contents = testResults.collect { it.text }
 
 		def optional = [:] as Map
 		if (definition.getPartition()) {

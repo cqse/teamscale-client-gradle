@@ -79,12 +79,12 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		// get all builds
 		(Files.list(definition.buildDir)
 			.findAll { Path path -> path.fileName.toString().toLowerCase().endsWith(".zip")
-		} as List<Path>).each { Path archive ->
+			} as List<Path>).each { Path archive ->
 			LoggingUtils.log(String.format("Processing '%s'", archive.toAbsolutePath().toString()), definition)
 
 			XamlBuild build = new XamlBuild(definition, archive)
 
-			if(setBuildStatus(definition, build)) {
+			if (setBuildStatus(definition, build)) {
 				// If the build status cannot be determined skip the build
 				definition.builds.add(build)
 			}
@@ -100,20 +100,24 @@ class ProcessBuildArchivesTask extends DefaultTask {
 	static boolean setBuildStatus(XamlDefinition definition, XamlBuild build) {
 		List<Path> matches = ZipUtils.getMatches(build.archive, definition.config.errors)
 
-		if (matches.size() != 1) {
-			LoggingUtils.warn("Found ${matches.size()} matches for $definition.config.errors.pathPattern but " +
-				"expected exactly one. Skipping the build")
-			return false
-		}
-		def errorsFile = matches[0]
+		try {
+			if (matches.size() != 1) {
+				LoggingUtils.warn("Found ${matches.size()} matches for $definition.config.errors.pathPattern but " +
+					"expected exactly one. Skipping the build")
+				return false
+			}
+			def errorsFile = matches[0]
 
-		if (errorsFile.text.length() > 0) {
-			build.setResult(EBuildResult.FAILED)
-		} else {
-			build.setResult(EBuildResult.SUCCEEDED)
-		}
+			if (errorsFile.text.length() > 0) {
+				build.setResult(EBuildResult.FAILED)
+			} else {
+				build.setResult(EBuildResult.SUCCEEDED)
+			}
 
-		return true
+			return true
+		} finally {
+			matches.forEach { it.toFile().delete() }
+		}
 	}
 
 	protected static Path createZipstoreDirectory(String basePath, String projectName, String definitionName) {
