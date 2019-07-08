@@ -20,7 +20,7 @@ class ZipUtils {
 		try {
 			return (file.entries() as List<ZipEntry>).findResults { ZipEntry entry ->
 				if (matcher.pathMatches(entry.name)) {
-					return extractFile(file, entry.name)
+					return extractFile(file, entry.name, archive.fileName.toString())
 				}
 			}
 		} finally {
@@ -31,9 +31,9 @@ class ZipUtils {
 	/**
 	 * Extract the file defined by the given path from the archive
 	 */
-	private static Path extractFile(ZipFile archive, String path) {
+	private static Path extractFile(ZipFile archive, String path, String archiveName) {
 		ZipEntry entry = archive.getEntry(path)
-		Path tmp = Files.createTempFile(TMP_NAME, ".tmp")
+		Path tmp = Files.createTempFile(TMP_NAME + archiveName, ".tmp")
 		if (entry) {
 			tmp << archive.getInputStream(entry).bytes
 			return tmp
