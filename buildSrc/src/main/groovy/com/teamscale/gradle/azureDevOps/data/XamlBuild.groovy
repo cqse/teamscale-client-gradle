@@ -5,6 +5,7 @@ import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 
+import java.nio.file.Files
 import java.nio.file.Path
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -80,25 +81,29 @@ class XamlBuild implements IBuild {
 	 */
 	Instant parseBuildTimeFromBuildLog(ReportLocationMatcher buildLogMatcher) {
 		List<Path> path = ZipUtils.getMatches(archive, buildLogMatcher)
-		if (path.size() != 1) {
-			throw new AzureBuildException("No definite match for a build log found with '$buildLogMatcher.pathPattern' " +
-				"in $archive.fileName")
-		}
-
-		String firstLine = ""
-		path.get(0).withReader("utf-16", {
-			firstLine = it.readLine()
-		})
-
-		def matcher = buildLogTimestampPattern.matcher(firstLine)
-		if (matcher.matches()) {
-			try {
-				return buildLogTimestampFormat.parse(matcher.group(1)).toInstant()
-			} catch (ParseException e) {
-				throw new AzureBuildException("'${matcher.group(1)}' could not be parsed with '${buildLogTimestampFormat.toPattern()}'", e)
+		try {
+			if (path.size() != 1) {
+				throw new AzureBuildException("No definite match for a build log found with '$buildLogMatcher.pathPattern' " +
+					"in $archive.fileName")
 			}
-		} else {
-			throw new AzureBuildException("No timestamp match found for first line of build log: $firstLine")
+
+			String firstLine = ""
+			path.get(0).withReader("utf-16", {
+				firstLine = it.readLine()
+			})
+
+			def matcher = buildLogTimestampPattern.matcher(firstLine)
+			if (matcher.matches()) {
+				try {
+					return buildLogTimestampFormat.parse(matcher.group(1)).toInstant()
+				} catch (ParseException e) {
+					throw new AzureBuildException("'${matcher.group(1)}' could not be parsed with '${buildLogTimestampFormat.toPattern()}'", e)
+				}
+			} else {
+				throw new AzureBuildException("No timestamp match found for first line of build log: $firstLine")
+			}
+		} finally {
+			path.forEach { Files.deleteIfExists(it) }
 		}
 	}
 

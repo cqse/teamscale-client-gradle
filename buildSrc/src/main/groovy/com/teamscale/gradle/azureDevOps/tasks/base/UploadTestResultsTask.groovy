@@ -19,29 +19,29 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 	}
 
 	void upload(S definition, T build, ReportLocationMatcher options, List<File> testResults) {
-		if (testResults.isEmpty()) {
-			log("No test results found with '$options)'", definition, build)
-			setBuildAsProcessed(definition, build)
-			return
-		}
-
-		// upload to teamscale
-		def contents = []
 		try {
-			contents = testResults.collect { it.text }
+			if (testResults.isEmpty()) {
+				log("No test results found with '$options)'", definition, build)
+				setBuildAsProcessed(definition, build)
+				return
+			}
+
+			// upload to teamscale
+			def contents = testResults.collect { it.text }
+
+			def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
+			def type = options.type
+
+			def optional = [:] as Map
+			if (definition.getPartition()) {
+				optional = ["path-prefix": definition.getPartition()]
+			}
+
+			String result = getTeamscaleClient().uploadExternalReports(standard, contents, type, optional)
+			processUploadResult(definition, build, result, "$type (${contents.size()}): $result")
 		} finally {
 			testResults.forEach { Files.deleteIfExists(it.toPath()) }
 		}
-		def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
-		def type = options.type
-
-		def optional = [:] as Map
-		if (definition.getPartition()) {
-			optional = ["path-prefix": definition.getPartition()]
-		}
-
-		String result = getTeamscaleClient().uploadExternalReports(standard, contents, type, optional)
-		processUploadResult(definition, build, result, "$type (${contents.size()}): $result")
 	}
 
 	@Override
