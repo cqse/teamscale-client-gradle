@@ -9,7 +9,7 @@ import java.util.zip.ZipFile
 
 class ZipUtils {
 
-	public static final String TMP_NAME = "temp_arch"
+	public static final String TMP_NAME = "temp_"
 
 	/**
 	 * Searches for and returns all matches for the given patterns in the archive as temporary files.
@@ -33,7 +33,7 @@ class ZipUtils {
 	 */
 	private static Path extractFile(ZipFile archive, String path) {
 		ZipEntry entry = archive.getEntry(path)
-		Path tmp = Files.createTempFile(TMP_NAME, ".tmp")
+		Path tmp = Files.createTempFile(TMP_NAME + archive.name, ".tmp")
 		if (entry) {
 			tmp << archive.getInputStream(entry).bytes
 			return tmp
