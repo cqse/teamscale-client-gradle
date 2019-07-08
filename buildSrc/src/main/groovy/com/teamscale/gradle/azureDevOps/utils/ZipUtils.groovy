@@ -33,7 +33,7 @@ class ZipUtils {
 	 */
 	private static Path extractFile(ZipFile archive, String path) {
 		ZipEntry entry = archive.getEntry(path)
-		Path tmp = Files.createTempFile(TMP_NAME + archive.name, ".tmp")
+		Path tmp = Files.createTempFile(TMP_NAME, ".tmp")
 		if (entry) {
 			tmp << archive.getInputStream(entry).bytes
 			return tmp
