@@ -72,7 +72,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		int daysBeforeWarning = definition.options.maxDaysBetweenBuilds
 		long daysAfterLastBuild = Duration.between(lastBuildTime, Instant.now()).toDays()
 		if (daysAfterLastBuild > daysBeforeWarning) {
-			warn("Last processable build for [$definition.name] was executed $daysAfterLastBuild " +
+			warn("Last processable build for [$definition.name][$definition.id] was executed $daysAfterLastBuild " +
 				"days ago (max: $daysBeforeWarning)!")
 		}
 	}
