@@ -7,8 +7,10 @@ import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
+import com.teamscale.gradle.teamscale.data.StandardQueryParameter
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
+import java.nio.file.Files
 import java.time.Instant
 
 import static com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType.LAST_RELEASE
@@ -63,9 +65,15 @@ class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
 			// get parameters
 			def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 			def type = options.type.toString()
-			List<String> contents = testResults.collect { it.text }
 
-			def params = [:]
+			List<String> contents = []
+			try {
+				contents = testResults.collect { it.text }
+			} finally {
+				testResults.forEach { Files.deleteIfExists(it.toPath()) }
+			}
+
+			Map<String, String> params = [:]
 			def pathPrefix = ""
 			if (definition.options.partition) {
 				pathPrefix = "${definition.options.partition} "

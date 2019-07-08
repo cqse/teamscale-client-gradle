@@ -11,6 +11,8 @@ import java.nio.file.Path
  */
 class MSCoverageConverter {
 
+	public static final String TMP_NAME = "tmp_ms_cov"
+
 	/**
 	 * Fetches and converts all coverage files inside of the given folder.
 	 * It is important that the folder does not only contain the coverage files but also dlls which are needed for
@@ -19,7 +21,7 @@ class MSCoverageConverter {
 	 * Returns an xml file which can be uploaded to teamscale as a MS_COVERAGE report.
 	 */
 	static Path convert(Path folder, String execPath) {
-		Path xml = Files.createTempFile("coverage", ".xml")
+		Path xml = Files.createTempFile(TMP_NAME, ".xml")
 
 		try {
 			// copy coverage files to directory

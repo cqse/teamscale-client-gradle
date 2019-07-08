@@ -11,10 +11,10 @@ class AdosUtils {
 	 * The artifactPattern in the given options must be set!
 	 */
 	static List<File> getFilesFromBuildArtifact(AdosDefinition definition, AdosBuild build, ReportLocationMatcher options) {
-		List<File> coverageFiles = new ArrayList<>()
+		List<File> files = new ArrayList<>()
 
 		if (!options.mustSearchInArtifact()) {
-			return coverageFiles
+			return files
 		}
 		List<Object> artifacts = definition.http.getArtifacts(build.id).findAll { artifact ->
 			options.artifactMatches((String) artifact.name)
@@ -32,12 +32,12 @@ class AdosUtils {
 
 			contents.each { item ->
 				if (item.itemType == "file" && options.pathMatches((String) item.path)) {
-					coverageFiles.addAll(definition.http.downloadFiles([item.contentLocation]))
+					files.addAll(definition.http.downloadFiles([item.contentLocation]))
 				}
 			}
 		}
 
-		return coverageFiles
+		return files
 	}
 
 
