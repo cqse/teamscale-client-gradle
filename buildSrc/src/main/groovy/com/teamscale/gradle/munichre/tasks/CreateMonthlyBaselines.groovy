@@ -1,9 +1,7 @@
 package com.teamscale.gradle.munichre.tasks
 
-import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
-import com.teamscale.gradle.teamscale.TeamscaleClient
 
-import static com.teamscale.gradle.munichre.tasks.CreateMonthlyIssueQuery.hasNoIssues
+import com.teamscale.gradle.teamscale.TeamscaleClient
 
 /**
  * Task for creating monthly baselines for a project
@@ -15,11 +13,6 @@ class CreateMonthlyBaselines extends CreateBaseline {
 
 	@Override
 	void execute(TeamscaleClient http, String project) {
-		if (hasNoIssues(http, project)) {
-			LoggingUtils.log(" Skipping  $project: no issues found")
-			return
-		}
-
 		Date baseline = getDateAtStartOfCurrentMonth()
 		createBaseline(project, CURRENT, baseline.getTime())
 
