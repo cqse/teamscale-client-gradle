@@ -3,21 +3,24 @@ package com.teamscale.gradle.munichre
 import com.teamscale.gradle.PluginUtils
 import com.teamscale.gradle.munichre.extensions.DashboardExtension
 import com.teamscale.gradle.munichre.extensions.MonthlyExtension
-import com.teamscale.gradle.munichre.tasks.CreateMonthlyIssueQuery
-import com.teamscale.gradle.munichre.tasks.CreateUniformDashboards
+import com.teamscale.gradle.munichre.tasks.*
 import org.gradle.api.Project
 
 class MunichRePlugin {
-	private static final String DASHBOARD_TASKS = "MunichRe Dashboard Utils"
-	private static final String MONTHLY_TASKS = "MunichRe Monthly Utils"
+	private static final String UTILS_TASKS = "MunichRe Utils Tasks"
 
-	static  void createProjectTasks(Project project) {
+	static void createProjectTasks(Project project) {
 		//
 	}
 
 	static void createInstanceTasks(Project project) {
-		PluginUtils.createTask(project, CreateUniformDashboards, DASHBOARD_TASKS)
-		PluginUtils.createTask(project, CreateMonthlyIssueQuery, MONTHLY_TASKS)
+		PluginUtils.createTask(project, CreateUniformDashboards, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateMonthlyIssueQuery, UTILS_TASKS)
+
+		PluginUtils.createTask(project, CreateTGAStart, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateTSAStart, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateReportLast, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateMonthlyBaselines, UTILS_TASKS)
 	}
 
 	static void createExtensions(Project project) {

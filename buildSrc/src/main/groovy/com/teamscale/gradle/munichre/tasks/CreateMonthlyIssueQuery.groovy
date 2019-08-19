@@ -49,6 +49,11 @@ class CreateMonthlyIssueQuery extends DefaultTask {
 		TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
 		for (project in http.getAllProjects()) {
+			if (hasNoIssues(http, project)) {
+				log("Skipping $project: no issues found")
+				continue
+			}
+
 			log("Creating issue metrics for $project")
 
 			// get current issue metrics
@@ -57,33 +62,33 @@ class CreateMonthlyIssueQuery extends DefaultTask {
 
 			// delete current
 			def currentQuery = queries.find { it.name == ISSUE_QUERY_NAME_CURRENT }
-			if(currentQuery) {
+			if (currentQuery) {
 				deleteIssueQuery(http, project, ISSUE_QUERY_NAME_CURRENT)
 				queries.remove(currentQuery)
 			}
 
 			// delete old
-			for(query in queries) {
+			for (query in queries) {
 				String name = query.name
 				def matcher = ISSUE_QUERY_NAME_PATTERN.matcher(name)
 
-				if(matcher.matches()) {
+				if (matcher.matches()) {
 					def date
 					try {
-						date = LocalDate.parse(matcher.group(1)+"-01")
-					} catch(DateTimeParseException e) {
+						date = LocalDate.parse(matcher.group(1) + "-01")
+					} catch (DateTimeParseException e) {
 						LoggingUtils.warn("Project: $project; the date of the issue query '$name' cannot be parsed")
 						continue
 					}
 
-					if(date < current.minusMonths(MAX_QUERIES - 1)) {
+					if (date < current.minusMonths(MAX_QUERIES - 1)) {
 						deleteIssueQuery(http, project, name)
 					}
 				}
 			}
 
 			// create new issue metrics
-			for(int i = 0; i < MAX_QUERIES; i++) {
+			for (int i = 0; i < MAX_QUERIES; i++) {
 				uploadIssueQuery(http, project, name, current.minusMonths(i))
 			}
 		}
@@ -96,7 +101,7 @@ class CreateMonthlyIssueQuery extends DefaultTask {
 		}) as List<Object>
 
 		return allQueries.findResults {
-			if(((String) it.name).startsWith("Monthly Assessment")) {
+			if (((String) it.name).startsWith("Monthly Assessment")) {
 				return it
 			}
 		}
@@ -131,5 +136,14 @@ class CreateMonthlyIssueQuery extends DefaultTask {
 			return ISSUE_QUERY_NAME_CURRENT
 		}
 		return String.format(ISSUE_QUERY_NAME, startDate.format(NAME_FORMAT))
+	}
+
+	/**
+	 * Checks if the given project has any issues by querying the number of issues
+	 */
+	static boolean hasNoIssues(TeamscaleClient http, String project) {
+		return (http.doCall("get", ["p", project, "issues"], ["count": "true"], { request ->
+			request.accept = "application/json"
+		}) as int) == 0
 	}
 }
