@@ -61,9 +61,12 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 		List<AdosDefinition> allDefinitions
 		try {
 			allDefinitions = http.getAllDefinitions();
-		} catch (SocketTimeoutException e) {
-			warn("Time-out while fetching all definitions for '$projectConfig.name' at '$organizationConfig.name'")
-			return []
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof SocketTimeoutException) {
+				warn("Time-out while fetching all definitions for '$projectConfig.name' at '$organizationConfig.name'")
+				return []
+			}
+			throw e
 		}
 
 		List<AdosDefinition> matchingDefinitions = allDefinitions.findResults { data ->
