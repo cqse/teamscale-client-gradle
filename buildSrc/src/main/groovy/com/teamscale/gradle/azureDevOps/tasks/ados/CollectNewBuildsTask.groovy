@@ -31,9 +31,12 @@ class CollectNewBuildsTask extends DefaultTask {
 			List<Map> allBuilds
 			try {
 				allBuilds = http.getBuildsForDefinition(definition.id, minTime)
-			} catch (SocketTimeoutException e) {
-				warn("Timeout while fetching builds", definition)
-				return
+			} catch (RuntimeException | SocketTimeoutException e) {
+				if (e instanceof SocketTimeoutException || e.getCause() instanceof SocketTimeoutException) {
+					warn("Timeout while fetching builds", definition)
+					return
+				}
+				throw e
 			}
 
 			List<AdosBuild> builds = allBuilds.findResults { Map data ->
