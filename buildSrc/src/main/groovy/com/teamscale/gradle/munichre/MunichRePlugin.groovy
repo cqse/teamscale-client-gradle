@@ -7,7 +7,7 @@ import com.teamscale.gradle.munichre.tasks.*
 import org.gradle.api.Project
 
 class MunichRePlugin {
-	private static final String UTILS_TASKS = "MunichRe Utils Tasks"
+	private static final String UTILS_TASKS = "MunichRe utils"
 
 	static void createProjectTasks(Project project) {
 		//

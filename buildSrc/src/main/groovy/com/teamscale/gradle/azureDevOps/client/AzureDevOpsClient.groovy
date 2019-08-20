@@ -72,7 +72,7 @@ class AzureDevOpsClient extends HttpClient {
 	 * Returns all current and retained builds for the given definition id. If a minTime is provided it will
 	 * only return the builds which *finished* AFTER the given Instant.
 	 */
-	List getBuildsForDefinition(String definitionId, Instant minTime = null) {
+	List<Map> getBuildsForDefinition(String definitionId, Instant minTime = null) {
 		def parameters = [
 			"definitions" : definitionId,
 			"statusFilter": "completed",

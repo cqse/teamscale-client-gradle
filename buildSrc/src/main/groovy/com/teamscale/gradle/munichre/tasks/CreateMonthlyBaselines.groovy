@@ -1,13 +1,12 @@
 package com.teamscale.gradle.munichre.tasks
 
-
 import com.teamscale.gradle.teamscale.TeamscaleClient
 
 /**
  * Task for creating monthly baselines for a project
  */
 class CreateMonthlyBaselines extends CreateBaseline {
-	public static final String TASK_NAME = "CreateMonthlyBaselines"
+	public static final String TASK_NAME = "createMonthlyBaselines"
 	private static final String CURRENT = "This Month"
 	private static final String PREVIOUS = "Previous Month"
 

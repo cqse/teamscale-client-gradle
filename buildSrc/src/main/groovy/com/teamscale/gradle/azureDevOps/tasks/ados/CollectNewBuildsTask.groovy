@@ -1,8 +1,8 @@
 package com.teamscale.gradle.azureDevOps.tasks.ados
 
-import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
+import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadTask
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
@@ -28,7 +28,15 @@ class CollectNewBuildsTask extends DefaultTask {
 
 			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(TIME_DELTA)
 
-			List builds = http.getBuildsForDefinition(definition.id, minTime).findResults { Map data ->
+			List<Map> allBuilds
+			try {
+				allBuilds = http.getBuildsForDefinition(definition.id, minTime)
+			} catch (SocketTimeoutException e) {
+				warn("Timeout while fetching builds", definition)
+				return
+			}
+
+			List<AdosBuild> builds = allBuilds.findResults { Map data ->
 				def build = new AdosBuild(data, definition.getOptions().getBranchMapping())
 				if (build.targetBranch != null) {
 					return build
@@ -62,7 +70,7 @@ class CollectNewBuildsTask extends DefaultTask {
 			return
 		}
 
-		def lastBuildTime = lastProcessed
+		Instant lastBuildTime = lastProcessed
 		if (builds.size() > 0) {
 			lastBuildTime = builds.finishTime.max()
 		} else if (lastProcessed.minusMillis(1) == Instant.EPOCH) {

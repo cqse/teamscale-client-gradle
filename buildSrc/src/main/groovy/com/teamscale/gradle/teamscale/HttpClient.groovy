@@ -10,7 +10,8 @@ class HttpClient {
 		this.http = http
 	}
 
-	protected Object doCall(String method, List<String> pathParameters, Map<String, String> queryParameters, setRequest = {}) {
+	protected Object doCall(String method, List<String> pathParameters, Map<String, String> queryParameters, setRequest = {
+	}) throws SocketTimeoutException {
 		def result = http."$method" {
 			setRequest(request)
 
