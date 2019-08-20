@@ -26,7 +26,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 			def credentials = azureDevOps.credentials[organization.name]
 
 			organization.projects.values().each { ProjectConfig projectConfig ->
-				def http = new AzureDevOpsClient(credentials, organization.name, projectConfig.name)
+				AzureDevOpsClient http = new AzureDevOpsClient(credentials, organization.name, projectConfig.name)
 
 				// minimize the api calls and get all definitions at once and sort then
 				def definitions = getAllDefinitions(http, organization, projectConfig)
@@ -55,7 +55,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 	/**
 	 * Fetches the information for all configured definitions
 	 */
-	private List<AdosDefinition> getAllDefinitions(AzureDevOpsClient http, OrganizationConfig organizationConfig, ProjectConfig projectConfig) {
+	List<AdosDefinition> getAllDefinitions(AzureDevOpsClient http, OrganizationConfig organizationConfig, ProjectConfig projectConfig) {
 		AzureDevOpsExtension azureDevOps = TeamscaleExtension.getFrom(project).azureDevOps
 
 		List<AdosDefinition> allDefinitions
