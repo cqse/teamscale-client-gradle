@@ -21,7 +21,7 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 	void upload(S definition, T build, ReportLocationMatcher options, List<File> testResults) {
 		try {
 			if (testResults.isEmpty()) {
-				log("No test results found with '$options)'", definition, build)
+				log("No test results found with \"$options)\"", definition, build)
 				setBuildAsProcessed(definition, build)
 				return
 			}

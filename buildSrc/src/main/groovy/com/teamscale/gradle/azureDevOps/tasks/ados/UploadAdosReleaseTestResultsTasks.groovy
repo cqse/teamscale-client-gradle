@@ -7,7 +7,6 @@ import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
 import com.teamscale.gradle.azureDevOps.tasks.base.AdosUploadTask
 import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.TeamscaleClient
-import com.teamscale.gradle.teamscale.data.StandardQueryParameter
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 import java.nio.file.Files
@@ -54,7 +53,7 @@ class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
 
 			// mark the build as processed if no files can be found
 			if (testResults.isEmpty()) {
-				log("No release tests results found with '$options'", definition, build)
+				log("No release tests results found with \"$options\"", definition, build)
 				setBuildAsProcessed(definition, build)
 				return
 			}

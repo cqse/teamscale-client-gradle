@@ -32,7 +32,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 				project.definitions.values().each { options ->
 					Path definitionInbox = Paths.get(xaml.inbox.toString(), project.name, options.name)
 					if (!Files.exists(definitionInbox)) {
-						LoggingUtils.warn("Inbox '$definitionInbox' does not exists, so no builds can be processed")
+						LoggingUtils.warn("Inbox \"$definitionInbox\" does not exists, so no builds can be processed")
 						return false
 					}
 
@@ -80,7 +80,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 		(Files.list(definition.buildDir)
 			.findAll { Path path -> path.fileName.toString().toLowerCase().endsWith(".zip")
 			} as List<Path>).each { Path archive ->
-			LoggingUtils.log(String.format("Processing '%s'", archive.toAbsolutePath().toString()), definition)
+			LoggingUtils.log(String.format("Processing \"%s\"", archive.toAbsolutePath().toString()), definition)
 
 			XamlBuild build = new XamlBuild(definition, archive)
 

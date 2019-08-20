@@ -83,7 +83,7 @@ class XamlBuild implements IBuild {
 		List<Path> path = ZipUtils.getMatches(archive, buildLogMatcher)
 		try {
 			if (path.size() != 1) {
-				throw new AzureBuildException("No definite match for a build log found with '$buildLogMatcher.pathPattern' " +
+				throw new AzureBuildException("No definite match for a build log found with \"$buildLogMatcher.pathPattern\" " +
 					"in $archive.fileName")
 			}
 
@@ -97,7 +97,7 @@ class XamlBuild implements IBuild {
 				try {
 					return buildLogTimestampFormat.parse(matcher.group(1)).toInstant()
 				} catch (ParseException e) {
-					throw new AzureBuildException("'${matcher.group(1)}' could not be parsed with '${buildLogTimestampFormat.toPattern()}'", e)
+					throw new AzureBuildException("\"${matcher.group(1)}\" could not be parsed with \"${buildLogTimestampFormat.toPattern()}\"", e)
 				}
 			} else {
 				throw new AzureBuildException("No timestamp match found for first line of build log: $firstLine")

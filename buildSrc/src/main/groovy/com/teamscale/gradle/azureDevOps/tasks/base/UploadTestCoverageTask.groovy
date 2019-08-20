@@ -22,7 +22,7 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 
 	void upload(S definition, T build, List<File> coverageFiles, ReportLocationMatcher coverageOptions) {
 		if (coverageFiles.isEmpty()) {
-			warn("No test coverage found with '$coverageOptions'", definition, build)
+			warn("No test coverage found with $coverageOptions", definition, build)
 			return
 		}
 
@@ -68,7 +68,7 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.codeCoverageExePath
 
 		assert path != null: "No code coverage exe given! In order to use VS_COVERAGE you need " +
-			"to provide a code coverage exe in ${AzureDevOpsExtension.NAME} with 'codeCoverageExe \"<path>\"'. " +
+			"to provide a code coverage exe in ${AzureDevOpsExtension.NAME} with: codeCoverageExe \"<path>\". " +
 			"VS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
 
 		assert (new File(path)).exists(): "Code coverage exe at path $path does not exists"

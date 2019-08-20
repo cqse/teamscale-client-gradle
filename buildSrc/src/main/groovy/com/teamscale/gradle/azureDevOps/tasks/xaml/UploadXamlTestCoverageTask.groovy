@@ -38,10 +38,10 @@ class UploadXamlTestCoverageTask extends UploadTestCoverageTask<XamlDefinition, 
 		def path = TeamscaleExtension.getFrom(project).azureDevOps.coverageMergerExePath
 
 		assert path != null: "No coverage merger exe given! In order to use MS_COVERAGE you need " +
-			"to provide a coverage merger exe in ${AzureDevOpsExtension.NAME} with 'coverageMergerPath \"<path>\"'. " +
+			"to provide a coverage merger exe in ${AzureDevOpsExtension.NAME} with: coverageMergerPath \"<path>\". " +
 			"MS_COVERAGE needs to be converted before it can be uploaded to Teamscale"
 
-		assert (new File(path)).exists(): "Coverage merger exe at path $path does not exists"
+		assert (new File(path)).exists(): "Coverage merger exe at path \"$path\" does not exists"
 
 		return path
 	}
