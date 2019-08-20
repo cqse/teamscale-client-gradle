@@ -42,10 +42,10 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 					log("$definition.name [$lastCompleted]")
 
 					if (definitions.size() > 1) {
-						assert definition.options.partition: "The project '$projectConfig.name' " +
+						assert definition.options.partition: "The project \"$projectConfig.name\" " +
 							"has ${definitions.size()} definitions, but there is no partition defined for " +
-							"'$definition.name ($definition.id)'.\nIf there are multiple definitions for a project, " +
-							"each one has to have a 'partition' property in its extensions gradle-file"
+							"\"$definition.name ($definition.id)\".\nIf there are multiple definitions for a project, " +
+							"each one has to have a \"partition\" property in its extensions gradle-file"
 					}
 				}
 			}
@@ -63,7 +63,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 			allDefinitions = http.getAllDefinitions();
 		} catch (RuntimeException | SocketTimeoutException e) {
 			if (e instanceof SocketTimeoutException || e.getCause() instanceof SocketTimeoutException) {
-				warn("Time-out while fetching all definitions for '$projectConfig.name' at '$organizationConfig.name'")
+				warn("Time-out while fetching all definitions for \"$projectConfig.name\" at \"$organizationConfig.name\"")
 				return []
 			}
 			throw e
