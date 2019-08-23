@@ -15,6 +15,15 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 
 	@Override
 	void run(S definition, T build) {
+		List<ReportLocationMatcher> configs = getTestResultConfigurations(definition)
+		if (configs.size() > 1) {
+			assert (configs.findAll {
+				it.partition == null
+			}).size() > 1: "If more than one test result upload is configured for a single build, only one is allowed " +
+				"to not have a specific partition. Otherwise the test results from the different source will be " +
+				"overwritten as they are uploaded to the same partition"
+		}
+
 		for (ReportLocationMatcher config in getTestResultConfigurations(definition)) {
 			List<File> files = getResultFiles(definition, build, config)
 			upload(definition, build, files, config)
@@ -48,8 +57,14 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 			standard.appendToMessage(type)
 
 			def optional = [:] as Map
-			if (definition.getPartition()) {
-				optional = ["path-prefix": definition.getPartition()]
+
+			def partition = options.getPartition()
+			if (!partition) {
+				partition = definition.getPartition()
+			}
+
+			if (partition) {
+				optional = ["path-prefix": partition]
 			}
 
 			String result = getTeamscaleClient().uploadExternalReports(standard, contents, type, optional)
