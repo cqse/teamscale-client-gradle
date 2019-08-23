@@ -88,7 +88,7 @@ class AzureDevOpsClient extends HttpClient {
 	}
 
 	/**
-	 * Downloads the test coverage for the given build id.
+	 * Downloads the code coverage for the given build id.
 	 * If the build does not have coverage, an emtpy list is returned.
 	 */
 	List<File> downloadTestCoverage(String buildId) {

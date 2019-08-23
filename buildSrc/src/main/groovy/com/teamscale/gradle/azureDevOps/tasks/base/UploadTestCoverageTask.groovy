@@ -1,5 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks.base
 
+
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
@@ -18,11 +19,25 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
  */
 abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> extends UploadTask<S, T> {
 	public static final String PARTITION = "Test Coverage"
-	public static final String REJECT_REASON = "No test coverage configured"
+	public static final String REJECT_REASON = "No code coverage configured"
+
+	@Override
+	void run(S definition, T build) {
+		for (ReportLocationMatcher config in getCoverageConfigurations()) {
+			List<File> files = getCoverageFiles(definition, build, config)
+			upload(definition, build, files, config)
+		}
+	}
+
+	/** Get the list of coverage configuration */
+	abstract List<ReportLocationMatcher> getCoverageConfigurations(S definition)
+
+	/** Fetch the available coverage files for the build with the given configuration */
+	abstract List<File> getCoverageFiles(S definition, T build, ReportLocationMatcher config)
 
 	void upload(S definition, T build, List<File> coverageFiles, ReportLocationMatcher coverageOptions) {
 		if (coverageFiles.isEmpty()) {
-			warn("No test coverage found with $coverageOptions", definition, build)
+			warn("No code coverage found with $coverageOptions", definition, build)
 			return
 		}
 

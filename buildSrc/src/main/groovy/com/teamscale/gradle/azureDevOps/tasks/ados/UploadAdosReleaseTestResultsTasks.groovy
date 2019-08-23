@@ -48,7 +48,7 @@ class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
 			}
 
 			// get the files from the test runs
-			def options = definition.options.tests.releaseResultOptions
+			def options = definition.options.tests.releaseResultConfigs
 			List<File> testResults = AdosUtils.getFilesFromTestRuns(definition.http, options, testRuns.id as List)
 
 			// mark the build as processed if no files can be found
@@ -122,7 +122,7 @@ class UploadAdosReleaseTestResultsTasks extends AdosUploadTask {
 
 	@Override
 	boolean isConfiguredForTask(AdosDefinition definition) {
-		return definition.options.tests && definition.options.tests.releaseResultOptions
+		return definition.options.tests && definition.options.tests.releaseResultConfigs
 	}
 
 	@Override

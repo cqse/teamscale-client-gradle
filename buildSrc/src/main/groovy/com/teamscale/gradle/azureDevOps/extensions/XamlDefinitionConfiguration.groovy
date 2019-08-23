@@ -27,10 +27,10 @@ class XamlDefinitionConfiguration {
 	ReportLocationMatcher errors
 
 	/** Matcher for any test result files */
-	ReportLocationMatcher result
+	List<ReportLocationMatcher> result = new ArrayList<>()
 
 	/** Matcher for any coverage files */
-	ReportLocationMatcher coverage
+	List<ReportLocationMatcher> coverage = new ArrayList<>()
 
 	/** Matcher for the Build Log where the timestamp can be parsed out of */
 	ReportLocationMatcher timestamp
@@ -56,11 +56,11 @@ class XamlDefinitionConfiguration {
 	}
 
 	def result(String type, String pattern, String partition = null) {
-		result = new ReportLocationMatcher(type, pattern, null, partition)
+		result.add(new ReportLocationMatcher(type, pattern, null, partition))
 	}
 
 	def coverage(String type, String pattern, String partition = null) {
-		coverage = new ReportLocationMatcher(type, pattern, null, partition)
+		coverage.add(new ReportLocationMatcher(type, pattern, null, partition))
 	}
 
 	def timestamp(String pattern) {

@@ -4,6 +4,7 @@ import com.teamscale.gradle.azureDevOps.data.XamlBuild
 import com.teamscale.gradle.azureDevOps.data.XamlDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadTestCoverageTask
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 import com.teamscale.gradle.azureDevOps.utils.convert.MSCoverageConverter
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
@@ -17,18 +18,21 @@ class UploadXamlTestCoverageTask extends UploadTestCoverageTask<XamlDefinition, 
 	final static String TASK_NAME = "uploadXamlTestCoverage"
 
 	@Override
-	void run(XamlDefinition definition, XamlBuild build) {
-		def coverageOptions = definition.config.coverage
+	List<ReportLocationMatcher> getCoverageConfigurations(XamlDefinition definition) {
+		return definition.config.coverage
+	}
 
+	@Override
+	List<File> getCoverageFiles(XamlDefinition definition, XamlBuild build, ReportLocationMatcher config) {
 		List<File> coverageFiles
-		if (coverageOptions.type == "MS_COVERAGE") {
-			Path coverageFolder = ZipUtils.getMatchesPreserveNames(build.archive, coverageOptions)
+		if (config.type == "MS_COVERAGE") {
+			Path coverageFolder = ZipUtils.getMatchesPreserveNames(build.archive, config)
 			coverageFiles = [MSCoverageConverter.convert(coverageFolder, getCodeMergerPath()).toFile()]
 		} else {
-			coverageFiles = ZipUtils.getMatches(build.archive, definition.config.coverage).collect { it.toFile() }
+			coverageFiles = ZipUtils.getMatches(build.archive, config).collect { it.toFile() }
 		}
 
-		upload(definition, build, coverageFiles, coverageOptions)
+		return coverageFiles
 	}
 
 	/**
@@ -53,6 +57,6 @@ class UploadXamlTestCoverageTask extends UploadTestCoverageTask<XamlDefinition, 
 
 	@Override
 	boolean isConfiguredForTask(XamlDefinition definition) {
-		return definition.config.coverage
+		return definition.config.coverage.size() > 0
 	}
 }

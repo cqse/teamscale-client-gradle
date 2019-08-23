@@ -8,6 +8,8 @@
 .idea/
 *.swp
 *.iml
+.gradletasknamecache
+teamscale_plugin_mappings.properties
 
 projects/*
 cache/*

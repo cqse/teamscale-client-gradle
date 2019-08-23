@@ -11,7 +11,7 @@ class UploadAdosTestResultsTask extends UploadTestResultsTask<AdosDefinition, Ad
 
 	@Override
 	void run(AdosDefinition definition, AdosBuild build) {
-		def options = definition.options.tests.resultOptions
+		def options = definition.options.tests.resultConfigs
 
 		// get test result files
 		List<File> testResults
@@ -26,7 +26,7 @@ class UploadAdosTestResultsTask extends UploadTestResultsTask<AdosDefinition, Ad
 
 	@Override
 	boolean isConfiguredForTask(AdosDefinition definition) {
-		return (definition.options.tests != null && definition.options.tests.resultOptions)
+		return (definition.options.tests != null && definition.options.tests.resultConfigs)
 	}
 
 	@Override
