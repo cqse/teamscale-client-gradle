@@ -24,7 +24,7 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 				"the different source will be overwritten as they are uploaded to the same partition "
 		}
 
-		for (ReportLocationMatcher config in getTestResultConfigurations(definition)) {
+		for (ReportLocationMatcher config in configs ^) {
 			List<File> files = getResultFiles(definition, build, config)
 			upload(definition, build, files, config)
 		}
