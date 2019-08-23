@@ -25,11 +25,11 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 	void run(S definition, T build) {
 		List<ReportLocationMatcher> configs = getCoverageConfigurations(definition)
 		if (configs.size() > 1) {
-			assert (configs.findAll {
-				it.partition == null
-			}).size() > 1: "If more than one coverage upload is configured for a single build, only one is allowed to " +
-				"not have a specific partition. Otherwise the coverage from the different source will be " +
-				"overwritten as they are uploaded to the same partition"
+			Set<String> partitions = new HashSet<>(configs.collect { it.partition })
+
+			assert partitions.size() == configs.size(): "If more than one coverage upload is configured for a single " +
+				"build, only one is allowed to not have a specific partition. Otherwise the coverage from the " +
+				"different source will be overwritten as they are uploaded to the same partition"
 		}
 
 		for (ReportLocationMatcher config in configs) {
