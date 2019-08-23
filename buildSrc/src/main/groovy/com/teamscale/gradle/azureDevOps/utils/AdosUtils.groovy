@@ -3,7 +3,8 @@ package com.teamscale.gradle.azureDevOps.utils
 import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
-import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
+
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class AdosUtils {
 	/**
@@ -14,17 +15,23 @@ class AdosUtils {
 		List<File> files = new ArrayList<>()
 
 		if (!options.mustSearchInArtifact()) {
+			warn("No artifact pattern given: ${options.toString()}", definition, build)
 			return files
 		}
 		List<Object> artifacts = definition.http.getArtifacts(build.id).findAll { artifact ->
 			options.artifactMatches((String) artifact.name)
 		}
 
+		if (artifacts.size() == 0) {
+			warn("No artifacts found with the given pattern: ${options.toString()}", definition, build)
+			return files
+		}
+
 		artifacts.each { artifact ->
 			def contents = definition.http.getArtifactContents(artifact)
 
 			if (!contents) {
-				LoggingUtils.warn("The contents for the artifact [$artifact.name] could not be found.\n" +
+				warn("The contents for the artifact [$artifact.name] could not be found.\n" +
 					"Probably a different `data` field. It should be in the form of `#/<number>/<artifact>`\n" +
 					"$artifact", definition, build)
 				return
@@ -35,6 +42,10 @@ class AdosUtils {
 					files.addAll(definition.http.downloadFiles([item.contentLocation]))
 				}
 			}
+		}
+
+		if (files.size() == 0) {
+			warn("No files with the given pattern found in the artifacts: ${options.toString()}")
 		}
 
 		return files

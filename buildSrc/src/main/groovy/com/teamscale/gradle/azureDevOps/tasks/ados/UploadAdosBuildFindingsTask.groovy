@@ -7,7 +7,7 @@ import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition, AdosBuild> {
 	static final String TASK_NAME = "uploadBuildFindings"
@@ -21,7 +21,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 		List matchedLogs = getMatchingLogs(definition, build, logs)
 
 		if (matchedLogs.isEmpty()) {
-			log("No log(s) matched $definition.options.logNameMatcher. Remember that the regex" +
+			warn("No log(s) matched $definition.options.logNameMatcher. Remember that the regex" +
 				"must match the complete name, not just a part! The name of all available logs are: ${logs.name}",
 				definition, build)
 			return
