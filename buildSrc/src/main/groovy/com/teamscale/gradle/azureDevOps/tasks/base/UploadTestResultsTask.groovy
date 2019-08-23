@@ -14,11 +14,25 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 	public static final String REJECT_REASON = "No test results configured"
 
 	@Override
+	void run(S definition, T build) {
+		for (ReportLocationMatcher config in getTestResultConfigurations(definition)) {
+			List<File> files = getResultFiles(definition, build, config)
+			upload(definition, build, files, config)
+		}
+	}
+
+	/** Get the list of coverage configuration */
+	abstract List<ReportLocationMatcher> getTestResultConfigurations(S definition)
+
+	/** Fetch the available coverage files for the build with the given configuration */
+	abstract List<File> getResultFiles(S definition, T build, ReportLocationMatcher config)
+
+	@Override
 	EBuildInformationType getUploadType() {
 		return EBuildInformationType.TEST_RESULT
 	}
 
-	void upload(S definition, T build, ReportLocationMatcher options, List<File> testResults) {
+	void upload(S definition, T build, List<File> testResults, ReportLocationMatcher options) {
 		try {
 			if (testResults.isEmpty()) {
 				log("No test results found with \"$options)\"", definition, build)
