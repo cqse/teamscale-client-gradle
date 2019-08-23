@@ -105,4 +105,9 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 	String getRejectReason() {
 		return REJECT_REASON
 	}
+
+	@Override
+	protected boolean canBeProcessed(S definition, T build) {
+		return true
+	}
 }

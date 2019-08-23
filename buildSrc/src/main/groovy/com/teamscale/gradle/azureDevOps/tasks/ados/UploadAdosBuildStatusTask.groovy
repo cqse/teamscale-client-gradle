@@ -23,11 +23,6 @@ class UploadAdosBuildStatusTask extends UploadBuildStatusTask<AdosDefinition, Ad
 	}
 
 	@Override
-	protected boolean canBeProcessed(AdosDefinition definition, AdosBuild build) {
-		return true
-	}
-
-	@Override
 	List<AdosDefinition> getDefinitions() {
 		return TeamscaleExtension.getFrom(project).azureDevOps.definitions
 	}

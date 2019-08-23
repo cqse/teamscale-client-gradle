@@ -1,5 +1,6 @@
 package com.teamscale.gradle.azureDevOps.tasks.base
 
+
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
@@ -9,9 +10,7 @@ import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.EAssessment
 import com.teamscale.gradle.teamscale.data.NonCodeMetric
 
-import static com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult.FAILED
-import static com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult.PARTIALLY_SUCCEEDED
-import static com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult.SUCCEEDED
+import static com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult.*
 import static com.teamscale.gradle.teamscale.data.EAssessment.*
 
 /**
@@ -82,5 +81,10 @@ abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> ex
 	@Override
 	EBuildInformationType getUploadType() {
 		return EBuildInformationType.BUILD_STATUS
+	}
+
+	@Override
+	protected boolean canBeProcessed(S definition, T build) {
+		return true
 	}
 }
