@@ -23,7 +23,7 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 
 	@Override
 	void run(S definition, T build) {
-		for (ReportLocationMatcher config in getCoverageConfigurations()) {
+		for (ReportLocationMatcher config in getCoverageConfigurations(definition)) {
 			List<File> files = getCoverageFiles(definition, build, config)
 			upload(definition, build, files, config)
 		}
