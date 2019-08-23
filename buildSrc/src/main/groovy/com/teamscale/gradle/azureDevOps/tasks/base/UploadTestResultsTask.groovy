@@ -45,6 +45,7 @@ abstract class UploadTestResultsTask<S extends IDefinition, T extends IBuild> ex
 
 			def standard = getStandardQueryParameters(definition, build, getDefaultPartition(), options)
 			def type = options.type
+			standard.appendToMessage(type)
 
 			def optional = [:] as Map
 			if (definition.getPartition()) {
