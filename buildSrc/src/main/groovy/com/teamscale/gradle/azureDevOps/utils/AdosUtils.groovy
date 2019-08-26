@@ -59,7 +59,7 @@ class AdosUtils {
 		// get test runs
 		List<Integer> testRunsIds = definition.http.getTestRunsForBuild(build.getUri()).findAll {
 			it.release == null // Ignore release test runs
-		}.id
+		}.id as List<Integer>
 
 		return getFilesFromTestRuns(definition.http, options, testRunsIds)
 	}
@@ -72,7 +72,7 @@ class AdosUtils {
 		List<String> attachmentUrls = testRunsIds.collect { http.getAttachmentsOfTestRun(it) }
 			.flatten().findAll { attachment ->
 			options.pathMatches((String) attachment.fileName)
-		}.url
+		}.url as List<String>
 
 		return http.downloadFiles(attachmentUrls)
 	}
