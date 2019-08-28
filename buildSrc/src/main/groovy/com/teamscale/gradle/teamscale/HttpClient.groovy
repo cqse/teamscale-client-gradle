@@ -13,6 +13,7 @@ class HttpClient {
 	protected Object doCall(String method, List<String> pathParameters, Map<String, String> queryParameters, setRequest = {
 	}) throws SocketTimeoutException {
 		def result = http."$method" {
+			setRequest.delegate = delegate
 			setRequest(request)
 
 			request.uri.path = "/" + pathParameters.join("/")

@@ -2,7 +2,6 @@ package com.teamscale.gradle.munichre
 
 import com.teamscale.gradle.PluginUtils
 import com.teamscale.gradle.munichre.extensions.DashboardExtension
-import com.teamscale.gradle.munichre.extensions.MonthlyExtension
 import com.teamscale.gradle.munichre.tasks.*
 import org.gradle.api.Project
 
@@ -25,6 +24,5 @@ class MunichRePlugin {
 
 	static void createExtensions(Project project) {
 		project.extensions.create(DashboardExtension.NAME, DashboardExtension)
-		project.extensions.create(MonthlyExtension.NAME, MonthlyExtension)
 	}
 }

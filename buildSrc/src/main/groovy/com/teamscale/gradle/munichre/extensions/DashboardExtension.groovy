@@ -5,5 +5,7 @@ class DashboardExtension {
 
 	String template
 
-	String propertiesPath
+	String data
+
+	String tool
 }
