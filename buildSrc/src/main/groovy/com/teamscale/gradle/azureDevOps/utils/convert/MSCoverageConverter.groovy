@@ -21,9 +21,8 @@ class MSCoverageConverter {
 	 * Returns an xml file which can be uploaded to teamscale as a MS_COVERAGE report.
 	 */
 	static Path convert(Path folder, String execPath) {
-		Path xml = Files.createTempFile(TMP_NAME, ".xml")
-
 		try {
+			Path xml = Files.createTempFile(TMP_NAME, ".xml")
 			// copy coverage files to directory
 			def command = ["cmd", "/C", "\"\"$execPath\"",
 						   "-d", "\"$folder\"",

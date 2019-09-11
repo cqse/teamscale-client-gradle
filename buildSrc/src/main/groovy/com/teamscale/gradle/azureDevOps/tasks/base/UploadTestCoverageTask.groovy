@@ -46,7 +46,12 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 
 	void upload(S definition, T build, List<File> coverageFiles, ReportLocationMatcher coverageOptions) {
 		if (coverageFiles.isEmpty()) {
-			warn("No code coverage found with $coverageOptions", definition, build)
+			String message = "No code coverage found with $coverageOptions"
+			if (build.hasFailed()) {
+				log(message, definition, build)
+			} else {
+				warn(message, definition, build)
+			}
 			return
 		}
 
