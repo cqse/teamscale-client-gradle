@@ -70,7 +70,7 @@ class ZipUtils {
 		String name = Paths.get(path).getFileName().toString()
 		Path extracted = Paths.get(destFolder.toAbsolutePath().toString(), name)
 
-		if(extracted.toFile().exists()) {
+		if (extracted.toFile().exists()) {
 			return
 		}
 
