@@ -13,7 +13,7 @@ import java.util.regex.Pattern
 class CSharpLogAnalyzer implements ILogAnalyzer {
 	final static String DATE_TIME = "[0-9-\\.:T]{18,}[A-Z]{1}"
 	final static String PATH = "((?:\\w:)?(?:[^:#\\s]+)\\\\?\\w+\\.\\w+)\\(([0-9]+),[0-9,]+\\):"
-	final static String FINDING_ID = "(?:[\\w\\s]+)?warning\\s((?:[A-Z]{2,3})[0-9]+):"
+	final static String FINDING_ID = "(?:[\\w\\s]+)?warning\\s((?:[A-Z]{1,3})[0-9]+):"
 	final static String MESSAGE = "(.*?)\\s+\\[[^\\]]*\\]"
 	final static Pattern COMBINED = ~"(?:$DATE_TIME\\s+)?$PATH\\s$FINDING_ID\\s+$MESSAGE"
 	final List<String> filter
