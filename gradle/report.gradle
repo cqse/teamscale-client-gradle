@@ -17,7 +17,7 @@ ext {
 			dir: null,
 
 			// The trace include pattern, defaults to txt files.
-			includes: ["**/*.xml"],
+			includes: ["**.xml"],
 
 			// Optional file pattern excludes.
 			excludes: [],
@@ -35,7 +35,7 @@ ext {
 			dir: null,
 
 			// The trace include pattern, defaults to txt files.
-			includes: ["**/*.xml"],
+			includes: ["**.xml"],
 
 			// Optional file pattern excludes.
 			excludes: [],
@@ -69,6 +69,8 @@ task collectReport {
 			return
 		}
 
+		file(report.store.dir).mkdirs()
+
 		fileTreeFiltered(report.inbox.dir, report.inbox).files.each { reportFile ->
 			def toDir = report.store.dir
 			if (!report.inbox.copyFlat) {
@@ -81,7 +83,7 @@ task collectReport {
 
 task uploadReport(dependsOn: collectReport) {
 	doLast {
-		assert file(report.store.dir).exists()
+		file(report.store.dir).mkdirs()
 
 		def http = teamscale.httpClient(teamscale)
 		def sortedReports = fileTreeFiltered(report.store.dir, report.store).files.sort{ it.lastModified() }
