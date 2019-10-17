@@ -7,6 +7,8 @@ buildscript {
 	}
 }
 
+import com.xlson.groovycsv.CsvParser
+
 ///////  Configuration
 
 ext {
@@ -20,51 +22,74 @@ ext {
 				// May be null in order to disable inbox and work on manual created store.
 				dir: null,
 
-				// An optional check that is performed before copying files to the store from the inbox. If false, copying will be skipped. 
- 				require: { dir -> true },			
-				
+				// An optional check that is performed before copying files to the store from the inbox. If false, copying will be skipped.
+ 				require: { dir -> true },
+
 				// Included files, usually just PDB files.
 				includes: ["**/*.pdb"],
-				
+
 				// Optional excluded PDBs.
 				excludes: [],
-				
+
 				// Allows further filtering of included files, e.g. by size.
 				filter: { file -> true },
-				
+
 				// Closure that returns the version based on the build directory
 				version: { path -> file(path).name },
 
 				// Whether the files should be copied flat or in an hierarchical structure
 				copyFlat: false,
-				
+
 				// Copies a single file to the inbox
 				copyFile: { file, toDir -> ant.copy(file: file, toDir: toDir, preservelastmodified: true) }
 			],
-			
+
+			// The symbol server inbox for PDB files
+			symbolserver: [
+				// A directory (or array of directories) with symbol server projects (usually containing an 000Admin folder).
+				// Note: At the moment only fileshare-based symbol servers are supported.
+				dir: null,
+
+				// An optional check that is performed before copying files of a symbolserver entry to the store.
+				// If false, copying will be skipped.
+ 				require: { entry -> true },
+
+				// Included files, usually just PDB files.
+				includes: ["**/*.pdb"],
+
+				// Optional excluded PDBs.
+				excludes: [],
+
+				// Allows further filtering of included files, e.g. by size.
+				filter: { file -> true },
+
+				// Closure that returns the version based on the build directory
+				version: { entry -> entry.version },
+			],
+
 			// The PDB store. Usually the store gets filled from the inbox.
 			// It requires (unless otherwise configured) subfolders that correspond to "versions" of PDBs that are published in teamscale.
 			store: [
 				// The store location. Must be set in implementing project.
 				dir: null,
-				
+
 				// Included files, usually just PDB files.
 				includes: ["**/*.pdb"],
-				
+
 				// Optional excluded PDBs.
 				excludes: [],
-				
+
 				// Allows further filtering of included files, e.g. by size. Usually this is not needed and filtering should be applied before copying to the store.
 				filter: { file -> true }
 			],
-			
+
 			upload: [
 				// The amount of pdb files to upload in one batch
 				collate: 8,
-				
+
 				// The project to upload PDBs
 				project: { dir -> teamscale.project },
-				
+
 				// Closure that returns the program version based on the build directory. Usually there is no need to configure this property.
 				version: { dir -> file(dir).name },
 
@@ -73,7 +98,7 @@ ext {
 
 				// The PDB file that is used to calculate the timestamp the PDBs correlate to the code (approximation), better override timestamp closure and extract exact revision.
 				timestampFile: null,
-				
+
 				// The timestamp calculation closure. Timestamp the PDB files correspond to in the repository.
 				// Defaults to the modification timestamp of a specific file in build output, override if better means exist.
 				timestamp:  { path ->
@@ -89,76 +114,76 @@ ext {
 				}
 			]
 		],
-		
+
 		trace: [
 			// E.g. file share where traces are copied after test execution (dir may be null to disable inbox and work on store directly, this is however not recommended)
 			inbox: [
 				// The trace inbox directory (or array of directories).
 				// May be null in order to disable inbox and work on manual created store.
 				dir: null,
-				
+
 				// The trace include pattern, defaults to txt files.
 				includes: ["**/*.txt"],
-				
+
 				// Optional file pattern excludes.
 				excludes: [],
-				
+
 				// Optional further filtering.
 				filter: { file -> true },
 
 				// Whether the files should be copied flat or in an hierarchical structure
 				copyFlat: false,
 			],
-			
+
 			// Directory where unprocessed traces are located. If a inbox is defined, the traces are moved from the inbox into this folder.
 			store: [
 				// The trace store location.
 				dir: null,
-				
+
 				// The trace include pattern, defaults to txt files.
 				includes: ["**/*.txt"],
-				
+
 				// Optional file pattern excludes.
 				excludes: [],
-				
+
 				// Optional further filtering.
 				filter: { file -> true }
 			],
-			
+
 			upload: [
 				// The project to upload PDBs
 				project: { key, files -> teamscale.project },
-				
+
 				// An optional bucket to group traces, e.g. by day { trace -> new Date(trace.lastModified()).format('yyyyMMdd') }
 				bucket: { traceFile -> null },
-				
+
 				// The amount of traces that are uploaded in one batch.
 				// If null (default value), a collation of 200 is used if a bucket is set, otherwise collation is set to 1 (traces are processed one by one).
 				collate: null,
-				
+
 				// The upload commit message. The variable key corresponds to the trace grouping key.
 				message: { key, files -> "$key.partition (Version: $key.version Traces: "+files.collect{it.name}.join(", ")+")" },
-				
+
 				// A closure that calculates the timestamp of when the trace was created (default: modification date).
 				timestamp: { file -> file.lastModified() },
-				
+
 				// An assmebly that is used to detect the program version from the trace file.
 				versionAssembly: null,
-				
+
 				// Version attribute that is extracted from the trace file
 				versionAttribute: "Version",
 
-				// Closure that returns the program version a trace corresponds to. Return null to ignore trace. Defaults to a version assembly. 
+				// Closure that returns the program version a trace corresponds to. Return null to ignore trace. Defaults to a version assembly.
 				version: { file ->
 					assert tga.trace.upload.versionAssembly != null
-					
+
 					def assemblyKey = tga.trace.upload.versionAssembly
 					if (!(tga.trace.upload.versionAssembly instanceof java.util.regex.Pattern)) {
 						assemblyKey = java.util.regex.Pattern.quote(tga.trace.upload.versionAssembly)
 					}
-										
+
 					assemblyKey = "^Assembly=$assemblyKey:\\d+ Version:.*"
-					
+
 					def assemblyLine = file.readLines().find { it ==~ assemblyKey }
 					if (assemblyLine == null) {
 						return null
@@ -168,7 +193,7 @@ ext {
 
 				partition: { traceFile -> "Manual Test" }
 			],
-			
+
 			// Directory where traces are archived (in a subfolder corresponding to the version)
 			archive: [ dir: null ]
 		]
@@ -177,36 +202,36 @@ ext {
 
 ///////  PDB Handling
 
-task collectPdb {
+task collectPdbInbox {
 	doLast {
 		if (tga.pdb.inbox.dir == null) {
 			println "No PDB inbox defined, skipping"
 			return;
 		}
-		
+
 		tga.pdb.inbox.dir = wrapAsArray(tga.pdb.inbox.dir)
-		
+
 		tga.pdb.inbox.dir.each{ assert file(it).exists() }
-		
+
 		def stored = file("${tga.pdb.store.dir}/stored.txt")
 		def storedDirs = (stored.exists() ? stored.readLines() : []) as Set
-		
+
 		tga.pdb.inbox.dir.each { inboxDir ->
 			file(inboxDir).eachDir { buildDir ->
 				if (storedDirs.contains(buildDir.name)) {
 					return
 				}
-				
+
 				println "Storing PDBs from $buildDir.name"
-				
+
 				if (!tga.pdb.inbox.require(buildDir)) {
 					println "  -> Skipping, due to missing requirement"
 					return
 				}
-				
+
 				def version = tga.pdb.inbox.version(buildDir)
 				println "  ... for version $version"
-				
+
 				def store = "$tga.pdb.store.dir/$version"
 
 				fileTreeFiltered(buildDir, tga.pdb.inbox).files.each { file ->
@@ -214,30 +239,118 @@ task collectPdb {
 					if (!tga.pdb.inbox.copyFlat) {
 						toDir += "/" + stripPathPrefix(file.parent, buildDir)
 					}
-					
+
 					tga.pdb.inbox.copyFile(file, toDir)
 				}
-				
+
 				stored.append "$buildDir.name\r\n"
 			}
 		}
 	}
 }
 
+// See https://docs.microsoft.com/en-us/windows/desktop/Debug/using-symstore#the-servertxt-and-historytxt-files
+task collectPdbSymbolServer {
+	doLast {
+		if (tga.pdb.symbolserver.dir == null) {
+			println "No PDB SymbolServer defined, skipping"
+			return;
+		}
+
+		tga.pdb.symbolserver.dir = wrapAsArray(tga.pdb.symbolserver.dir)
+		tga.pdb.symbolserver.dir.each{ assert file(it).exists() }
+
+		// TODO extract duplicated logic with collectPdbInbox
+		def stored = file("${tga.pdb.store.dir}/stored.txt")
+		def storedIds = (stored.exists() ? stored.readLines() : []) as Set
+
+		tga.pdb.symbolserver.dir.each { symSrv ->
+			def symSrvAdmin = file("$symSrv/000Admin")
+			def serverCsv = CsvParser.parseCsv(
+				file("$symSrvAdmin/server.txt").text,
+				readFirstLine:true,
+				escapeChar:'°',
+				columnNames:['id', 'transaction', 'type', 'date', 'time', 'product', 'version', 'comment', 'reserved']
+			)
+
+			serverCsv.findAll{it.transaction == 'add' && it.type == 'file'}.each { entry ->
+				if (storedIds.contains(entry.version)) {
+					return
+				}
+
+				println "Storing PDBs from $entry.version"
+
+				if (!tga.pdb.symbolserver.require(entry)) {
+					println "  -> Skipping, due to missing requirement"
+					return
+				}
+
+				def version = tga.pdb.symbolserver.version(entry)
+				println "  ... for version $version"
+
+				def store = "$tga.pdb.store.dir/$version"
+
+
+				def entryFiles = CsvParser.parseCsv(
+					file("$symSrvAdmin/$entry.id").text,
+					readFirstLine:true,
+					escapeChar:'°',
+					columnNames:['directory', 'location']
+				)
+
+				// TODO Add include/exclude mechanism
+				//def pattern = new PatternSet().include(tga.pdb.symbolserver.includes).exclude(tga.pdb.symbolserver.excludes)
+				//def includes = PatternMatcherFactory.compile(false, tga.pdb.symbolserver.includes);
+				//def excludes = PatternMatcherFactory.compile(false, tga.pdb.symbolserver.excludes);
+				//println files(entryFiles.collect{it.location}).getAsFileTree().size()
+
+				def entryObj = new ConfigObject()
+				entryObj.putAll(entry.toMap())
+
+				file("$store/symbolserver-entry.txt").text = entryObj.prettyPrint()
+				file("$store/timestamp.txt").text = new Date().parse('MM/dd/yyyy HH:mm:ss', "$entry.date $entry.time").time
+
+				entryFiles.each { entryFile ->
+					def location = RelativePath.parse(true, entryFile.location)
+					def pdbFile = file("$symSrv/$entryFile.directory/$location.lastName")
+
+					// FIXME
+					if (tga.pdb.symbolserver.filter(pdbFile)) {
+						tga.pdb.inbox.copyFile(pdbFile, store)
+					}
+				}
+
+				/*fileTreeFiltered(buildDir, tga.pdb.symbolserver).files.each { file ->
+					def toDir = store
+					if (!tga.pdb.symbolserver.copyFlat) {
+						toDir += "/" + stripPathPrefix(file.parent, buildDir)
+					}
+
+					tga.pdb.symbolserver.copyFile(file, toDir)
+				}*/
+
+				stored.append "$entry.version\r\n"
+			}
+		}
+	}
+}
+
+task collectPdb(dependsOn: [collectPdbInbox, collectPdbSymbolServer])
+
 task uploadPdb(dependsOn: collectPdb) {
 	doLast {
 		assert file(tga.pdb.store.dir).exists()
-		
+
 		def published = file("${tga.pdb.store.dir}/published.txt")
 		def publishedVersions = (published.exists() ? published.readLines() : []) as Set
-		
+
 		def dirs = [:]
 		file(tga.pdb.store.dir).eachDir { pdbDir ->
 			def version = tga.pdb.upload.version(pdbDir)
 			if (publishedVersions.contains(version)) {
 				return
 			}
-		
+
 			def timestamp = tga.pdb.upload.timestamp(pdbDir)
 			dirs.put(timestamp, [version, pdbDir])
 		}
@@ -245,7 +358,7 @@ task uploadPdb(dependsOn: collectPdb) {
 		dirs.keySet().sort().each { timestamp ->
 		 	def (version, pdbDir) = dirs[timestamp]
 			def project = tga.pdb.upload.project(pdbDir)
-					
+
 			println "Uploading PDBs"
 			println "  ... for timestamp $timestamp"
 			println "  ... for version $version"
@@ -253,16 +366,16 @@ task uploadPdb(dependsOn: collectPdb) {
 			if (teamscale.dryRun) {
 				println "  ... in DRY-RUN mode"
 			}
-			
+
 			def http = teamscale.httpClient(teamscale)
 			def pdbs = fileTreeFiltered(pdbDir, tga.pdb.store)
 			pdbs.collate(tga.pdb.upload.collate).each { pdbSlice ->
 				println "  -> Uploading: " + pdbSlice
-				
+
 				if (teamscale.dryRun) {
 					return
 				}
-			
+
 				println http.post(String) {
 					request.uri.path = "/p/$project/dotnet-debug-info-upload"
 					request.contentType = 'multipart/form-data'
@@ -278,7 +391,7 @@ task uploadPdb(dependsOn: collectPdb) {
 					request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
 				}
 			}
-			
+
 			if (!teamscale.dryRun) {
 				published.append "${version}\r\n"
 			}
@@ -294,27 +407,27 @@ task collectTraces {
 			println "No Trace inbox defined, skipping"
 			return
 		}
-		
+
 		wrapAsArray(tga.trace.inbox.dir).each { inboxDir ->
 			assert file(inboxDir).exists()
-			
+
 			fileTreeFiltered(inboxDir, tga.trace.inbox).files.each { traceFile ->
-			def toDir = tga.trace.store.dir
-			if (!tga.trace.inbox.copyFlat) {
+				def toDir = tga.trace.store.dir
+				if (!tga.trace.inbox.copyFlat) {
 					toDir += "/" + stripPathPrefix(traceFile.parent, inboxDir)
+				}
+				ant.move(file: traceFile, toDir: toDir, preservelastmodified: true, failonerror: false)
 			}
-			ant.move(file: traceFile, toDir: toDir, preservelastmodified: true, failonerror: false)
 		}
 	}
-}
 }
 
 task uploadTrace(dependsOn: collectTraces) {
 	doLast {
 		assert file(tga.trace.store.dir).exists()
-		
+
 		def http = teamscale.httpClient(teamscale)
-	
+
 		// grup traces by partition, version, bucket (e.g. time)
 		def groupedTraces = fileTreeFiltered(tga.trace.store.dir, tga.trace.store).files.groupBy({[
 			version: tga.trace.upload.version(it),
@@ -331,18 +444,18 @@ task uploadTrace(dependsOn: collectTraces) {
 					collate = 200
 				}
 			}
-			
+
 			tracesPerGroup.sort{ it.lastModified() }.collate(collate).each { traces ->
 				def timestamp = tga.trace.upload.timestamp(traces.last())
 				def version = key.version
 				def partition = key.partition
 				def project = teamscale.project
 				def message = tga.trace.upload.message(key, traces)
-				
+
 				if (version != null) {
 					project = tga.trace.upload.project(key, traces)
 				}
-				
+
 				println "  -> $traces.size Traces: "
 				println "     .... $message"
 				println "     ... for timestamp $timestamp"
@@ -353,7 +466,7 @@ task uploadTrace(dependsOn: collectTraces) {
 					println "     ... in DRY-RUN mode"
 					return
 				}
-				
+
 				if (version == null) {
 					version = "_unknown"
 					println "     -> Skipped due to missing version"
@@ -382,7 +495,7 @@ task uploadTrace(dependsOn: collectTraces) {
 						return
 					}
 				}
-				
+
 				traces.each { trace ->
 					def toDir = "$tga.trace.archive.dir/$version/" + stripPathPrefix(trace.parent, tga.trace.store.dir)
 					ant.move(file: trace, todir: toDir, preservelastmodified: true)
