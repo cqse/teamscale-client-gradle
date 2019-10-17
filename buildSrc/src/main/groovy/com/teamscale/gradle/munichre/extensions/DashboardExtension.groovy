@@ -8,4 +8,6 @@ class DashboardExtension {
 	String data
 
 	String tool
+
+	String placeholder = "dummy"
 }

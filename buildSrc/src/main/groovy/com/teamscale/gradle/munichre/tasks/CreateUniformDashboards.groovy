@@ -43,7 +43,7 @@ class CreateUniformDashboards extends DefaultTask {
 		Map data = new JsonSlurper().parse(new File(config.data)) as Map
 
 		for (ProjectInfo info in getProjectInfos(data, config.tool)) {
-			def dashboard = createDashboard(info, template)
+			def dashboard = createDashboard(info, template, config)
 			LoggingUtils.log(String.format("Creating dashboard for %s", info.id))
 			DashboardUtils.uploadDashboard(http, dashboard)
 		}
@@ -52,7 +52,7 @@ class CreateUniformDashboards extends DefaultTask {
 	/**
 	 * Create the dashboard by replacing values in a template dashboard
 	 */
-	private Dashboard createDashboard(ProjectInfo info, String template) {
+	private Dashboard createDashboard(ProjectInfo info, String template, DashboardExtension config) {
 		// parse the XML
 		GPathResult xml = new XmlSlurper().parseText(template)
 
@@ -60,7 +60,7 @@ class CreateUniformDashboards extends DefaultTask {
 		xml.payload.name = info.dashboardName
 
 		// Set sharing
-		setSharing(xml, info)
+		setSharing(xml, info, config.placeholder)
 
 		// change JSON
 		Object json = new JsonSlurper().parseText(xml.payload.descriptorJSON.text())
@@ -91,9 +91,9 @@ class CreateUniformDashboards extends DefaultTask {
 	}
 
 	/** Sets the sharing for the given dashboard */
-	static def setSharing(dashboard, projectInfo) {
+	static def setSharing(dashboard, ProjectInfo projectInfo, String placeholder) {
 		dashboard.payload.projectAccessEntries.children().each { child ->
-			if (child.userOrGroup == "dummy") {
+			if (child.userOrGroup == placeholder) {
 				child.userOrGroup = projectInfo.id
 			}
 		}
@@ -124,7 +124,7 @@ class CreateUniformDashboards extends DefaultTask {
 				info(String.format("No dashboard configured for %s", info.id))
 				continue
 			}
-			info.dashboardName = URLDecoder.decode(info.dashboardName.split("%2F").last(), "utf-8")
+			info.dashboardName = URLDecoder.decode(info.dashboardName.split("admin%2F").last(), "utf-8")
 
 			info.path = teamscale.path ? teamscale.path : ""
 			if (info.path != "") {

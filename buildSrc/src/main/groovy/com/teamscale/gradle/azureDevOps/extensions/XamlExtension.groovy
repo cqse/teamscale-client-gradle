@@ -6,8 +6,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-// TODO: check if organizations are actually useful.
-
 class XamlExtension extends NamedClosureContainer {
 	Map<String, XamlOrganizationConfig> organizations = [:]
 
