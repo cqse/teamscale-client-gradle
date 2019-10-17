@@ -78,14 +78,20 @@ ext {
 				// Defaults to the modification timestamp of a specific file in build output, override if better means exist.
 				timestamp:  { path ->
 					assert tga.pdb.upload.timestampFile != null
-					def timestampFile = file("${path}/${tga.pdb.upload.timestampFile}")
-					assert timestampFile.exists()
-					def ts = timestampFile.lastModified() as long
-					def branch = tga.pdb.upload.branch(path)
-					if (branch != null) {
-						ts = "$branch:$ts"
+					for (timestampFileName in wrapAsArray(tga.pdb.upload.timestampFile)) {
+						def timestampFile = file("${path}/${timestampFileName}")
+						if (!timestampFile.exists()) {
+							continue
+						}
+						def ts = timestampFile.lastModified() as long
+						def branch = tga.pdb.upload.branch(path)
+						if (branch != null) {
+							ts = "$branch:$ts"
+						}
+						return ts
 					}
-					return ts
+					
+					throw new GradleException("No timestamp file found: ${tga.pdb.upload.timestampFile}")
 				}
 			]
 		],
@@ -243,7 +249,7 @@ task uploadPdb(dependsOn: collectPdb) {
 		}
 
 		dirs.keySet().sort().each { timestamp ->
-		 	def (version, pdbDir) = dirs[timestamp]
+		 	def (version, pdbDir) = dirs.get(timestamp)
 			def project = tga.pdb.upload.project(pdbDir)
 					
 			println "Uploading PDBs"
