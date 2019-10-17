@@ -3,10 +3,14 @@ package com.teamscale.gradle.azureDevOps.tasks.ados
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildFindingsTask
+import com.teamscale.gradle.azureDevOps.utils.AdosBuildLogConfig
+import com.teamscale.gradle.azureDevOps.utils.IAdosBuildLogFilter
+import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.loganalyzer.LogAnalyzerFactory
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.data.TeamscaleFinding
 
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition, AdosBuild> {
@@ -18,46 +22,72 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 	@Override
 	void run(AdosDefinition definition, AdosBuild build) {
 		List logs = definition.http.getTimelineOfBuild(build.id)
-		List matchedLogs = getMatchingLogs(definition, build, logs)
 
-		if (matchedLogs.isEmpty()) {
-			warn("No log(s) matched $definition.options.logNameMatcher. Remember that the regex" +
-				"must match the complete name, not just a part! The name of all available logs are: ${logs.name}",
-				definition, build)
-			return
+		for (AdosBuildLogConfig config : definition.options.buildLogConfigs) {
+			ReportLocationMatcher matcher = config.getBuildLogMatcher()
+			List matchedLogs = getMatchingLogs(definition, build, logs, matcher)
+
+			if (matchedLogs.isEmpty()) {
+				warn("No log(s) matched by $matcher. Remember that the regex must match the complete name, " +
+					"not just a part! The name of all available logs are: ${logs.name}", definition, build)
+				continue;
+			}
+
+			String content = downloadBuildLogs(definition, build, matchedLogs)
+			if (content.isEmpty()) {
+				warn("Downloaded logs are empty: $matcher", definition, build)
+				continue
+			}
+
+			IAdosBuildLogFilter buildLogFilter = config.getLogContentFilter()
+			if (buildLogFilter != null) {
+				content = buildLogFilter.filter(content)
+				if (content.isEmpty()) {
+					warn("Filtered log is empty: $matcher with $buildLogFilter", definition, build)
+					continue
+				}
+			}
+
+			def logAnalyzer = LogAnalyzerFactory.getFor(matcher.type, TeamscaleExtension.getFrom(project))
+			Set<TeamscaleFinding> findings = parseLog(content, logAnalyzer)
+
+			boolean noFindings = findings.size() == 0
+			boolean dockerLog = config.logType == AdosBuildLogConfig.ELogType.DOCKER
+			if (noFindings && dockerLog && content.contains("Using cache")) {
+				log("Skipping docker log because a cached version is being used", definition, build)
+				continue
+			}
+
+			upload(definition, build, findings, matcher)
 		}
-
-		Set<TeamscaleFinding> findings = parseFindingsFromLogs(matchedLogs, definition, build)
-
-		upload(definition, build, findings, definition.options.logNameMatcher)
 	}
 
-	/** Downloads the content of the given logs and extracts possible findings from them */
-	Set<TeamscaleFinding> parseFindingsFromLogs(List<Object> logs, AdosDefinition definition, AdosBuild build) {
-		Set<TeamscaleFinding> findings = new HashSet<>()
+	/**
+	 * Download the content of the build logs, which have been matched by a name pattern
+	 */
+	static String downloadBuildLogs(AdosDefinition definition, AdosBuild build, List<Object> matchedLogs) {
+		String content = ""
 
-		logs.each { log ->
+		matchedLogs.each { log ->
 			def currentLine = 0
 			while (currentLine < log.lineCount) {
 				def endLine = currentLine + MAX_LOG_LINES
-				String logsContent = definition.http.downloadLog(build.id, "$log.id", currentLine, endLine)
-
-				def logAnalyzer = LogAnalyzerFactory.getFor(definition.options.logNameMatcher.type,
-					TeamscaleExtension.getFrom(project))
-				findings.addAll(parseLog(logsContent, logAnalyzer))
+				content += definition.http.downloadLog(build.id, "$log.id", currentLine, endLine)
 
 				// endLine is inclusive. Add one in order to prevent parsing a line twice
 				currentLine += MAX_LOG_LINES + 1
 			}
 		}
 
-		return findings
+		return content
 	}
 
-	/** Returns a list of all logs of the build which matched the "logNamePattern" */
-	static List getMatchingLogs(AdosDefinition definition, AdosBuild build, List logs) {
+	/**
+	 * Returns a list of all logs of the build which matched the "logNamePattern"
+	 */
+	static List getMatchingLogs(AdosDefinition definition, AdosBuild build, List logs, ReportLocationMatcher matcher) {
 		def matchingLogs = logs.findAll {
-			def nameMatches = definition.options.logNameMatcher.pathMatches(it.name)
+			def nameMatches = matcher.pathMatches(it.name)
 			def hasLog = (it.log != null)
 
 			return hasLog && nameMatches
@@ -78,7 +108,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 
 	@Override
 	boolean isConfiguredForTask(AdosDefinition definition) {
-		return definition.options.logNameMatcher != null
+		return definition.options.buildLogConfigs.size() > 0
 	}
 
 	@Override

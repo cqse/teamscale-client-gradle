@@ -143,7 +143,7 @@ class AzureDevOpsClient extends HttpClient {
 	}
 
 	/** Returns the logs for the build defined by the given id */
-	Object getLogsOfBuild(String buildId) {
+	List getLogsOfBuild(String buildId) {
 		def path = ["build", "builds", buildId, "logs"]
 		return doCall("get", path, [:]).value
 	}

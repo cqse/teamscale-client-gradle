@@ -31,7 +31,7 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 			def findingId = matcher.group(3)
 			def message = matcher.group(4)
 
-			if(isIncluded(findingId)) {
+			if (isIncluded(findingId)) {
 				return new TeamscaleFinding(findingTypeId: findingId, message: message, path: filePath,
 					startLine: line, endLine: line)
 			}
@@ -40,6 +40,9 @@ class CSharpLogAnalyzer implements ILogAnalyzer {
 		return null
 	}
 
+	/**
+	 * Checks if the finding with the given id should be included in the upload
+	 */
 	def isIncluded(String findingId) {
 		return (findingId =~ "^(${filter.join("|")})") as boolean
 	}

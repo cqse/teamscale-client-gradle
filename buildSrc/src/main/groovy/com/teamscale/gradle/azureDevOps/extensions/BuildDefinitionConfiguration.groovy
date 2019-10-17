@@ -1,6 +1,12 @@
 package com.teamscale.gradle.azureDevOps.extensions
 
+import com.teamscale.gradle.azureDevOps.utils.AdosBuildLogConfig
+import com.teamscale.gradle.azureDevOps.utils.DockerLogContentFilter
+import com.teamscale.gradle.azureDevOps.utils.IAdosBuildLogFilter
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
+
+import static com.teamscale.gradle.azureDevOps.utils.AdosBuildLogConfig.ELogType.DOCKER
+import static com.teamscale.gradle.azureDevOps.utils.AdosBuildLogConfig.ELogType.STANDARD
 
 class BuildDefinitionConfiguration {
 	/** Name of the definition */
@@ -13,10 +19,9 @@ class BuildDefinitionConfiguration {
 	Closure branchMapping = { it }
 
 	/**
-	 * The pattern for the name of the build step whose logs should be analyzed for
-	 * build findings
+	 * Configurations for matching and filtering the build logs for the parsing.
 	 */
-	ReportLocationMatcher logNameMatcher
+	List<AdosBuildLogConfig> buildLogConfigs = new ArrayList<>()
 
 	/** Configuration for test results and coverage */
 	TestsConfig tests
@@ -54,7 +59,15 @@ class BuildDefinitionConfiguration {
 
 	/** Define the log analyzer for this definition */
 	def parseLogs(String type, String logNamePattern, String partition = null) {
-		this.logNameMatcher = new ReportLocationMatcher(type, logNamePattern, null, partition)
+		ReportLocationMatcher matcher = new ReportLocationMatcher(type, logNamePattern, null, partition)
+		buildLogConfigs.add(new AdosBuildLogConfig(STANDARD, matcher))
+	}
+
+	/** Define a log analyzer for build steps which utilize docker images */
+	def parseDockerLogs(String type, String logNamePattern, String stepCommandPattern, String partition = null) {
+		ReportLocationMatcher matcher = new ReportLocationMatcher(type, logNamePattern, null, partition)
+		IAdosBuildLogFilter filter = new DockerLogContentFilter(stepCommandPattern)
+		buildLogConfigs.add(new AdosBuildLogConfig(DOCKER, matcher, filter))
 	}
 
 	/** Define the location and type of a report which should be uploaded */
