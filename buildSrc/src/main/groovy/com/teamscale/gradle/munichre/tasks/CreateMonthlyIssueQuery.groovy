@@ -51,7 +51,7 @@ class CreateMonthlyIssueQuery extends DefaultTask {
 				continue
 			}
 
-			log("Creating issue metrics for $project")
+			log("Creating monthly issue metrics for $project")
 
 			// get current issue metrics
 			List<Object> queries = getIssueQueries(http, project)
