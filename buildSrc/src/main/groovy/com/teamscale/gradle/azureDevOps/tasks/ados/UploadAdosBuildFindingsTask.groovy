@@ -23,6 +23,22 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 	void run(AdosDefinition definition, AdosBuild build) {
 		List logs = definition.http.getTimelineOfBuild(build.id)
 
+		def configs = definition.options.buildLogConfigs
+		if (configs.size() > 1) {
+			List<String> partitions = configs.findResults {
+				return it.buildLogMatcher.partition
+			} as List<String>
+
+			if (configs.size() - 1 > partitions.size()) {
+				warn("There are ${configs.size()} parse log configurations, but only ${partitions.size()} partition(s). " +
+					"The findings from each parse log must be uploaded to a separate partition in order " +
+					"to not overwrite any results. Therefore the number of explicit partitions must be at least " +
+					"one less than number of parse log configurations (because of the default partition)"
+					, definition, build)
+				return
+			}
+		}
+
 		for (AdosBuildLogConfig config : definition.options.buildLogConfigs) {
 			ReportLocationMatcher matcher = config.getBuildLogMatcher()
 			List matchedLogs = getMatchingLogs(definition, build, logs, matcher)
