@@ -2,6 +2,7 @@ package com.teamscale.gradle.munichre
 
 import com.teamscale.gradle.PluginUtils
 import com.teamscale.gradle.munichre.extensions.DashboardExtension
+import com.teamscale.gradle.munichre.extensions.IssueQueryExtension
 import com.teamscale.gradle.munichre.tasks.*
 import org.gradle.api.Project
 
@@ -15,6 +16,7 @@ class MunichRePlugin {
 	static void createInstanceTasks(Project project) {
 		PluginUtils.createTask(project, CreateUniformDashboards, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateMonthlyIssueQuery, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateIssueQueries, UTILS_TASKS)
 
 		PluginUtils.createTask(project, CreateTGAStart, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateTSAStart, UTILS_TASKS)
@@ -24,5 +26,6 @@ class MunichRePlugin {
 
 	static void createExtensions(Project project) {
 		project.extensions.create(DashboardExtension.NAME, DashboardExtension)
+		project.extensions.create(IssueQueryExtension.NAME, IssueQueryExtension)
 	}
 }
