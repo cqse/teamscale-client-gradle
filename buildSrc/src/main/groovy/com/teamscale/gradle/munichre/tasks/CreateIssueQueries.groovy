@@ -28,6 +28,7 @@ class CreateIssueQueries extends DefaultTask {
 			}
 
 			issueConfig.queries.forEach { queryName, query ->
+				log("Creating standard issue queries for '$project'")
 				CreateMonthlyIssueQuery.uploadIssueQuery(http, project, queryName, query)
 			}
 		}
