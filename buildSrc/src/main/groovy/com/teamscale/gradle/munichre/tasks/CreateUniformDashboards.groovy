@@ -106,7 +106,7 @@ class CreateUniformDashboards extends DefaultTask {
 			Map value = entrySet.value
 
 			ProjectInfo info = new ProjectInfo()
-			info.id = entrySet.key
+
 			info.qualifiedName = value.name
 			def tool = value[toolName]
 			if (!tool) {
@@ -114,17 +114,20 @@ class CreateUniformDashboards extends DefaultTask {
 			}
 
 			def teamscale = tool.teamscale
-			if (!teamscale) {
-				warn(String.format("No teamscale configured for %s", info.id))
+			if (!(teamscale && teamscale.project)) {
+				warn(String.format("No teamscale project configured for %s", info.id))
 				continue
 			}
+
+			info.id = teamscale.project
 
 			info.dashboardName = teamscale.dashboard
 			if (!info.dashboardName) {
 				info(String.format("No dashboard configured for %s", info.id))
 				continue
 			}
-			info.dashboardName = URLDecoder.decode(info.dashboardName.split("admin%2F").last(), "utf-8")
+			info.dashboardName = info.dashboardName.split("admin/").last()
+
 
 			info.path = teamscale.path ? teamscale.path : ""
 			if (info.path != "") {
@@ -172,10 +175,18 @@ class CreateUniformDashboards extends DefaultTask {
 	}
 
 	class ProjectInfo {
+		/** project id */
 		String id
+
+		/** additional path inside of the project */
 		String path
+
+		/** Printable Name of the project */
 		String qualifiedName
+
+		/** Name of the dashboard */
 		String dashboardName
+
 		int qualityGoal
 	}
 
