@@ -115,7 +115,7 @@ class CreateUniformDashboards extends DefaultTask {
 
 			def teamscale = tool.teamscale
 			if (!(teamscale && teamscale.project)) {
-				warn(String.format("No teamscale project configured for %s", info.id))
+				// If the tool is not in teamscale we don't need to create a dashboard
 				continue
 			}
 
@@ -123,7 +123,7 @@ class CreateUniformDashboards extends DefaultTask {
 
 			info.dashboardName = teamscale.dashboard
 			if (!info.dashboardName) {
-				info(String.format("No dashboard configured for %s", info.id))
+				info(String.format("Teamscale project, but no dashboard configured for %s %s", toolName, info))
 				continue
 			}
 			info.dashboardName = info.dashboardName.split("admin/").last()
@@ -188,6 +188,10 @@ class CreateUniformDashboards extends DefaultTask {
 		String dashboardName
 
 		int qualityGoal
+
+		String toString() {
+			return String.format("[id:%s, path:%s, qualifiedName:%s]", id, path, qualifiedName)
+		}
 	}
 
 	/** Wrapper for the Dashboard XML */
