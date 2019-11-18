@@ -13,6 +13,12 @@ Especially note that *Renamed Properties* are incompatible changes that have to 
 
 *Update advise for legacy projects*: Move `build.gradle` to `projects` folder or set `projectsDirName` to empty string in `gradle.properties`.
 
+## v19.11.0
+
+### Breaking Changes
+
+* report.upload.message: signature changed from file to (key, files)
+
 ## v17.12.0
 
 ### Renamed Properties
