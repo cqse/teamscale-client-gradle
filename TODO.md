@@ -5,6 +5,7 @@
 * Replace **/*.xxx with **.xxx
 * Re-evaluate requirement, filter attributes on "store"
 * Update Gradle
+* Subdir logic from report to tga
 
 ## Symbol Server
 

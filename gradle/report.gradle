@@ -27,6 +27,9 @@ ext {
 
 			// Whether the files should be copied flat or in an hierarchical structure
 			copyFlat: false,
+
+			// TODO docs, move to TGA as well
+			subdir: { reportFile, inboxDir -> report.inbox.copyFlat ? null : stripPathPrefix(reportFile.parent, inboxDir) }
 		],
 		
 		// Directory where unprocessed traces are located. If a inbox is defined, the traces are moved from the inbox into this folder.
@@ -69,14 +72,19 @@ task collectReport {
 			return
 		}
 		
-		fileTreeFiltered(report.inbox.dir, report.inbox).files.each { reportFile ->
+		report.inbox.dir = wrapAsArray(report.inbox.dir)
+		
+		report.inbox.dir.each {inboxDir ->
+			fileTreeFiltered(inboxDir, report.inbox).files.each { reportFile ->
 			def toDir = report.store.dir
-			if (!report.inbox.copyFlat) {
-				toDir += "/" + stripPathPrefix(reportFile.parent, report.inbox.dir)
+				def subdir = report.inbox.subdir(reportFile, inboxDir)
+				if (subdir?.trim()) {
+					toDir += "/" + subdir
 			}
 			ant.move(file: reportFile, toDir: toDir, preservelastmodified: true, failonerror: false)
 		}
 	}
+}
 }
 
 task uploadReport(dependsOn: collectReport) {
