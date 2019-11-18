@@ -1,4 +1,8 @@
 .gradle/
+.settings/
+.project
 /gradle/dist
 /gradle/lib
 /wrapper/
+/projects/
+/test/
