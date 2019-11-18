@@ -73,7 +73,7 @@ ext {
 				// The store location. Must be set in implementing project.
 				dir: null,
 
-				// An optional check that is performed before uploading files from the store. If false, upload will be skipped. 
+				// An optional check that is performed before uploading files from the store. If false, upload will be skipped.
  				require: { dir -> true },
 
 				// Included files, usually just PDB files.
@@ -118,7 +118,7 @@ ext {
 						}
 						return ts
 					}
-					
+
 					throw new GradleException("No timestamp file found: ${tga.pdb.upload.timestampFile}")
 				}
 			]
@@ -269,8 +269,9 @@ task collectPdbSymbolServer {
 		tga.pdb.symbolserver.dir = wrapAsArray(tga.pdb.symbolserver.dir)
 		tga.pdb.symbolserver.dir.each{ assert file(it).exists() }
 
+		// TODO check on symbolserver-entry.txt?
 		// TODO extract duplicated logic with collectPdbInbox
-		def stored = file("${tga.pdb.store.dir}/stored.txt")
+		def stored = file("${tga.pdb.store.dir}/symsrv.txt")
 		def storedIds = (stored.exists() ? stored.readLines() : []) as Set
 
 		tga.pdb.symbolserver.dir.each { symSrv ->
@@ -313,12 +314,6 @@ task collectPdbSymbolServer {
 				//def excludes = PatternMatcherFactory.compile(false, tga.pdb.symbolserver.excludes);
 				//println files(entryFiles.collect{it.location}).getAsFileTree().size()
 
-				def entryObj = new ConfigObject()
-				entryObj.putAll(entry.toMap())
-
-				file("$store/symbolserver-entry.txt").text = entryObj.prettyPrint()
-				file("$store/timestamp.txt").text = new Date().parse('MM/dd/yyyy HH:mm:ss', "$entry.date $entry.time").time
-
 				entryFiles.each { entryFile ->
 					def location = RelativePath.parse(true, entryFile.location)
 					def pdbFile = file("$symSrv/$entryFile.directory/$location.lastName")
@@ -338,6 +333,10 @@ task collectPdbSymbolServer {
 					tga.pdb.symbolserver.copyFile(file, toDir)
 				}*/
 
+				def entryObj = new ConfigObject()
+				entryObj.putAll(entry.toMap())
+				file("$store/symbolserver-entry.txt").text = entryObj.prettyPrint()
+				file("$store/timestamp.txt").text = new Date().parse('MM/dd/yyyy HH:mm:ss', "$entry.date $entry.time").time
 				stored.append "$entry.version\r\n"
 			}
 		}
@@ -466,6 +465,7 @@ task uploadTrace(dependsOn: collectTraces) {
 				def project = teamscale.project
 				def message = tga.trace.upload.message(key, traces)
 
+				// TODO unify between report & tga, unclear why special handling.
 				if (version != null) {
 					project = tga.trace.upload.project(key, traces)
 				}
@@ -475,6 +475,7 @@ task uploadTrace(dependsOn: collectTraces) {
 				println "     ... for version $version"
 				println "     ... for bucket $key.bucket"
 				println "     ... to project $project"
+				println "     ... to partition $partition"
 
 				if (teamscale.dryRun) {
 					println "     ... in DRY-RUN mode"
@@ -491,8 +492,8 @@ task uploadTrace(dependsOn: collectTraces) {
 							request.uri.path = "/p/$project/dotnet-ephemeral-trace-upload"
 							request.contentType = 'multipart/form-data'
 							request.uri.query = [
-                                // the timestamp is ignored by the service but older versions of
-                                // Teamscale still require that one be given anyways
+								// the timestamp is ignored by the service but older versions of
+								// Teamscale still require that one be given anyways
 								t: timestamp,
 								version: version,
 								adjusttimestamp: true,
