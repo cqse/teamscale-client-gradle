@@ -5,4 +5,8 @@
 /gradle/lib
 /wrapper/
 /projects/
-/test/
+/settings.local.gradle
+/gradle.properties
+/test/build
+/projects/*
+!/projects/.gitkeep

@@ -1,0 +1,27 @@
+apply plugin: "groovy"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile localGroovy()
+    testCompile gradleTestKit()
+    testCompile ("org.spockframework:spock-core:1.1-groovy-2.4") {
+         exclude module: 'groovy-all'
+    }
+}
+
+sourceSets {
+    test {
+        groovy {
+            srcDirs = ['spec']
+        }
+    }
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+	}
+}

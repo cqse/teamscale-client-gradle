@@ -4,8 +4,16 @@ CHANGELOG
 Gives an overview of changes to the configuration format.
 Especially note that *Renamed Properties* are incompatible changes that have to be propagated to existing configuration files on update.
 
-v17.12.0
---------
+## vNext
+
+### Support for multi-project builds
+
+* Improved support for Gradle multi-project builds with config inheritance & injection
+* Project configuration in separate directory that can be versioned (default `projects`) and makes updating the script pack easier
+
+*Update advise for legacy projects*: Move `build.gradle` to `projects` folder or set `projectsDirName` to empty string in `gradle.properties`.
+
+## v17.12.0
 
 ### Renamed Properties
 
