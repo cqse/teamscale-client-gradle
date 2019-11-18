@@ -73,6 +73,9 @@ ext {
 				// The store location. Must be set in implementing project.
 				dir: null,
 
+				// An optional check that is performed before uploading files from the store. If false, upload will be skipped. 
+ 				require: { dir -> true },
+
 				// Included files, usually just PDB files.
 				includes: ["**/*.pdb"],
 
@@ -354,6 +357,11 @@ task uploadPdb(dependsOn: collectPdb) {
 		file(tga.pdb.store.dir).eachDir { pdbDir ->
 			def version = tga.pdb.upload.version(pdbDir)
 			if (publishedVersions.contains(version)) {
+				return
+			}
+
+			if (!tga.pdb.store.require(pdbDir)) {
+				println "  -> Skipping, due to missing requirement"
 				return
 			}
 
