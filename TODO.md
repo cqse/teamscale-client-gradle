@@ -4,6 +4,7 @@
 
 * Replace **/*.xxx with **.xxx
 * Re-evaluate requirement, filter attributes on "store"
+* Update Gradle
 
 ## Symbol Server
 
