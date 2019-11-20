@@ -119,7 +119,7 @@ ext {
 						return ts
 					}
 
-					throw new GradleException("No timestamp file found: ${tga.pdb.upload.timestampFile}")
+					assert false: "No timestamp file found: ${tga.pdb.upload.timestampFile}"
 				}
 			]
 		],
