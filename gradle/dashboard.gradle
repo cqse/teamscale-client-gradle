@@ -110,15 +110,11 @@ def getProjectInfos(tool, dataPath) {
 
 		def teamscaleId = project[tool].teamscale.project.split("/").last()
 
-		if (!project[tool]?.teamscale?.path) {
-			println "[WARNING] No teamscale path given for $tool $project.name"
+		if (!project[tool]?.teamscale) {
 			return
 		}
 
-		def path = project[tool].teamscale.path.split("/") as List
-		path = path.subList(path.indexOf("code.html#") + 2, path.size()).join("/")
-
-
+		def path = project[tool].teamscale.path
 		def qualifiedName = project.name
 		def dashboardName = URLDecoder.decode(project[tool].teamscale.dashboard.split("admin%2F").last(), "utf-8")
 		def qualityGoal = project[tool].qualityGoal
