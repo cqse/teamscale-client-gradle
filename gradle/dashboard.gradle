@@ -110,6 +110,11 @@ def getProjectInfos(tool, dataPath) {
 
 		def teamscaleId = project[tool].teamscale.project.split("/").last()
 
+		if (!project[tool]?.teamscale?.path) {
+			println "[WARNING] No teamscale path given for $tool $project.name"
+			return
+		}
+
 		def path = project[tool].teamscale.path.split("/") as List
 		path = path.subList(path.indexOf("code.html#") + 2, path.size()).join("/")
 
