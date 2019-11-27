@@ -44,7 +44,7 @@ class CreateUniformDashboards extends DefaultTask {
 
 		for (ProjectInfo info in getProjectInfos(data, config.tool)) {
 			def dashboard = createDashboard(info, template, config)
-			LoggingUtils.log(String.format("Creating dashboard for %s", info.id))
+			LoggingUtils.log(String.format("Creating dashboard for %s: %s", info.id, dashboard.getName()))
 			DashboardUtils.uploadDashboard(http, dashboard)
 		}
 	}
