@@ -86,7 +86,6 @@ task collectReport {
 task uploadReport(dependsOn: collectReport) {
 	doLast {
 		file(report.store.dir).mkdirs()
-		println file(report.store.dir)
 
 		def http = teamscale.httpClient(teamscale)
 		def sortedReports = fileTreeFiltered(report.store.dir, report.store).files.sort{ it.lastModified() }
