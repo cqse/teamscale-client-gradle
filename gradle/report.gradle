@@ -17,7 +17,7 @@ ext {
 			dir: null,
 
 			// The trace include pattern, defaults to txt files.
-			includes: ["**.xml"],
+			includes: ["**/*.xml"],
 
 			// Optional file pattern excludes.
 			excludes: [],
@@ -35,7 +35,7 @@ ext {
 			dir: null,
 
 			// The trace include pattern, defaults to txt files.
-			includes: ["**.xml"],
+			includes: ["**/*.xml"],
 
 			// Optional file pattern excludes.
 			excludes: [],
@@ -49,6 +49,8 @@ ext {
 
 			// A closure that calculates the timestamp of when the trace was created (default: modification date).
 			timestamp: { file -> file.lastModified() },
+
+			revision: { file -> null },
 
 			message: { reportFile -> report.upload.partition(reportFile) + ": ${reportFile.name}" },
 
@@ -84,15 +86,25 @@ task collectReport {
 task uploadReport(dependsOn: collectReport) {
 	doLast {
 		file(report.store.dir).mkdirs()
+		println file(report.store.dir)
 
 		def http = teamscale.httpClient(teamscale)
 		def sortedReports = fileTreeFiltered(report.store.dir, report.store).files.sort{ it.lastModified() }
 		println "Uploading report to project $teamscale.project"
 		sortedReports.each { reportFile ->
-			def timestamp = report.upload.timestamp(reportFile)
+			def timestamp = null
+			def revision = null
+			if (report.upload.timestamp != null) {
+				timestamp = report.upload.timestamp(reportFile)
+			}
+
+			if (report.upload.revision != null) {
+				revision = report.upload.revision(reportFile);
+			}
 
 			println "  -> $reportFile.name"
 			println "     ... for timestamp $timestamp"
+			println "     ... for revision $revision"
 			if (teamscale.dryRun) {
 				println "     ... in DRY-RUN mode"
 				return
@@ -103,12 +115,17 @@ task uploadReport(dependsOn: collectReport) {
 				    request.uri.path = "$teamscale.prefix/p/${teamscale.project}/external-report"
 				    request.contentType = 'multipart/form-data'
 				    request.uri.query = [
-					    t: timestamp,
 					    format: report.upload.format(reportFile),
 					    adjusttimestamp: true,
 					    message: report.upload.message(reportFile),
 					    partition: report.upload.partition(reportFile)
 				    ]
+					if (timestamp != null) {
+						request.uri.query += [ t: timestamp ]
+					}
+					if (revision != null) {
+						request.uri.query += [ revision: revision ]
+					}
 				    request.body = groovyx.net.http.MultipartContent.multipart {
 					    part 'report', reportFile.name, 'text/plain', reportFile
 				    }
