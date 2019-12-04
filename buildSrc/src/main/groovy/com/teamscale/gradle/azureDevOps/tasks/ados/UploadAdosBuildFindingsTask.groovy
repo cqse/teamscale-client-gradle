@@ -91,7 +91,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 			def currentLine = 0
 			while (currentLine < log.lineCount) {
 				def endLine = currentLine + MAX_LOG_LINES
-				log("Downloading logs ($endLine/${log.lineCount})", definition, build)
+				log("Downloading logs (${endLine.toString()}/${log.lineCount.toString()})", definition, build)
 				content += definition.http.downloadLog(build.id, "$log.id", currentLine, endLine)
 
 				// endLine is inclusive. Add one in order to prevent parsing a line twice
