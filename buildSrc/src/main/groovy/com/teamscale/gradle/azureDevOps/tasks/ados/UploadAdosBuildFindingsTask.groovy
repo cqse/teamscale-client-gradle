@@ -57,6 +57,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 
 			IAdosBuildLogFilter buildLogFilter = config.getLogContentFilter()
 			if (buildLogFilter != null) {
+				log("Filtering logs", definition, build)
 				content = buildLogFilter.filter(content)
 				if (content.isEmpty()) {
 					warn("Filtered log is empty: $matcher with $buildLogFilter", definition, build)
@@ -65,6 +66,8 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 			}
 
 			def logAnalyzer = LogAnalyzerFactory.getFor(matcher.type, TeamscaleExtension.getFrom(project))
+
+			log("Parsing logs", definition, build)
 			Set<TeamscaleFinding> findings = parseLog(content, logAnalyzer)
 
 			boolean noFindings = findings.size() == 0
@@ -88,6 +91,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 			def currentLine = 0
 			while (currentLine < log.lineCount) {
 				def endLine = currentLine + MAX_LOG_LINES
+				log("Downloading logs ($endLine/${log.lineCount})", definition, build)
 				content += definition.http.downloadLog(build.id, "$log.id", currentLine, endLine)
 
 				// endLine is inclusive. Add one in order to prevent parsing a line twice
