@@ -49,6 +49,7 @@ class UploadAdosBuildFindingsTask extends UploadBuildFindingsTask<AdosDefinition
 				continue;
 			}
 
+			log("Downloading logs", definition, build)
 			String content = downloadBuildLogs(definition, build, matchedLogs)
 			if (content.isEmpty()) {
 				warn("Downloaded logs are empty: $matcher", definition, build)
