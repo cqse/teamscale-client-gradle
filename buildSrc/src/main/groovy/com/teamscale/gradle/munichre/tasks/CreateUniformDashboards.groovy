@@ -130,12 +130,6 @@ class CreateUniformDashboards extends DefaultTask {
 
 
 			info.path = teamscale.path ? teamscale.path : ""
-			if (info.path != "") {
-				// Get actual teamscale path and not the link to the code metric with the path
-				List<String> parts = path.split("/") as List
-				info.path = parts.subList(parts.indexOf("code.html#") + 2, parts.size()).join("/")
-			}
-
 			info.qualityGoal = tool?.qualityGoal ? tool.qualityGoal : 0
 
 			projectInfos.add(info)
