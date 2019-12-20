@@ -1,6 +1,5 @@
 package com.teamscale.gradle.azureDevOps.tasks.base
 
-
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
@@ -12,7 +11,6 @@ import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import java.nio.file.Files
 
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
-import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 /**
  * Task handling the down- and uploading of the test coverage of the builds of the a configured definition.
@@ -47,11 +45,7 @@ abstract class UploadTestCoverageTask<S extends IDefinition, T extends IBuild> e
 	void upload(S definition, T build, List<File> coverageFiles, ReportLocationMatcher coverageOptions) {
 		if (coverageFiles.isEmpty()) {
 			String message = "No code coverage found with $coverageOptions"
-			if (build.hasFailed()) {
-				log(message, definition, build)
-			} else {
-				warn(message, definition, build)
-			}
+			log(message, definition, build)
 			return
 		}
 
