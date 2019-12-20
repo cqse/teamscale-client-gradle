@@ -34,9 +34,9 @@ class TestsConfig {
 
 	def getDefaultResultPattern(String type) {
 		switch (type) {
-			case JUNIT:
+			case "JUNIT":
 				return ".*\\.xml"
-			case MS_TEST:
+			case "MS_TEST":
 				return ".*\\.trx"
 			default:
 				return null
@@ -45,10 +45,10 @@ class TestsConfig {
 
 	def getDefaultCoveragePattern(String type) {
 		switch (type) {
-			case VS_COVERAGE:
-			case MS_COVERAGE:
+			case "VS_COVERAGE":
+			case "MS_COVERAGE":
 				return ".*\\.coverage"
-			case JACOCO:
+			case "JACOCO":
 				return ".*\\.xml"
 		}
 	}
