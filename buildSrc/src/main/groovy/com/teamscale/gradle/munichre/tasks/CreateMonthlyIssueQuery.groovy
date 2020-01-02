@@ -102,7 +102,7 @@ class CreateMonthlyIssueQuery extends DefaultTask {
 
 	/** Creates the issue query for the given start and end date */
 	static String getIssueQuery(LocalDate start) {
-		LocalDate end = start.withMonth(start.plusMonths(1).monthValue)
+		LocalDate end = start.plusMonths(1)
 
 		return String.format(ISSUE_QUERY_CLOSED_BETWEEN, start.format(QUERY_FORMAT), end.format(QUERY_FORMAT))
 	}
