@@ -116,7 +116,7 @@ ext {
 						if (branch != null) {
 							ts = "$branch:$ts"
 						}
-						return ts
+						return ts as String
 					}
 
 					assert false: "No timestamp file found: ${tga.pdb.upload.timestampFile}"
