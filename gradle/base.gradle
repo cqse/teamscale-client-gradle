@@ -4,6 +4,8 @@ buildscript {
 	}
 }
 
+import java.nio.file.Files
+import java.nio.file.Path
 ext {
 	appendLine = { file, line ->
 		if (line.endsWith("\n")) {
@@ -73,5 +75,36 @@ ext {
 		}
 		
 		return objectOrArray
+	}
+
+	convertVsCoverageXml = { files, output=null ->
+
+		Path xml = output ?: Files.createTempFile("vscoverage", ".xml")
+
+		def codeCoverageExe = "$rootDir/gradle/bin/CodeCoverage/CodeCoverage.exe"
+		assert file(codeCoverageExe).exists()
+
+		try {
+			// file must not exist, otherwise nothing will be written to it
+			Files.deleteIfExists(xml)
+
+			List<String> coverageFiles = files.collect { "\"$it.absolutePath\"" as String }
+			def command = (["cmd", "/C", "\"\"$codeCoverageExe\"", "analyze", "/output:\"$xml.absolutePath\""]
+				+ coverageFiles
+				+ ["\""]).execute()
+
+			def errorStream = new StringBuffer()
+			command.waitForProcessOutput(null, errorStream)
+
+			assert errorStream.size() == 0 : "Converting the coverage file failed: $errorStream"
+			assert (Files.exists(xml) && xml.text.size() > 0) : "Conversion of the coverage files to $xml.path did not work. Consider using MS_COVERAGE instead, because the coverage files might be in an older format."
+
+			return xml.text
+		} finally {
+			// prevent clogging of the temp dir
+			if (output == null) {
+				Files.deleteIfExists(xml)
+			}
+		}
 	}
 }

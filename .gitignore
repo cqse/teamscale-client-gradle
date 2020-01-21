@@ -3,6 +3,7 @@
 .project
 /gradle/dist
 /gradle/lib
+/gradle/bin/CodeCoverage
 /wrapper/
 /projects/
 /settings.local.gradle
