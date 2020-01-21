@@ -4,7 +4,7 @@ CHANGELOG
 Gives an overview of changes to the configuration format.
 Especially note that *Renamed Properties* are incompatible changes that have to be propagated to existing configuration files on update.
 
-## vNext
+## v20.01.0
 
 ### Support for multi-project builds
 
