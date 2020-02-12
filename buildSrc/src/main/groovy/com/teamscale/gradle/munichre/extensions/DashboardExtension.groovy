@@ -10,4 +10,6 @@ class DashboardExtension {
 	String tool
 
 	String placeholder = "dummy"
+
+	boolean projectMustExist = true
 }

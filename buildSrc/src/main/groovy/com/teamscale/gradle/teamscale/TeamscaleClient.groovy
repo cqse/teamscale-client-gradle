@@ -158,7 +158,7 @@ class TeamscaleClient extends HttpClient {
 		return doProjectCall("get", "external-result-upload", [:], acceptJson) as List
 	}
 
-	List<String> getAllProjects() {
-		return doGlobalCall("get", "projects", [:], acceptJson) as List
+	Set<String> getAllProjects() {
+		return doGlobalCall("get", "projects", [:], acceptJson) as Set
 	}
 }

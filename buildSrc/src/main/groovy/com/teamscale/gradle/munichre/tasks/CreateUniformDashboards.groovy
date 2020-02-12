@@ -11,8 +11,10 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.util.slurpersupport.NodeChild
 import groovy.xml.XmlUtil
 import org.gradle.api.DefaultTask
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskAction
 
+import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 
 /**
@@ -39,13 +41,19 @@ class CreateUniformDashboards extends DefaultTask {
 			return
 		}
 
+
 		String template = DashboardUtils.getDashboard(http, config.template)
 		Map data = new JsonSlurper().parse(new File(config.data)) as Map
 
+		Set<String> projects = http.getAllProjects();
 		for (ProjectInfo info in getProjectInfos(data, config.tool)) {
-			def dashboard = createDashboard(info, template, config)
-			LoggingUtils.log(String.format("Creating dashboard for %s: %s", info.id, dashboard.getName()))
-			DashboardUtils.uploadDashboard(http, dashboard)
+			if(config.projectMustExist && !projects.contains(info.id)) {
+				warn(String.format("No project in teamscale found for %s", info.id));
+			} else {
+				def dashboard = createDashboard(info, template, config)
+				log(String.format("Creating dashboard for %s: %s", info.id, dashboard.getName()))
+				DashboardUtils.uploadDashboard(http, dashboard)
+			}
 		}
 	}
 
@@ -140,7 +148,7 @@ class CreateUniformDashboards extends DefaultTask {
 	/** Check that everything necessary for the job is configured.  */
 	boolean checkConfig(DashboardExtension config) {
 		if (!config) {
-			LoggingUtils.log("No dashboard info configured for this task")
+			log("No dashboard info configured for this task")
 			return false
 		}
 
