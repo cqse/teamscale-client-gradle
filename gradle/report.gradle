@@ -23,10 +23,13 @@ ext {
 			excludes: [],
 			
 			// Optional further filtering.
-			filter: { file -> true },
+			filter: { reportFile -> true },
 
 			// Whether the files should be copied flat or in an hierarchical structure
 			copyFlat: false,
+
+			// TODO docs, move to TGA as well
+			subdir: { reportFile, inboxDir -> report.inbox.copyFlat ? null : stripPathPrefix(reportFile.parent, inboxDir) }
 		],
 		
 		// Directory where unprocessed traces are located. If a inbox is defined, the traces are moved from the inbox into this folder.
@@ -45,14 +48,27 @@ ext {
 		],
 		
 		upload: [
-			format: { format -> "" },
+			// The project to upload reports to
+			project: { reportFile -> teamscale.project },
+
+			// An optional bucket to group traces, e.g. by day { trace -> new Date(trace.lastModified()).format('yyyyMMdd') }
+			bucket: { reportFile -> null },
+
+			// The amount of traces that are uploaded in one batch.
+			// If null (default value), a collation of 200 is used if a bucket is set, otherwise collation is set to 1 (traces are processed one by one).
+			collate: null,
+
+			// TODO docs
+			format: { reportFile -> "" },
 			
 			// A closure that calculates the timestamp of when the trace was created (default: modification date).
-			timestamp: { file -> file.lastModified() },
+			timestamp: { reportFile -> reportFile.lastModified() },
 
-			message: { reportFile -> report.upload.partition(reportFile) + ": ${reportFile.name}" },
+			// TODO docs
+			message: { key, reportFiles -> key.partition + ": \r\n" + reportFiles.collect{it.name}.join(", ") },
 
-			partition: { reportFile -> "External Upload" }
+			// TODO docs
+			partition: { reportFile -> report.upload.format(reportFile) }
 		],
 		
 		// Directory where traces are archived (in a subfolder corresponding to the version)
@@ -69,56 +85,138 @@ task collectReport {
 			return
 		}
 		
-		fileTreeFiltered(report.inbox.dir, report.inbox).files.each { reportFile ->
-			def toDir = report.store.dir
-			if (!report.inbox.copyFlat) {
-				toDir += "/" + stripPathPrefix(reportFile.parent, report.inbox.dir)
+		report.inbox.dir = wrapAsArray(report.inbox.dir)
+		
+		report.inbox.dir.each {inboxDir ->
+			fileTreeFiltered(inboxDir, report.inbox).files.each { reportFile ->
+				def toDir = report.store.dir
+				def subdir = report.inbox.subdir(reportFile, inboxDir)
+				if (subdir?.trim()) {
+					toDir += "/" + subdir
+				}
+				ant.move(file: reportFile, toDir: toDir, preservelastmodified: true, failonerror: false)
 			}
-			ant.move(file: reportFile, toDir: toDir, preservelastmodified: true, failonerror: false)
 		}
 	}
 }
 
 task uploadReport(dependsOn: collectReport) {
 	doLast {
+		if (report.store.dir == null) {
+			println "No report defined defined, skipping"
+			return
+		}
 		assert file(report.store.dir).exists()
 		
 		def http = teamscale.httpClient(teamscale)
-		def sortedReports = fileTreeFiltered(report.store.dir, report.store).files.sort{ it.lastModified() }
-		println "Uploading report to project $teamscale.project"
-		sortedReports.each { reportFile ->
-			def timestamp = report.upload.timestamp(reportFile)
-			
-			println "  -> $reportFile.name"
+		def groupedReports = fileTreeFiltered(report.store.dir, report.store).files.groupBy({[
+			project: report.upload.project(it),
+			timestamp: report.upload.timestamp(it),
+			partition: report.upload.partition(it),
+			bucket: report.upload.bucket(it)
+		]})
+
+		// TODO Sort
+		groupedReports.each { key, reportsPerGroup ->
+			def reportsByFormat = reportsPerGroup.groupBy{ report.upload.format(it) }
+			def timestamp = key.timestamp
+			def partition = key.partition
+			def project = key.project
+			def message = report.upload.message(key, reportsPerGroup)
+			def query = [
+				t: timestamp,
+				adjusttimestamp: true,
+				message: message,
+				partition: partition
+			]
+
+			println "  -> $reportsPerGroup.size Reports: "
+			println "     .... $message"
 			println "     ... for timestamp $timestamp"
+			println "     ... for bucket $key.bucket"
+			println "     ... to project $project"
+			println "     ... to partition $partition"
+			println "     ... in ${reportsByFormat.size()} sessions"
+			println "     ... with formats ${reportsByFormat.keySet()}"
+
+			assert project != null
 			if (teamscale.dryRun) {
 				println "     ... in DRY-RUN mode"
 				return
 			}
-			
-			try {
-				println "     -> " + http.post(String) {
-				    request.uri.path = "/p/${teamscale.project}/external-report"
-				    request.contentType = 'multipart/form-data'
-				    request.uri.query = [
-					    t: timestamp,
-					    format: report.upload.format(reportFile),
-					    adjusttimestamp: true,
-					    message: report.upload.message(reportFile),
-					    partition: report.upload.partition(reportFile)
-				    ]
-				    request.body = groovyx.net.http.MultipartContent.multipart {
-					    part 'report', reportFile.name, 'text/plain', reportFile
-				    }
-				    request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
-			   	}
-			} catch(e) {
-				println "     -> Skipped ($e)"
-				return
+
+			if (reportsByFormat.size() > 1) {
+				try {
+					def session = http.get(String) {
+						request.uri.path = "/p/${project}/external-analysis"
+						request.uri.query = query
+					}
+
+					println "     -> Session: $session"
+					query = [
+						session: session
+					]
+				} catch(e) {
+					println "     -> Skipped ($e)"
+					return
+				}
 			}
-			
-			def toDir = "$report.archive.dir/" + stripPathPrefix(reportFile.parent, report.store.dir)
-			ant.move(file: reportFile, todir: toDir, preservelastmodified: true)
+
+			reportsByFormat.each { format, reports ->
+
+			// TODO Collate
+			// def collate = report.upload.collate
+			// if (collate == null) {
+			// 	if (key.bucket == null) {
+			// 		collate = 1
+			// 	} else {
+			// 		collate = 200
+			// 	}
+			// }
+			// def reports = reportsPerGroup
+			//reportsPerGroup.sort{ it.lastModified() }.collate(collate).each { traces ->
+
+				// TODO sanity checks
+				try {
+					print "     -> Upload $format: "
+					println http.post(String) {
+						request.uri.path = "/p/${project}/external-report"
+						request.contentType = 'multipart/form-data'
+						request.uri.query = query + [
+							format: format
+						]
+						request.body = groovyx.net.http.MultipartContent.multipart {
+							reports.each { report ->
+								part 'report', report.name, 'text/plain', report
+							}
+						}
+						request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
+					}
+				} catch(e) {
+					print "Skipped ($e)"
+					return
+				}
+			}
+
+			if (reportsByFormat.size() > 1) {
+				println  "/p/${project}/external-analysis/${query.session}"
+				try {
+					print "     -> Close session: "
+					println http.post(String) {
+						request.uri.path = "/p/${project}/external-analysis/${query.session}"
+						request.contentType = 'text/plain'
+						request.body = ''
+					}
+				} catch(e) {
+					println "Error ($e)"
+					return
+				}
+			}
+
+			reportsByFormat.values()*.each { reportFile ->
+				def toDir = "$report.archive.dir/" + stripPathPrefix(reportFile.parent, report.store.dir)
+				ant.move(file: reportFile, todir: toDir, preservelastmodified: true)
+			}
 		}
 	
 	}
