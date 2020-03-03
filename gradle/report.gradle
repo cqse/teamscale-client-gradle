@@ -129,6 +129,7 @@ task uploadReport(dependsOn: collectReport) {
 					    part 'report', reportFile.name, 'text/plain', reportFile
 				    }
 				    request.encoder 'multipart/form-data', groovyx.net.http.OkHttpEncoders.&multipart
+					response.failure failure
 			   	}
 			} catch(e) {
 				println "     -> Skipped ($e)"
