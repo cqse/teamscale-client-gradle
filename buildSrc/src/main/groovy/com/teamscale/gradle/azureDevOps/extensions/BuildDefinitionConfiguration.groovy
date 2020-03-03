@@ -26,6 +26,9 @@ class BuildDefinitionConfiguration {
 	/** Configuration for test results and coverage */
 	TestsConfig tests
 
+	/** Configuration for uploading pdbs */
+	PdbConfig pdb;
+
 	/**
 	 * A suffix to the name of the partition the information of the build will be uploaded to.
 	 * This needs to be set if there are two or more definitions for the same project, otherwise
@@ -48,6 +51,13 @@ class BuildDefinitionConfiguration {
 		def props = new HashMap<>(this.properties)
 		props.remove("class")
 		return props
+	}
+
+	def pdb(Closure closure) {
+		pdb = new PdbConfig()
+		closure.delegate = pdb
+		closure.resolveStrategy = Closure.DELEGATE_ONLY
+		closure.run()
 	}
 
 	def tests(Closure closure) {

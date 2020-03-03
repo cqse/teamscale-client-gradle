@@ -5,6 +5,7 @@ import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosBuildFindingsTask
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosBuildStatusTask
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosExternalReportsTask
+import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosPDBs
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosReleaseTestResultsTasks
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosTestCoverageTask
 import com.teamscale.gradle.azureDevOps.tasks.ados.UploadAdosTestResultsTask
@@ -50,6 +51,7 @@ class AzureDevOpsPlugin {
 		uploadTasks.add(PluginUtils.createTask(project, UploadAdosTestResultsTask, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(PluginUtils.createTask(project, UploadAdosReleaseTestResultsTasks, TASK_GROUP, collectNewBuilds))
 		uploadTasks.add(PluginUtils.createTask(project, UploadAdosExternalReportsTask, TASK_GROUP, collectNewBuilds))
+		uploadTasks.add(PluginUtils.createTask(project, UploadAdosPDBs, TASK_GROUP, collectNewBuilds))
 		project.tasks.create("uploadBuildInformation").dependsOn(uploadTasks as Object[]).setGroup(TASK_GROUP)
 	}
 

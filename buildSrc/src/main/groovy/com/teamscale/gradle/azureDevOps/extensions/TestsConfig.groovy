@@ -32,7 +32,7 @@ class TestsConfig {
 		releaseResultConfigs = new ReportLocationMatcher(type, pathPattern, artifactPattern, partition)
 	}
 
-	def getDefaultResultPattern(String type) {
+	static def getDefaultResultPattern(String type) {
 		switch (type) {
 			case "JUNIT":
 				return ".*\\.xml"
@@ -43,7 +43,7 @@ class TestsConfig {
 		}
 	}
 
-	def getDefaultCoveragePattern(String type) {
+	static def getDefaultCoveragePattern(String type) {
 		switch (type) {
 			case "VS_COVERAGE":
 			case "MS_COVERAGE":
