@@ -33,12 +33,14 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 			return
 		}
 
+		String timestamp = build.getStartTime().toEpochMilli().toString()
+
 		String result = null
 		int numberOfPdbs = 0
-		LoggingUtils.log("Uploading ${pdbs.size()} PDBs", definition, build)
+		LoggingUtils.log("Uploading ${pdbs.size()} PDBs for version $version ($timestamp)", definition, build)
 		pdbs.collate(MAX_PDB_UPLOAD).each { pdbSlice ->
 			numberOfPdbs += pdbSlice.size()
-			result = uploadPDBs(version, build.getStartTime().toEpochMilli(), pdbSlice)
+			result = uploadPDBs(version, timestamp, pdbSlice)
 			if(result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
 				LoggingUtils.log("Uploaded $numberOfPdbs/${pdbs.size()}", definition, build)
 			} else {
