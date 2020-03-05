@@ -35,6 +35,7 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 
 		String timestamp = build.getStartTime().toEpochMilli().toString()
 
+		// Upload the pdbs in batches
 		String result = null
 		int numberOfPdbs = 0
 		LoggingUtils.log("Uploading ${pdbs.size()} PDBs for version $version ($timestamp)", definition, build)
