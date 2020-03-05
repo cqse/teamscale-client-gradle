@@ -8,6 +8,8 @@ import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
+import java.nio.file.Path
+
 class UploadAdosTestResultsTask extends UploadTestResultsTask<AdosDefinition, AdosBuild> {
 	final static String TASK_NAME = "uploadTestResults"
 
@@ -39,13 +41,13 @@ class UploadAdosTestResultsTask extends UploadTestResultsTask<AdosDefinition, Ad
 	 * Get any zips from the test runs and check inside of them for the test results
 	 */
 	static List<File> getFilesFromTestRunsZip(AdosDefinition definition, AdosBuild build, ReportLocationMatcher config) {
-		List<File> testResults = new ArrayList<>();
+		List<Path> testResults = new ArrayList<>();
 
 		AdosUtils.getFilesFromTestRuns(definition, build, zipMatcher).each { zip ->
-			testResults.addAll(ZipUtils.getMatches(zip.toPath(), config).each {it.toFile()} as List<File>)
+			testResults.addAll(ZipUtils.getMatches(zip.toPath(), config))
 		}
 
-		return testResults
+		return testResults.collect {it.toFile()}
 	}
 
 	@Override
