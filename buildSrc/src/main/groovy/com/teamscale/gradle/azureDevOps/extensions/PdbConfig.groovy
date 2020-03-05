@@ -3,14 +3,14 @@ package com.teamscale.gradle.azureDevOps.extensions
 import com.teamscale.gradle.azureDevOps.utils.ReportLocationMatcher
 
 class PdbConfig {
-	ReportLocationMatcher versionConfig
-	ReportLocationMatcher pdbConfig
+	ReportLocationMatcher versionMatcher
+	ReportLocationMatcher pdbMatcher
 
 	def version(String artifactPattern, String pathPattern) {
-		versionConfig = new ReportLocationMatcher(null, pathPattern, artifactPattern)
+		versionMatcher = new ReportLocationMatcher(null, pathPattern, artifactPattern)
 	}
 
 	def pdb(String artifactPattern, String pathPattern) {
-		pdbConfig = new ReportLocationMatcher(null, pathPattern, artifactPattern)
+		pdbMatcher = new ReportLocationMatcher(null, pathPattern, artifactPattern)
 	}
 }
