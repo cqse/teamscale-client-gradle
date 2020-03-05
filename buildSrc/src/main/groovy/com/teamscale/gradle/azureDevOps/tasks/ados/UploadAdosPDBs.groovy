@@ -48,7 +48,7 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 				return
 			}
 		}
-		processUploadResult(definition,build, result, "Uploaded ${pdbs.size()} PDBs for $version")
+		processUploadResult(definition,build, result, "Success")
 	}
 
 	/**
@@ -66,7 +66,7 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 		}
 
 		def query = [
-			"timestamp": timestamp.toString(),
+			"t": timestamp.toString(),
 			"version": version
 		]
 
