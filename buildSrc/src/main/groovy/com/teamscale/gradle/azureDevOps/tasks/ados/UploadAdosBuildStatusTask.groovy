@@ -1,7 +1,10 @@
 package com.teamscale.gradle.azureDevOps.tasks.ados
 
+import com.teamscale.gradle.azureDevOps.client.AzureDevOpsClient
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
 import com.teamscale.gradle.azureDevOps.data.AdosDefinition
+import com.teamscale.gradle.azureDevOps.data.IBuild
+import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
@@ -25,5 +28,11 @@ class UploadAdosBuildStatusTask extends UploadBuildStatusTask<AdosDefinition, Ad
 	@Override
 	List<AdosDefinition> getDefinitions() {
 		return TeamscaleExtension.getFrom(project).azureDevOps.definitions
+	}
+
+	@Override
+	String getBuildUrl(IDefinition definition, IBuild build) {
+		return String.format("%s%s/%s/_build/results?buildId=%s", AzureDevOpsClient.URL,
+			definition.organization, definition.project, build.id)
 	}
 }

@@ -1,6 +1,5 @@
 package com.teamscale.gradle.azureDevOps.tasks.base
 
-
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.tasks.EBuildInformationType
@@ -33,7 +32,7 @@ abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> ex
 	}
 
 	/** Get the non code metric which is uploaded as the current build status. */
-	static NonCodeMetric getNonCodeMetric(IDefinition definition, IBuild build) {
+	NonCodeMetric getNonCodeMetric(IDefinition definition, IBuild build) {
 		def buildResult = getBuildResultInfo(definition, build)
 		String path = createPath(NON_CODE_METRIC_PATH, definition)
 		String content = buildResult.message
@@ -46,14 +45,15 @@ abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> ex
 	}
 
 	/** Returns information on the result of the given build */
-	private static BuildResultInfo getBuildResultInfo(IDefinition definition, IBuild build) {
+	private BuildResultInfo getBuildResultInfo(IDefinition definition, IBuild build) {
+		def url = getBuildUrl(definition, build)
 		switch (build.getResult()) {
 			case SUCCEEDED:
 				return new BuildResultInfo(assessment: GREEN, message: "Build succeeded")
 			case PARTIALLY_SUCCEEDED:
-				return new BuildResultInfo(assessment: YELLOW, message: "Build partially succeeded")
+				return new BuildResultInfo(assessment: YELLOW, message: "Build partially succeeded: $url")
 			case FAILED:
-				return new BuildResultInfo(assessment: RED, message: "Build failed")
+				return new BuildResultInfo(assessment: RED, message: "Build failed: $url")
 			default:
 				// should not happen. Check the "resultFilter" in CollectNewBuildsTasks
 				def message = "Invalid build result: ${build.getResult().value}. Check where the builds are fetched, " +
@@ -61,6 +61,8 @@ abstract class UploadBuildStatusTask<S extends IDefinition, T extends IBuild> ex
 				throw new AzureBuildException(LoggingUtils.createMessage(message, definition, build))
 		}
 	}
+
+	protected abstract String getBuildUrl(IDefinition definition, IBuild build);
 
 	/** Data class containing the assessment of a build status and the message for the assessment. */
 	private static class BuildResultInfo {

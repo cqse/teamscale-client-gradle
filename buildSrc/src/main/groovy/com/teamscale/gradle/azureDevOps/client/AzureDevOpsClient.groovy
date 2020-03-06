@@ -1,5 +1,7 @@
 package com.teamscale.gradle.azureDevOps.client
 
+import com.teamscale.gradle.azureDevOps.data.AdosBuild
+import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.extensions.Credentials
 import com.teamscale.gradle.teamscale.HttpClient
 import groovyx.net.http.OkHttpBuilder
@@ -13,7 +15,7 @@ import java.time.Instant
  * convenience.
  */
 class AzureDevOpsClient extends HttpClient {
-	final static URL = "https://dev.azure.com/"
+	public final static URL = "https://dev.azure.com/"
 
 	final static VSRM_URL = "https://vsrm.dev.azure.com/"
 
