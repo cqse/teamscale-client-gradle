@@ -6,7 +6,6 @@ import com.teamscale.gradle.azureDevOps.data.IDefinition
 import com.teamscale.gradle.azureDevOps.data.XamlBuild
 import com.teamscale.gradle.azureDevOps.data.XamlDefinition
 import com.teamscale.gradle.azureDevOps.tasks.base.UploadBuildStatusTask
-import com.teamscale.gradle.azureDevOps.utils.AdosUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 
 class UploadXamlBuildStatusTask extends UploadBuildStatusTask<XamlDefinition, XamlBuild> {
@@ -29,7 +28,8 @@ class UploadXamlBuildStatusTask extends UploadBuildStatusTask<XamlDefinition, Xa
 
 	@Override
 	String getBuildUrl(IDefinition definition, IBuild build) {
-		return String.format("%s%s/%s/_build/xaml?buildId=%s", AzureDevOpsClient.URL,
-			definition.organization, definition.project, build.id)
+		return "";
+		// Id is not fetched from ADOS
+		//return String.format("%s%s/%s/_build/xaml?buildId=%s", AzureDevOpsClient.URL, definition.organization, definition.project, build.id)
 	}
 }
