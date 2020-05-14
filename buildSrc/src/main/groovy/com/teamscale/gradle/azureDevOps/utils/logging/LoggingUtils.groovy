@@ -1,6 +1,7 @@
 package com.teamscale.gradle.azureDevOps.utils.logging
 
 import com.teamscale.gradle.azureDevOps.data.AdosBuild
+import com.teamscale.gradle.azureDevOps.data.AdosDefinition
 import com.teamscale.gradle.azureDevOps.data.IBuild
 import com.teamscale.gradle.azureDevOps.data.IDefinition
 import groovy.json.JsonBuilder
@@ -14,8 +15,8 @@ class LoggingUtils {
 	static String createMessage(String message, IDefinition definition = null, IBuild build = null) {
 		def info = ""
 
-		if (build instanceof AdosBuild) {
-			info += "[" + ((AdosBuild) build).id + "]"
+		if (definition instanceof AdosDefinition) {
+			info += "[" + ((AdosDefinition) definition).id + "]"
 		}
 
 		if (definition) {
