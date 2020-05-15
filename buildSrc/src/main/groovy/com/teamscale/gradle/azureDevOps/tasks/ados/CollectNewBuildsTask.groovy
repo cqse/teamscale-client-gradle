@@ -39,7 +39,7 @@ class CollectNewBuildsTask extends DefaultTask {
 				throw e
 			}
 
-			if(allBuilds.isEmpty()) {
+			if(allBuilds.isEmpty() && definition.lastCompletedTime == null) {
 				log("No builds run yet", definition)
 				return
 			}
