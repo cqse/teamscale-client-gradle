@@ -39,6 +39,11 @@ class CollectNewBuildsTask extends DefaultTask {
 				throw e
 			}
 
+			if(allBuilds.isEmpty()) {
+				log("No builds run yet", definition)
+				return
+			}
+
 			List<AdosBuild> builds = allBuilds.findResults { Map data ->
 				def build = new AdosBuild(data, definition.getOptions().getBranchMapping())
 				if (build.targetBranch != null) {
