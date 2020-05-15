@@ -39,7 +39,7 @@ class CollectBuildDefinitionsTask extends DefaultTask {
 						lastCompleted = "$definition.lastCompletedTime"
 					}
 
-					log("$definition.name [$lastCompleted]")
+					log(lastCompleted, definition)
 
 					if (definitions.size() > 1) {
 						assert definition.options.partition: "The project \"$projectConfig.name\" " +

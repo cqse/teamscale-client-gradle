@@ -44,11 +44,6 @@ class AdosBuild implements IBuild {
 	 * If no branchMapping is set it will be uploaded to the default branch (main).
 	 */
 	private void setTargetBranch(Closure branchMapping) {
-		if (shouldBeExcluded(sourceBranch)) {
-			targetBranch = null
-			return
-		}
-
 		sourceBranch = formatBranchName(sourceBranch)
 		targetBranch = branchMapping(sourceBranch)
 
@@ -62,14 +57,6 @@ class AdosBuild implements IBuild {
 	/** Whether the build failed */
 	boolean hasFailed() {
 		return this.result == EBuildResult.FAILED
-	}
-
-	/**
-	 * Checks if the branch name suggest that this might be, for example, a pull
-	 * request, which should than automatically be excluded from the processing.
-	 */
-	private static boolean shouldBeExcluded(String branchName) {
-		return branchName =~ /^refs\/pull/
 	}
 
 	/**

@@ -24,6 +24,11 @@ class CollectNewBuildsTask extends DefaultTask {
 		AzureDevOpsExtension ados = TeamscaleExtension.getFrom(project).azureDevOps
 
 		ados.definitions.each { AdosDefinition definition ->
+			if(definition.lastCompletedTime == null) {
+				log("No builds run yet or ", definition)
+				return
+			}
+
 			def http = definition.getHttp()
 
 			Instant minTime = definition.getMinLastProcessedTimeFor(getConfiguredTaskTypes(definition)).plusMillis(TIME_DELTA)
@@ -39,8 +44,13 @@ class CollectNewBuildsTask extends DefaultTask {
 				throw e
 			}
 
-			if(allBuilds.isEmpty() && definition.lastCompletedTime == null) {
-				log("No builds run yet", definition)
+			// remove unwanted builds
+			allBuilds = allBuilds.findAll { Map data ->
+				return !shouldBeExcluded(data.sourceBranch as String)
+			}
+
+			if(allBuilds.isEmpty()) {
+				log("No valid build run yet (e.g. source branch is a pull request)", definition)
 				return
 			}
 
@@ -67,6 +77,14 @@ class CollectNewBuildsTask extends DefaultTask {
 	}
 
 	/**
+	 * Checks if the branch name suggest that this might be, for example, a pull
+	 * request, which should than automatically be excluded from the processing.
+	 */
+	static boolean shouldBeExcluded(String branchName) {
+		return branchName =~ /^refs\/pull/
+	}
+
+	/**
 	 * Checks the time of the last build of the given definition. If this exceeds a certain number
 	 * of days, which are defined in the definition options, then a warning will be logged.
 	 *
@@ -89,8 +107,7 @@ class CollectNewBuildsTask extends DefaultTask {
 		long daysAfterLastBuild = Duration.between(lastBuildTime, Instant.now()).toDays()
 		if (daysAfterLastBuild > daysBeforeWarning) {
 			// Removed as a warning as this is not really actionable and happens in a majority of the projects
-			log("Last processable build for [$definition.name][$definition.id] was executed $daysAfterLastBuild " +
-				"days ago (max: $daysBeforeWarning)!")
+			log("Last processable build was executed $daysAfterLastBuild days ago (max: $daysBeforeWarning)!", definition)
 		}
 	}
 
