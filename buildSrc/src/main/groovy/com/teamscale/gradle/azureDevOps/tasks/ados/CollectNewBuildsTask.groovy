@@ -50,7 +50,7 @@ class CollectNewBuildsTask extends DefaultTask {
 
 			if (builds.isEmpty()) {
 				if (minTime.minusMillis(TIME_DELTA) == Instant.EPOCH) {
-					warn("No builds found for [$definition.name] which match the provided branch mapping")
+					warn("No builds found which match the provided branch mapping", definition)
 				} else {
 					log("No unprocessed builds since $minTime", definition)
 				}
