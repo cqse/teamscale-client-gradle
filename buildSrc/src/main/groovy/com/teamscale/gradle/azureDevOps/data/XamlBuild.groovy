@@ -68,7 +68,7 @@ class XamlBuild implements IBuild {
 		this.result = result
 	}
 
-	Instant getBuildTime(XamlDefinition definition) {
+	Instant getBuildTime(XamlDefinition definition) throws AzureBuildException {
 		if (definition.config.timestamp) {
 			return parseBuildTimeFromBuildLog(definition.config.timestamp)
 		}
@@ -79,7 +79,7 @@ class XamlBuild implements IBuild {
 	 * Parses the timestamp of when the build started from the build log
 	 * This information should be in the first line of the log.
 	 */
-	Instant parseBuildTimeFromBuildLog(ReportLocationMatcher buildLogMatcher) {
+	Instant parseBuildTimeFromBuildLog(ReportLocationMatcher buildLogMatcher) throws AzureBuildException {
 		List<Path> path = ZipUtils.getMatches(archive, buildLogMatcher)
 		try {
 			if (path.size() != 1) {

@@ -5,6 +5,7 @@ import com.teamscale.gradle.azureDevOps.data.XamlDefinition
 import com.teamscale.gradle.azureDevOps.extensions.AzureDevOpsExtension
 import com.teamscale.gradle.azureDevOps.extensions.XamlExtension
 import com.teamscale.gradle.azureDevOps.tasks.base.EBuildResult
+import com.teamscale.gradle.azureDevOps.utils.AzureBuildException
 import com.teamscale.gradle.azureDevOps.utils.ZipUtils
 import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
@@ -82,7 +83,14 @@ class ProcessBuildArchivesTask extends DefaultTask {
 			} as List<Path>).each { Path archive ->
 			LoggingUtils.log(String.format("Processing \"%s\"", archive.toAbsolutePath().toString()), definition)
 
-			XamlBuild build = new XamlBuild(definition, archive)
+
+			XamlBuild build;
+			try {
+				build = new XamlBuild(definition, archive)
+			} catch(AzureBuildException e) {
+				LoggingUtils.warn(String.format("Archive '%s' cannot be processed: %s", archive, e.getMessage()), definition)
+				throw e
+			}
 
 			if (setBuildStatus(definition, build)) {
 				// If the build status cannot be determined skip the build
