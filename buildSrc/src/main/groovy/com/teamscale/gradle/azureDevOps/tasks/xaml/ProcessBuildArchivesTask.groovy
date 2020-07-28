@@ -89,7 +89,7 @@ class ProcessBuildArchivesTask extends DefaultTask {
 				build = new XamlBuild(definition, archive)
 			} catch(AzureBuildException e) {
 				LoggingUtils.warn(String.format("Archive '%s' cannot be processed: %s", archive, e.getMessage()), definition)
-				throw e
+				return
 			}
 
 			if (setBuildStatus(definition, build)) {
