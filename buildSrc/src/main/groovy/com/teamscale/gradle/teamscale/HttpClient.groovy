@@ -29,11 +29,11 @@ class HttpClient {
 		return result
 	}
 
-	private static encodeParams(List<String> params) {
-		return params.collect { it -> URLEncoder.encode(it, "UTF-8").replaceAll("\\+", "%20") }
+	static encodeParams(List<String> params) {
+		return params.collect { it -> URLEncoder.encode(it, "UTF-8").replaceAll("\\+", "%20") } as List<String>
 	}
 
-	private static encodeQueryParams(Map<String, String> query) {
+	static encodeQueryParams(Map<String, String> query) {
 		return query.collectEntries { key, value ->
 			[(key): URLEncoder.encode(value, "UTF-8").replaceAll("\\+", "%20")]
 		} as Map<String, String>
