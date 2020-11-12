@@ -62,7 +62,7 @@ class TeamscaleClient extends HttpClient {
 		List<String> path = [prefix]
 
 		// Encode each single path segment
-		service = service.each { it -> URLEncoder.encode(it, "UTF-8").replace("/", "%2F") }
+		service = service.each { it -> URLEncoder.encode(it, "UTF-8").replaceAll("/", "%2F") }
 
 		path = (path + service).findAll {
 			it != null
@@ -86,9 +86,7 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
 	 */
 	protected Object doProjectCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		def projectService = ["api", "projects", server.project]
-		projectService.addAll(service)
-		return doCall(method, projectService, query, setRequest)
+		return doCall(method, ["api", "projects", server.project] + service, query, setRequest)
 	}
 
 
@@ -103,9 +101,7 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
 	 */
 	protected Object doProjectCallOld(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		def projectService = ["p", server.project]
-		projectService.addAll(service)
-		return doCall(method, projectService, query, setRequest)
+		return doCall(method, ["p", server.project] + service, query, setRequest)
 	}
 
 	/**
@@ -119,9 +115,7 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a global REST Api service call for teamscale.
 	 */
 	protected Object doGlobalCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		def globalService = ["api"]
-		globalService.addAll(service)
-		return doCall(method, globalService, query, setRequest)
+		return doCall(method, ["api"] + service, query, setRequest)
 	}
 
 	/**
