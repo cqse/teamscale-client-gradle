@@ -22,7 +22,9 @@ class MunichRePlugin {
 		PluginUtils.createTask(project, CreateTGAStart, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateTSAStart, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateReportLast, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateReportLastOld, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateMonthlyBaselines, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateMonthlyBaselinesOld, UTILS_TASKS)
 	}
 
 	static void createExtensions(Project project) {
