@@ -11,8 +11,8 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.log
 /**
  * Task for automatically creating baselines for all projects.
  */
-abstract class CreateBaseline extends DefaultTask {
-	public static final String TASK_NAME = "createBaselines"
+abstract class CreateBaselineOld extends DefaultTask {
+	public static final String TASK_NAME = "createBaselinesOld"
 
 	private TeamscaleClient http = TeamscaleExtension.getFrom(project).http
 
@@ -25,10 +25,12 @@ abstract class CreateBaseline extends DefaultTask {
 
 	abstract void execute(TeamscaleClient http, String project)
 
-	/** Create the baseline for the given project */
+	/**
+	 * Create the baseline for the given project
+	 */
 	protected void createBaseline(String project, String name, long baseline) {
 		log("Creating \"$name\" for $project")
-		http.doProjectCall("put", ["baselines", name], [:], { request ->
+		http.doProjectCallOld("put", ["baselines", name], [:], { request ->
 			request.contentType = "application/json"
 			request.body = new JsonBuilder([
 				"description": "",
@@ -38,9 +40,11 @@ abstract class CreateBaseline extends DefaultTask {
 		})
 	}
 
-	/** Returns the timestamp of the first commit */
+	/**
+	 * Returns the timestamp of the first commit
+	 */
 	long getTimeStampOfFirstCommit(String project) {
-		Object summary = http.doProjectCall("get", "repository-summary", [:], { request ->
+		Object summary = http.doProjectCallOld("get", "repository-summary", [:], { request ->
 			request.accept = "application/json"
 		}) as Object
 
@@ -49,7 +53,7 @@ abstract class CreateBaseline extends DefaultTask {
 
 	/** Checks if the project has a baseline with the same name */
 	boolean hasBaseline(String project, String baseline) {
-		return (http.doProjectCall("get", "baselines", [:], { request ->
+		return (http.doProjectCallOld("get", "baselines", [:], { request ->
 			request.accept = "application/json"
 		}) as List<String>).contains(baseline)
 	}

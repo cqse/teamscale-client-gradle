@@ -23,12 +23,12 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 	@Override
 	void run(AdosDefinition definition, AdosBuild build) {
 		String version = getVersionNumber(definition, build)
-		if(!version) {
+		if (!version) {
 			return
 		}
 
 		List<File> pdbs = AdosUtils.getFilesFromBuildArtifact(definition, build, definition.options.pdb.pdbMatcher)
-		if(pdbs.size() == 0) {
+		if (pdbs.size() == 0) {
 			LoggingUtils.warn("No pdbs found for $definition.options.pdb.pdbMatcher", definition, build)
 			return
 		}
@@ -42,14 +42,14 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 		pdbs.collate(MAX_PDB_UPLOAD).each { pdbSlice ->
 			numberOfPdbs += pdbSlice.size()
 			result = uploadPDBs(version, timestamp, pdbSlice)
-			if(result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
+			if (result == TeamscaleClient.UPLOAD_SUCCESS_RETURN) {
 				LoggingUtils.log("Uploaded $numberOfPdbs/${pdbs.size()}", definition, build)
 			} else {
 				LoggingUtils.warn("Upload failed", definition, build)
 				return
 			}
 		}
-		processUploadResult(definition,build, result, "Success")
+		processUploadResult(definition, build, result, "Success")
 	}
 
 	/**
@@ -67,11 +67,11 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 		}
 
 		def query = [
-			"t": timestamp.toString(),
+			"t"      : timestamp.toString(),
 			"version": version
 		]
 
-		return getTeamscaleClient().doProjectCall("post", "dotnet-debug-info-upload", query, setRequest)
+		return getTeamscaleClient().doProjectCallOld("post", "dotnet-debug-info-upload", query, setRequest)
 	}
 
 	/**
@@ -82,11 +82,11 @@ class UploadAdosPDBs extends UploadTask<AdosDefinition, AdosBuild> {
 		def matcher = definition.options.pdb.versionMatcher
 		def matched = AdosUtils.getFilesFromBuildArtifact(definition, build, matcher)
 
-		if(matched.size() == 0) {
+		if (matched.size() == 0) {
 			return null
 		}
 
-		if(matched.size() > 1) {
+		if (matched.size() > 1) {
 			LoggingUtils.warn("Found multiple artifact matches for $matcher. Taking first", definition, build)
 		}
 

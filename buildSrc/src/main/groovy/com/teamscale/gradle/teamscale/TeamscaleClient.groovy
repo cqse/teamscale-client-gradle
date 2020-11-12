@@ -58,11 +58,8 @@ class TeamscaleClient extends HttpClient {
 	/**
 	 * Makes an HTTP call to the teamscale server. Prepends any necessary prefix or subpath.
 	 */
-	protected Object doCall(String method, List<String> service, Map<String, String> query = [:], setRequest = {}, boolean projectCall = false) {
+	protected Object doCall(String method, List<String> service, Map<String, String> query = [:], setRequest = {}) {
 		List<String> path = [prefix]
-		if(projectCall) {
-			path += ["p", server.project]
-		}
 
 		path = (path + service).findAll {
 			it != null
@@ -86,7 +83,26 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
 	 */
 	protected Object doProjectCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		return doCall(method, service, query, setRequest, true)
+		def projectService = ["api", "projects", server.project]
+		projectService.addAll(service)
+		return doCall(method, projectService, query, setRequest)
+	}
+
+
+	/**
+	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
+	 */
+	protected Object doProjectCallOld(String method, String service, Map<String, String> query, setRequest = {}) {
+		return doProjectCall(method, [service], query, setRequest)
+	}
+
+	/**
+	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
+	 */
+	protected Object doProjectCallOld(String method, List<String> service, Map<String, String> query, setRequest = {}) {
+		def projectService = ["p", server.project]
+		projectService.addAll(service)
+		return doCall(method, projectService, query, setRequest)
 	}
 
 	/**
@@ -100,7 +116,21 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a global REST Api service call for teamscale.
 	 */
 	protected Object doGlobalCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		return doCall(method, service, query, setRequest, false)
+		return doCall(method, service, query, setRequest)
+	}
+
+	/**
+	 * Calls a global REST Api service call for teamscale.
+	 */
+	protected Object doGlobalCallOld(String method, String service, Map<String, String> query, setRequest = {}) {
+		return doGlobalCall(method, [service], query, setRequest)
+	}
+
+	/**
+	 * Calls a global REST Api service call for teamscale.
+	 */
+	protected Object doGlobalCallOld(String method, List<String> service, Map<String, String> query, setRequest = {}) {
+		return doCall(method, service, query, setRequest)
 	}
 
 
@@ -113,7 +143,7 @@ class TeamscaleClient extends HttpClient {
 			request.body = metrics
 		}
 
-		return doProjectCall("put", "add-non-code-metrics", query, setBody)
+		return doProjectCallOld("put", "add-non-code-metrics", query, setBody)
 	}
 
 	/**
@@ -135,7 +165,7 @@ class TeamscaleClient extends HttpClient {
 			}
 		}
 
-		return doProjectCall("post", "external-report", query, setRequest)
+		return doProjectCallOld("post", "external-report", query, setRequest)
 	}
 
 	/**
@@ -151,14 +181,10 @@ class TeamscaleClient extends HttpClient {
 			}
 		}
 
-		return doProjectCall("put", "add-external-findings", query, setRequest)
-	}
-
-	List getExternalUploads() {
-		return doProjectCall("get", "external-result-upload", [:], acceptJson) as List
+		return doProjectCallOld("put", "add-external-findings", query, setRequest)
 	}
 
 	Set<String> getAllProjects() {
-		return doGlobalCall("get", "projects", [:], acceptJson) as Set
+		return doGlobalCallOld("get", "projects", [:], acceptJson) as Set
 	}
 }

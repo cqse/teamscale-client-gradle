@@ -1,10 +1,10 @@
 package com.teamscale.gradle.munichre.tasks
 
-import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
+
 import com.teamscale.gradle.munichre.extensions.DashboardExtension
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
-import com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtils
+import com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtilsOld
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.slurpersupport.GPathResult
@@ -19,7 +19,7 @@ import static com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils.warn
 /**
  * Tasks for creating dashboards for all projects defined in the "portfolio dashboard" data based on a template
  */
-class CreateUniformDashboards extends DefaultTask {
+class CreateUniformDashboardsOld extends DefaultTask {
 
 	protected static Map<Integer, String> QUALITY_GOAL_DESCRIPTIONS = [
 		0: "TBD",
@@ -29,7 +29,7 @@ class CreateUniformDashboards extends DefaultTask {
 		4: "perfective"
 	]
 
-	public static final String TASK_NAME = "createUniformDashboards"
+	public static final String TASK_NAME = "createUniformDashboardsOld"
 
 	@TaskAction
 	def action() {
@@ -41,17 +41,17 @@ class CreateUniformDashboards extends DefaultTask {
 		}
 
 
-		String template = DashboardUtils.getDashboard(http, config.template)
+		String template = DashboardUtilsOld.getDashboard(http, config.template)
 		Map data = new JsonSlurper().parse(new File(config.data)) as Map
 
 		Set<String> projects = http.getAllProjects();
 		for (ProjectInfo info in getProjectInfos(data, config.tool)) {
-			if (config.projectMustExist && !projects.contains(info.id)) {
+			if(config.projectMustExist && !projects.contains(info.id)) {
 				warn(String.format("No project in teamscale found for %s", info.id));
 			} else {
 				def dashboard = createDashboard(info, template, config)
 				log(String.format("Creating dashboard for %s: %s", info.id, dashboard.getName()))
-				DashboardUtils.uploadDashboard(http, dashboard)
+				DashboardUtilsOld.uploadDashboard(http, dashboard)
 			}
 		}
 	}
@@ -167,7 +167,7 @@ class CreateUniformDashboards extends DefaultTask {
 			return false
 		}
 
-		if (!DashboardUtils.getAllDashboards(teamscale.http).contains(config.template)) {
+		if (!DashboardUtilsOld.getAllDashboards(teamscale.http).contains(config.template)) {
 			warn("The dashboard template $config.template does not exist")
 			return false
 		}
