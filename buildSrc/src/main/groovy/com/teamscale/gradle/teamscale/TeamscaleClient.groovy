@@ -62,7 +62,7 @@ class TeamscaleClient extends HttpClient {
 		List<String> path = [prefix]
 
 		// Encode each single path segment
-		service = service.each { it -> URLEncoder.encode(it, "UTF-8") }
+		service = service.each { it -> URLEncoder.encode(it, "UTF-8").replace("/", "%2F") }
 
 		path = (path + service).findAll {
 			it != null
