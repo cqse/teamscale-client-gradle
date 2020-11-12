@@ -1,15 +1,13 @@
 package com.teamscale.gradle.munichre.tasks
 
-import com.teamscale.gradle.azureDevOps.utils.logging.LoggingUtils
+
 import com.teamscale.gradle.munichre.extensions.DashboardExtension
 import com.teamscale.gradle.teamscale.TeamscaleClient
 import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtils
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
-import groovy.util.slurpersupport.GPathResult
 import groovy.util.slurpersupport.NodeChild
-import groovy.xml.XmlUtil
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
@@ -64,13 +62,13 @@ class CreateUniformDashboards extends DefaultTask {
 		Object templateJSON = new JsonSlurper().parseText(template)
 
 		// change XML
-		templateJSON.payload.name = info.dashboardName
+		templateJSON.name = info.dashboardName
 
 		// Set sharing
 		setSharing(templateJSON, info, config.placeholder)
 
 		// change JSON
-		Object json = new JsonSlurper().parseText(templateJSON.payload.descriptorJSON.text())
+		Object json = new JsonSlurper().parseText(templateJSON.descriptorJSON.text())
 		json.widgets.each { widget ->
 			// Label Title
 			if (widget["widget-id"] == "label") {
@@ -92,14 +90,14 @@ class CreateUniformDashboards extends DefaultTask {
 				widget.Trend.value.project = info.id
 			}
 		}
-		templateJSON.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
+		templateJSON.descriptorJSON = new JsonBuilder(json).toPrettyString()
 
 		return new Dashboard(templateJSON)
 	}
 
 	/** Sets the sharing for the given dashboard */
 	static def setSharing(dashboard, ProjectInfo projectInfo, String placeholder) {
-		dashboard.payload.projectAccessEntries.children().each { child ->
+		dashboard.projectAccessEntries.children().each { child ->
 			if (child.userOrGroup == placeholder) {
 				child.userOrGroup = projectInfo.id
 			}
@@ -195,20 +193,20 @@ class CreateUniformDashboards extends DefaultTask {
 		}
 	}
 
-	/** Wrapper for the Dashboard XML */
+	/** Wrapper for the Dashboard JSON */
 	class Dashboard {
-		NodeChild xml
+		NodeChild json
 
-		Dashboard(xml) {
-			this.xml = xml
+		Dashboard(json) {
+			this.json = json
 		}
 
 		String getName() {
-			return this.xml.payload.owner + "/" + this.xml.payload.name
+			return this.json.owner + "/" + this.json.name
 		}
 
 		String toString() {
-			return XmlUtil.serialize(this.xml)
+			return new JsonBuilder(this.json).toString()
 		}
 	}
 }
