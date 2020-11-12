@@ -28,7 +28,7 @@ abstract class CreateBaseline extends DefaultTask {
 	/** Create the baseline for the given project */
 	protected void createBaseline(String project, String name, long baseline) {
 		log("Creating \"$name\" for $project")
-		http.doProjectCall("put", ["baselines", name], [:], { request ->
+		http.doCall("put", ["api", "projects", project, "baselines", name], [:], { request ->
 			request.contentType = "application/json"
 			request.body = new JsonBuilder([
 				"description": "",
@@ -40,7 +40,7 @@ abstract class CreateBaseline extends DefaultTask {
 
 	/** Returns the timestamp of the first commit */
 	long getTimeStampOfFirstCommit(String project) {
-		Object summary = http.doProjectCall("get", "repository-summary", [:], { request ->
+		Object summary = http.doCall("get", ["api", "projects", project, "repository-summary"], [:], { request ->
 			request.accept = "application/json"
 		}) as Object
 
@@ -49,7 +49,7 @@ abstract class CreateBaseline extends DefaultTask {
 
 	/** Checks if the project has a baseline with the same name */
 	boolean hasBaseline(String project, String baseline) {
-		return (http.doProjectCall("get", "baselines", [:], { request ->
+		return (http.doCall("get", ["api", "projects", project, "baselines"], [:], { request ->
 			request.accept = "application/json"
 		}) as List<String>).contains(baseline)
 	}
