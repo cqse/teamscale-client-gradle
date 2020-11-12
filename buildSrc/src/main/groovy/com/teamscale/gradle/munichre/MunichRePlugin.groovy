@@ -15,6 +15,7 @@ class MunichRePlugin {
 
 	static void createInstanceTasks(Project project) {
 		PluginUtils.createTask(project, CreateUniformDashboards, UTILS_TASKS)
+		PluginUtils.createTask(project, CreateUniformDashboardsOld, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateMonthlyIssueQuery, UTILS_TASKS)
 		PluginUtils.createTask(project, CreateIssueQueries, UTILS_TASKS)
 
