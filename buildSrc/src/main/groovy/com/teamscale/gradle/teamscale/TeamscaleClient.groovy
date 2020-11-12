@@ -61,12 +61,12 @@ class TeamscaleClient extends HttpClient {
 	protected Object doCall(String method, List<String> service, Map<String, String> query = [:], setRequest = {}) {
 		List<String> path = [prefix]
 
-		// Encode each single path segment
-		service = service.collect { it -> URLEncoder.encode(it, "UTF-8").replaceAll("\\+", "%20") }
-
 		path = (path + service).findAll {
 			it != null
 		}
+
+		// Encode each single path segment
+		service = service.collect { it -> URLEncoder.encode(it, "UTF-8").replaceAll("\\+", "%20") }
 
 		if (disableUpload && method in ["post", "put"]) {
 			return UPLOAD_SUCCESS_RETURN
