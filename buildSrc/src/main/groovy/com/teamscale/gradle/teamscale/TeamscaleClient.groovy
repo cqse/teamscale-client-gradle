@@ -70,7 +70,7 @@ class TeamscaleClient extends HttpClient {
 
 		// encode query params
 		query = query.collectEntries { key, value ->
-			[key: URLEncoder.encode(value, "UTF-8").replaceAll("\\+", "%20")]
+			[(key): URLEncoder.encode(value, "UTF-8").replaceAll("\\+", "%20")]
 		} as Map<String, String>
 
 		if (disableUpload && method in ["post", "put"]) {
