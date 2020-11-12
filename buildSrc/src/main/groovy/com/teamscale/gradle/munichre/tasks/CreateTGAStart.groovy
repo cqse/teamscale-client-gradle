@@ -1,6 +1,6 @@
 package com.teamscale.gradle.munichre.tasks
 
-class CreateTGAStart extends CreateBaselineIfMissing {
+class CreateTGAStart extends CreateBaselineIfMissingOld {
 	public static final String TASK_NAME = "createTGAStartIfMissing"
 
 	@Override
