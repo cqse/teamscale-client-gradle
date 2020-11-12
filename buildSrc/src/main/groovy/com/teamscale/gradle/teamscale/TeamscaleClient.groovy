@@ -65,14 +65,6 @@ class TeamscaleClient extends HttpClient {
 			it != null
 		}
 
-		// Encode each single path segment
-		path = path.collect { it -> URLEncoder.encode(it, "UTF-8").replaceAll("\\+", "%20") }
-
-		// encode query params
-		query = query.collectEntries { key, value ->
-			[(key): URLEncoder.encode(value, "UTF-8").replaceAll("\\+", "%20")]
-		} as Map<String, String>
-
 		if (disableUpload && method in ["post", "put"]) {
 			return UPLOAD_SUCCESS_RETURN
 		}

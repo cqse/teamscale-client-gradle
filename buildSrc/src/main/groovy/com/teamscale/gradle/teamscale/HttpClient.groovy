@@ -17,8 +17,8 @@ class HttpClient {
 			setRequest(request)
 
 			request.uri.useRawValues = true
-			request.uri.path = "/" + pathParameters.join("/")
-			request.uri.query = queryParameters
+			request.uri.path = "/" + encodeParams(pathParameters).join("/")
+			request.uri.query = encodeQueryParams(queryParameters)
 
 			response.failure(failure)
 		}
@@ -27,6 +27,16 @@ class HttpClient {
 			return new String(result)
 		}
 		return result
+	}
+
+	private static encodeParams(List<String> params) {
+		return params.collect { it -> URLEncoder.encode(it, "UTF-8").replaceAll("\\+", "%20") }
+	}
+
+	private static encodeQueryParams(Map<String, String> query) {
+		return query.collectEntries { key, value ->
+			[(key): URLEncoder.encode(value, "UTF-8").replaceAll("\\+", "%20")]
+		} as Map<String, String>
 	}
 
 	/** Custom failure handler for request. More verbose. */
