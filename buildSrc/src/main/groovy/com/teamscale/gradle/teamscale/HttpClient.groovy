@@ -16,6 +16,7 @@ class HttpClient {
 			setRequest.delegate = delegate
 			setRequest(request)
 
+			request.uri.useRawValues = true
 			request.uri.path = "/" + pathParameters.join("/")
 			request.uri.query = queryParameters
 
