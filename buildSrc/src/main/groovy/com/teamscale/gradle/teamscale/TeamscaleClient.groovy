@@ -99,7 +99,7 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a project service for teamscale. Prepends any necessary prefix or subpath.
 	 */
 	protected Object doProjectCallOld(String method, String service, Map<String, String> query, setRequest = {}) {
-		return doProjectCall(method, [service], query, setRequest)
+		return doProjectCallOld(method, [service], query, setRequest)
 	}
 
 	/**
