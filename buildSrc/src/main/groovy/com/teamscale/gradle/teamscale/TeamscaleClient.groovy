@@ -127,7 +127,7 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a global REST Api service call for teamscale.
 	 */
 	protected Object doGlobalCallOld(String method, String service, Map<String, String> query, setRequest = {}) {
-		return doGlobalCall(method, [service], query, setRequest)
+		return doGlobalCallOld(method, [service], query, setRequest)
 	}
 
 	/**
