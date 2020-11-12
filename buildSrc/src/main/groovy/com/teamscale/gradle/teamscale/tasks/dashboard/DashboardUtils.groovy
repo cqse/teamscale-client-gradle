@@ -31,7 +31,7 @@ class DashboardUtils {
 	static void uploadDashboard(TeamscaleClient http, CreateUniformDashboards.Dashboard dashboard) {
 		String method = "post";
 		def path = ["api", "dashboards"]
-		if (http.doGlobalCall("get", ["dashboards", dashboard.getName(), "exists"], [:]) as boolean) {
+		if (http.doGlobalCall("get", ["dashboards", dashboard.getName(), "exist"], [:]) as boolean) {
 			method = "put"
 			path.add(dashboard.getName())
 		}
