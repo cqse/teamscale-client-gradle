@@ -61,6 +61,9 @@ class TeamscaleClient extends HttpClient {
 	protected Object doCall(String method, List<String> service, Map<String, String> query = [:], setRequest = {}) {
 		List<String> path = [prefix]
 
+		// Encode each single path segment
+		service = service.each { it -> URLEncoder.encode(it, "UTF-8") }
+
 		path = (path + service).findAll {
 			it != null
 		}
