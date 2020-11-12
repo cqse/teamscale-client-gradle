@@ -61,16 +61,16 @@ class CreateUniformDashboards extends DefaultTask {
 	 */
 	private Dashboard createDashboard(ProjectInfo info, String template, DashboardExtension config) {
 		// parse the XML
-		GPathResult xml = new XmlSlurper().parseText(template)
+		Object templateJSON = new JsonSlurper().parseText(template)
 
 		// change XML
-		xml.payload.name = info.dashboardName
+		templateJSON.payload.name = info.dashboardName
 
 		// Set sharing
-		setSharing(xml, info, config.placeholder)
+		setSharing(templateJSON, info, config.placeholder)
 
 		// change JSON
-		Object json = new JsonSlurper().parseText(xml.payload.descriptorJSON.text())
+		Object json = new JsonSlurper().parseText(templateJSON.payload.descriptorJSON.text())
 		json.widgets.each { widget ->
 			// Label Title
 			if (widget["widget-id"] == "label") {
@@ -92,9 +92,9 @@ class CreateUniformDashboards extends DefaultTask {
 				widget.Trend.value.project = info.id
 			}
 		}
-		xml.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
+		templateJSON.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
 
-		return new Dashboard(xml)
+		return new Dashboard(templateJSON)
 	}
 
 	/** Sets the sharing for the given dashboard */
