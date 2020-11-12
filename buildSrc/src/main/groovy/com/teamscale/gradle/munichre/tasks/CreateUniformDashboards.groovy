@@ -7,7 +7,9 @@ import com.teamscale.gradle.teamscale.data.TeamscaleExtension
 import com.teamscale.gradle.teamscale.tasks.dashboard.DashboardUtils
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovy.util.slurpersupport.GPathResult
 import groovy.util.slurpersupport.NodeChild
+import groovy.xml.XmlUtil
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
@@ -59,16 +61,16 @@ class CreateUniformDashboards extends DefaultTask {
 	 */
 	private Dashboard createDashboard(ProjectInfo info, String template, DashboardExtension config) {
 		// parse the XML
-		Object templateJSON = new JsonSlurper().parseText(template)
+		GPathResult xml = new XmlSlurper().parseText(template)
 
 		// change XML
-		templateJSON.name = info.dashboardName
+		xml.payload.name = info.dashboardName
 
 		// Set sharing
-		setSharing(templateJSON, info, config.placeholder)
+		setSharing(xml, info, config.placeholder)
 
 		// change JSON
-		Object json = new JsonSlurper().parseText(templateJSON.descriptorJSON.text())
+		Object json = new JsonSlurper().parseText(xml.payload.descriptorJSON.text())
 		json.widgets.each { widget ->
 			// Label Title
 			if (widget["widget-id"] == "label") {
@@ -90,14 +92,14 @@ class CreateUniformDashboards extends DefaultTask {
 				widget.Trend.value.project = info.id
 			}
 		}
-		templateJSON.descriptorJSON = new JsonBuilder(json).toPrettyString()
+		xml.payload.descriptorJSON = new JsonBuilder(json).toPrettyString()
 
-		return new Dashboard(templateJSON)
+		return new Dashboard(xml)
 	}
 
 	/** Sets the sharing for the given dashboard */
 	static def setSharing(dashboard, ProjectInfo projectInfo, String placeholder) {
-		dashboard.projectAccessEntries.each { child ->
+		dashboard.payload.projectAccessEntries.each { child ->
 			if (child.userOrGroup == placeholder) {
 				child.userOrGroup = projectInfo.id
 			}
@@ -195,18 +197,18 @@ class CreateUniformDashboards extends DefaultTask {
 
 	/** Wrapper for the Dashboard JSON */
 	class Dashboard {
-		NodeChild json
+		NodeChild xml
 
-		Dashboard(json) {
-			this.json = json
+		Dashboard(xml) {
+			this.xml = xml
 		}
 
 		String getName() {
-			return this.json.owner + "/" + this.json.name
+			return this.xml.payload.owner + "/" + this.xml.playload.name
 		}
 
 		String toString() {
-			return new JsonBuilder(this.json).toString()
+			return XmlUtil.serialize(this.xml)
 		}
 	}
 }

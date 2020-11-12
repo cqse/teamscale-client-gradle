@@ -20,7 +20,7 @@ class DashboardUtils {
 		File tmpFile = File.createTempFile("temp", ".tsdashboard")
 		tmpFile.deleteOnExit()
 
-		http.doGlobalCall("get", ["dashboards", dashboardName], [:], { request ->
+		http.doGlobalCall("get", ["dashboards", dashboardName, "export"], [:], { request ->
 			Download.toFile(delegate, tmpFile)
 		})
 
@@ -28,25 +28,25 @@ class DashboardUtils {
 	}
 
 	static boolean dashboardExists(TeamscaleClient http, String dashboardName) {
-		return http.doGlobalCall("get", ["dashboards", dashboardName, "exist"], [:]) as boolean
+		return (http.doGlobalCall("get", ["dashboards", dashboardName, "exist"], [:]) as String).toBoolean()
 	}
 
 	/** Upload the given dashboard descriptor to teamscale */
 	static void uploadDashboard(TeamscaleClient http, CreateUniformDashboards.Dashboard dashboard) {
-		String method = "post";
-		def path = ["api", "dashboards"]
 		if (dashboardExists(http, dashboard.getName())) {
-			method = "put"
-			path.add(dashboard.getName())
+			http.doGlobalCall("put", ["dashboards", dashboard.getName()], [:], { request ->
+				request.contentType = "application/json"
+				request.body = dashboard.toString()
+			})
+		} else {
+			http.doGlobalCall("post", "dashboards", [:], { request ->
+				request.encoder "multipart/form-data", OkHttpEncoders.&multipart
+				request.contentType = "multipart/form-data"
+
+				request.body = MultipartContent.multipart {
+					field "dashboardDescriptor", dashboard.toString()
+				}
+			})
 		}
-
-		http.doGlobalCall(method, ["dashboards", dashboard.getName()], [:], { request ->
-			request.encoder "multipart/form-data", OkHttpEncoders.&multipart
-			request.contentType = "multipart/form-data"
-
-			request.body = MultipartContent.multipart {
-				field "dashboardDescriptor", dashboard.toString()
-			}
-		})
 	}
 }
