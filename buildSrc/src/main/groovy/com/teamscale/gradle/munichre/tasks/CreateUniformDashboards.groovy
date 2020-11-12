@@ -167,7 +167,7 @@ class CreateUniformDashboards extends DefaultTask {
 			return false
 		}
 
-		if (!DashboardUtils.getAllDashboards(teamscale.http).contains(config.template)) {
+		if (!DashboardUtils.dashboardExists(teamscale.http, config.template)) {
 			warn("The dashboard template $config.template does not exist")
 			return false
 		}

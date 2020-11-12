@@ -27,11 +27,15 @@ class DashboardUtils {
 		return tmpFile.text
 	}
 
+	static boolean dashboardExists(TeamscaleClient http, String dashboardName) {
+		return http.doGlobalCall("get", ["dashboards", dashboardName, "exist"], [:]) as boolean
+	}
+
 	/** Upload the given dashboard descriptor to teamscale */
 	static void uploadDashboard(TeamscaleClient http, CreateUniformDashboards.Dashboard dashboard) {
 		String method = "post";
 		def path = ["api", "dashboards"]
-		if (http.doGlobalCall("get", ["dashboards", dashboard.getName(), "exist"], [:]) as boolean) {
+		if (dashboardExists(http, dashboard.getName())) {
 			method = "put"
 			path.add(dashboard.getName())
 		}
