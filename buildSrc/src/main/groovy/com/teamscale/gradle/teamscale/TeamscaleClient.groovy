@@ -116,7 +116,9 @@ class TeamscaleClient extends HttpClient {
 	 * Calls a global REST Api service call for teamscale.
 	 */
 	protected Object doGlobalCall(String method, List<String> service, Map<String, String> query, setRequest = {}) {
-		return doCall(method, service, query, setRequest)
+		def globalService = ["api"]
+		globalService.addAll(service)
+		return doCall(method, globalService, query, setRequest)
 	}
 
 	/**
