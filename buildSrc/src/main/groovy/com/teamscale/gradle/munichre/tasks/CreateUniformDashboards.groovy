@@ -99,11 +99,8 @@ class CreateUniformDashboards extends DefaultTask {
 
 	/** Sets the sharing for the given dashboard */
 	static def setSharing(dashboard, ProjectInfo projectInfo, String placeholder) {
-		dashboard.payload.projectAccessEntries.each { child ->
-			if (child.userOrGroup == placeholder) {
-				child.userOrGroup = projectInfo.id
-			}
-		}
+		def child = dashboard.payload.projectAccessEntries.'**'.find({ it -> it.name().contains("DashboardAccessEntry") })
+		child.userOrGroup = projectInfo.id
 	}
 
 	/** Assemble the information of all projects which have a dashboard configured */
