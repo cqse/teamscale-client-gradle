@@ -96,7 +96,7 @@ class AzureDevOpsClient extends HttpClient {
 	List<File> downloadTestCoverage(String buildId) {
 		// Get URLs
 		def path = ["test", "codecoverage"]
-		def query = ["buildId": buildId, "flags": "2"]
+		def query = ["buildId": buildId, "flags": "7"]
 		List<String> coverageFileUrls = doCall("get", path, query).value.codeCoverageFileUrl
 
 		List<File> coverageFiles = downloadFiles(coverageFileUrls)
